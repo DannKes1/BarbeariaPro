@@ -1,14 +1,15 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import NavSideBar from './components/NavSideBar.vue'
-import NavBarExpand from './components/NavBarExpand.vue'
-</script>
-
 <template>
-  <NavSideBar />
-  <NavBarExpand />
-
-  <RouterView />
+  <router-view />
 </template>
 
-<style scoped></style>
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'App'
+})
+</script>
+
+<style>
+/* Estilos globais podem ser adicionados aqui */
+</style>

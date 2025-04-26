@@ -1,0 +1,26 @@
+Eu crie as views. mas falta algumas como 
+profile
+blank
+Buttons
+forms
+cards
+typograpgy
+icons
+charts 
+maps
+
+
+Acho que não precisa de todas, mas os dois primeiros são importantes
+
+
+basicamente olha como fiz no layout.vue
+
+alguma duvida me manda mensagem no wpp
+
+só segue o padrão
+
+main.js
+app.vue
+layout
+views
+
