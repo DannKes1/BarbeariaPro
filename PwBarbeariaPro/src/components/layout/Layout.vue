@@ -20,11 +20,10 @@ import feather from "feather-icons";
 import Sidebar from "./Sidebar.vue";
 import Navbar from "./Navbar.vue";
 import Footer from "./Footer.vue";
-import Blank from "./Blank.vue";
 
 export default defineComponent({
   name: "Layout",
-  components: { Sidebar, Navbar, Footer, Blank },
+  components: { Sidebar, Navbar, Footer },
   setup() {
     const collapsed = ref(false);
 
