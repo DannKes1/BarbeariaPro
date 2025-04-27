@@ -1,37 +1,50 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Layout from '@/components/layout/Layout.vue'
+// src/router/index.ts
+import { createRouter, createWebHistory } from "vue-router";
+import Layout from "@/components/layout/Layout.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: "/",
       component: Layout,
       children: [
         {
-          path: '',
-          name: 'dashboard',
-          component: () => import('@/views/DashboardView.vue')
+          path: "", // rota “/”
+          name: "dashboard",
+          component: () => import("@/views/DashboardView.vue"),
         },
         {
-          path: '/sign-in',
-          name: 'sign-in',
-          component: () => import('@/views/SignInView.vue')
+          path: "profile", // rota “/profile”
+          name: "profile",
+          component: () => import("@/views/ProfileView.vue"),
         },
         {
-          path: '/sign-up',
-          name: 'sign-up',
-          component: () => import('@/views/SignUpView.vue')
-        }
-        // {
-        //   path: '/profile',
-        //   name: 'profile',
-        //   component: () => import('@/views/ProfileView.vue')
-        // },
-        // Adicione outras rotas conforme necessário
-      ]
-    }
-  ]
-})
+          path: "sign-in", // rota “/sign-in”
+          name: "sign-in",
+          component: () => import("@/views/SignInView.vue"),
+        },
+        {
+          path: "sign-up", // rota “/sign-up”
+          name: "sign-up",
+          component: () => import("@/views/SignUpView.vue"),
+        },
+        {
+          path: "icons",
+          name: "IconsFeather",
+          component: () => import("@/views/IconsFeatherView.vue"),
+        },
 
-export default router
+        {
+          path: "blank",
+          name: "blank",
+          component: () => import("@/views/BlankPageView.vue"),
+        },
+
+        // …outras rotas filhas
+      ],
+    },
+  ],
+});
+
+export default router;

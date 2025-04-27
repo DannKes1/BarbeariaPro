@@ -1,6 +1,5 @@
 Eu crie as views. mas falta algumas como 
-profile
-blank
+
 Buttons
 forms
 cards
