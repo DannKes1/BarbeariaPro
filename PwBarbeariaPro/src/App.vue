@@ -11,5 +11,4 @@ export default defineComponent({
 </script>
 
 <style>
-/* Estilos globais podem ser adicionados aqui */
 </style>

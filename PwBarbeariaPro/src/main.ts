@@ -5,13 +5,12 @@ import router from "./router";
 import "@/assets/css/app.css";
 import "bootstrap";
 
-import "bootstrap/dist/js/bootstrap.bundle"; // bootstrap JS (dropdowns, collapse etc)
-import "simplebar"; // plugin de scroll customizado
-import "simplebar/dist/simplebar.css"; // estilos do SimpleBar
-import "@/assets/js/app"; // aqui vem a lógica de sidebar toggle
+import "bootstrap/dist/js/bootstrap.bundle"; 
+import "simplebar"; 
+import "simplebar/dist/simplebar.css"; 
+import "@/assets/js/app"; 
 
-// Importe os ícones
-// import feather from 'feather-icons'
+
 import feather from "feather-icons";
 
 const app = createApp(App);

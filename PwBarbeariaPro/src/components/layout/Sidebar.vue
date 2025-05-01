@@ -2,7 +2,7 @@
   <nav id="sidebar" class="sidebar js-sidebar">
     <div class="sidebar-content js-simplebar">
       <router-link class="sidebar-brand" to="/">
-        <span class="align-middle">AdminKit</span>
+        <span class="align-middle">BarbeariaPro</span>
       </router-link>
 
       <ul class="sidebar-nav">
@@ -17,52 +17,14 @@
             <span class="align-middle">{{ item.name }}</span>
           </router-link>
         </li>
-
-        <li class="sidebar-header">Ferramentas & Componentes</li>
-        <li
-          v-for="item in sections[1].items"
-          :key="item.name"
-          :class="['sidebar-item', { active: $route.path === item.path }]"
-        >
-          <router-link :to="item.path" class="sidebar-link">
-            <i class="align-middle" :data-feather="item.icon"></i>
-            <span class="align-middle">{{ item.name }}</span>
-          </router-link>
-        </li>
-
-        <li class="sidebar-header">Plugins & Addons</li>
-        <li
-          v-for="item in sections[2].items"
-          :key="item.name"
-          :class="['sidebar-item', { active: $route.path === item.path }]"
-        >
-          <router-link :to="item.path" class="sidebar-link">
-            <i class="align-middle" :data-feather="item.icon"></i>
-            <span class="align-middle">{{ item.name }}</span>
-          </router-link>
-        </li>
       </ul>
-
-      <div class="sidebar-cta">
-        <div class="sidebar-cta-content">
-          <strong class="d-inline-block mb-2">Upgrade to Pro</strong>
-          <div class="mb-3 text-sm">
-            Quer mais componentes? Veja nossa versão premium.
-          </div>
-          <div class="d-grid">
-            <router-link to="/upgrade" class="btn btn-primary"
-              >Upgrade to Pro</router-link
-            >
-          </div>
-        </div>
-      </div>
     </div>
   </nav>
 </template>
 
 <script lang="ts">
+import feather from "feather-icons";
 import { defineComponent } from "vue";
-//   import feather from 'feather-icons'
 
 interface MenuItem {
   name: string;
@@ -85,8 +47,6 @@ export default defineComponent({
           items: [
             { name: "Dashboard", path: "/", icon: "sliders" },
             { name: "Profile", path: "/profile", icon: "user" },
-            { name: "Sign In", path: "/sign-in", icon: "log-in" },
-            { name: "Sign Up", path: "/sign-up", icon: "user-plus" },
             { name: "Blank", path: "/blank", icon: "book" },
           ],
         },
@@ -111,7 +71,7 @@ export default defineComponent({
     };
   },
   mounted() {
-    //   feather.replace()
+    feather.replace()
   },
 });
 </script>

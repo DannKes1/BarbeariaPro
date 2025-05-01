@@ -32,7 +32,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      feather.replace(); // renderiza todos os ícones feather no app
+      feather.replace(); 
     });
 
     return { collapsed, toggleSidebar };
@@ -41,10 +41,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* se por acaso o seu app.css não tiver,
-   defina como a sidebar “some” quando collapsed */
+
 .wrapper.collapsed .sidebar {
-  margin-left: -250px; /* ou largura da sua sidebar */
+  margin-left: -250px;
 }
 .wrapper.collapsed .main {
   margin-left: 0;

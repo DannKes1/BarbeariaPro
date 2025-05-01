@@ -1,4 +1,3 @@
-<!-- src/components/Navbar.vue -->
 <template>
   <nav class="navbar navbar-expand navbar-light navbar-bg">
     <a
@@ -11,7 +10,6 @@
 
     <div class="navbar-collapse collapse">
       <ul class="navbar-nav navbar-align">
-        <!-- Notifications dropdown… -->
         <li class="nav-item dropdown">
           <a
             class="nav-icon dropdown-toggle"
@@ -28,11 +26,9 @@
             class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
             aria-labelledby="alertsDropdown"
           >
-            <!-- … -->
           </div>
         </li>
 
-        <!-- Messages dropdown… -->
         <li class="nav-item dropdown">
           <a
             class="nav-icon dropdown-toggle"
@@ -48,11 +44,9 @@
             class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
             aria-labelledby="messagesDropdown"
           >
-            <!-- … -->
           </div>
         </li>
 
-        <!-- User menu… -->
         <li class="nav-item dropdown">
           <a
             class="nav-link dropdown-toggle d-none d-sm-inline-block"

@@ -54,7 +54,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Estilo para manter o layout original */
 .card {
   border: none;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);

@@ -1,4 +1,3 @@
-// src/router/index.ts
 import { createRouter, createWebHistory } from "vue-router";
 import Layout from "@/components/layout/Layout.vue";
 
@@ -10,22 +9,22 @@ const router = createRouter({
       component: Layout,
       children: [
         {
-          path: "", // rota “/”
+          path: "", 
           name: "dashboard",
           component: () => import("@/views/DashboardView.vue"),
         },
         {
-          path: "profile", // rota “/profile”
+          path: "profile", 
           name: "profile",
           component: () => import("@/views/ProfileView.vue"),
         },
         {
-          path: "sign-in", // rota “/sign-in”
+          path: "sign-in", 
           name: "sign-in",
           component: () => import("@/views/SignInView.vue"),
         },
         {
-          path: "sign-up", // rota “/sign-up”
+          path: "sign-up", 
           name: "sign-up",
           component: () => import("@/views/SignUpView.vue"),
         },
@@ -40,9 +39,17 @@ const router = createRouter({
           name: "blank",
           component: () => import("@/views/BlankPageView.vue"),
         },
-
-        // …outras rotas filhas
       ],
+    },
+    {
+      path: "/sign-in", 
+      name: "sign-in",
+      component: () => import("@/views/SignInView.vue"),
+    },
+    {
+      path: "/sign-up", 
+      name: "sign-up",
+      component: () => import("@/views/SignUpView.vue"),
     },
   ],
 });
