@@ -9,22 +9,22 @@ const router = createRouter({
       component: Layout,
       children: [
         {
-          path: "", 
+          path: "",
           name: "dashboard",
           component: () => import("@/views/DashboardView.vue"),
         },
         {
-          path: "profile", 
+          path: "profile",
           name: "profile",
           component: () => import("@/views/ProfileView.vue"),
         },
         {
-          path: "sign-in", 
+          path: "sign-in",
           name: "sign-in",
           component: () => import("@/views/SignInView.vue"),
         },
         {
-          path: "sign-up", 
+          path: "sign-up",
           name: "sign-up",
           component: () => import("@/views/SignUpView.vue"),
         },
@@ -42,12 +42,12 @@ const router = createRouter({
       ],
     },
     {
-      path: "/sign-in", 
+      path: "/login",
       name: "sign-in",
       component: () => import("@/views/SignInView.vue"),
     },
     {
-      path: "/sign-up", 
+      path: "/sign-up",
       name: "sign-up",
       component: () => import("@/views/SignUpView.vue"),
     },
