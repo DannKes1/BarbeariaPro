@@ -39,6 +39,16 @@ const router = createRouter({
           name: "blank",
           component: () => import("@/views/BlankPageView.vue"),
         },
+        {
+          path: "cliente/cadastro",
+          name: "cliente-cadastro",
+          component: () => import("@/views/ClienteCadastroView.vue"),
+        },
+        {
+          path: "/cliente/consulta",
+          name: "cliente-consulta",
+          component: () => import("@/views/ClienteConsultaView.vue"),
+        },
       ],
     },
     {
