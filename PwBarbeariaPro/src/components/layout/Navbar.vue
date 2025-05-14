@@ -25,8 +25,7 @@
           <div
             class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
             aria-labelledby="alertsDropdown"
-          >
-          </div>
+          ></div>
         </li>
 
         <li class="nav-item dropdown">
@@ -43,8 +42,7 @@
           <div
             class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
             aria-labelledby="messagesDropdown"
-          >
-          </div>
+          ></div>
         </li>
 
         <li class="nav-item dropdown">

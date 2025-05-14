@@ -48,6 +48,26 @@ export default defineComponent({
             { name: "Dashboard", path: "/", icon: "sliders" },
             { name: "Profile", path: "/profile", icon: "user" },
             { name: "Blank", path: "/blank", icon: "book" },
+            {
+              name: "Cadastrar Cliente",
+              path: "/cliente/cadastro",
+              icon: "user-plus",
+            },
+            {
+              name: "Consultar Cliente",
+              path: "/cliente/consulta",
+              icon: "search",
+            },
+            {
+              name: "Cadastrar Profissional",
+              path: "/profissional/cadastro",
+              icon: "user-check",
+            },
+            {
+              name: "Consultar Profissional",
+              path: "/profissional/consulta",
+              icon: "search",
+            },
           ],
         },
         {
@@ -71,7 +91,7 @@ export default defineComponent({
     };
   },
   mounted() {
-    feather.replace()
+    feather.replace();
   },
 });
 </script>

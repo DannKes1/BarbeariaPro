@@ -39,6 +39,38 @@ const router = createRouter({
           name: "blank",
           component: () => import("@/views/BlankPageView.vue"),
         },
+        {
+          path: "cliente/cadastro",
+          name: "cliente-cadastro",
+          component: () => import("@/views/ClienteCadastroView.vue"),
+        },
+        {
+          path: "/cliente/consulta",
+          name: "cliente-consulta",
+          component: () => import("@/views/ClienteConsultaView.vue"),
+        },
+        {
+          path: "/cliente/editar/:cpf",
+          name: "cliente-editar",
+          component: () => import("@/views/ClienteEditarView.vue"),
+        },
+        {
+          path: "/profissional/cadastro",
+          name: "profissional-cadastro",
+          component: () => import("@/views/ProfissionalCadastroView.vue"),
+        },
+
+        {
+          path: "/profissional/consulta",
+          name: "profissional-consulta",
+          component: () => import("@/views/ProfissionalConsultaView.vue"),
+        },
+
+        {
+          path: "/profissional/editar/:cpf",
+          name: "profissional-editar",
+          component: () => import("@/views/ProfissionalEditarView.vue"),
+        },
       ],
     },
     {
