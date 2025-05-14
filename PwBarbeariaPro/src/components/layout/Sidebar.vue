@@ -57,7 +57,17 @@ export default defineComponent({
               name: "Consultar Cliente",
               path: "/cliente/consulta",
               icon: "search",
-            }, // 👈 AQUI
+            },
+            {
+              name: "Cadastrar Profissional",
+              path: "/profissional/cadastro",
+              icon: "user-check",
+            },
+            {
+              name: "Consultar Profissional",
+              path: "/profissional/consulta",
+              icon: "search",
+            },
           ],
         },
         {

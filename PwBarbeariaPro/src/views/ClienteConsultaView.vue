@@ -31,7 +31,10 @@
             <td class="border px-4 py-2">{{ cliente.email }}</td>
             <td class="border px-4 py-2">{{ cliente.dataNascimento }}</td>
             <td class="border px-4 py-2">
-              <button class="btn text-sm mr-2" @click="editar(cliente)">
+              <button
+                class="btn text-sm mr-2"
+                @click="$router.push(`/cliente/editar/${cliente.cpf}`)"
+              >
                 Editar
               </button>
               <button class="btn-danger text-sm" @click="excluir(cliente)">
@@ -93,8 +96,13 @@ export default defineComponent({
     }
 
     function excluir(cliente: any) {
-      console.log("Excluir cliente:", cliente);
-      // show modal ou confirmação
+      const confirmar = window.confirm(
+        `Tem certeza que deseja excluir o cliente ${cliente.nome} ${cliente.sobrenome}?`
+      );
+      if (confirmar) {
+        clientes.value = clientes.value.filter((c) => c.cpf !== cliente.cpf);
+        console.log(`Cliente ${cliente.nome} excluído.`);
+      }
     }
 
     onMounted(() => {
