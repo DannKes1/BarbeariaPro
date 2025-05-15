@@ -68,6 +68,17 @@ export default defineComponent({
               path: "/profissional/consulta",
               icon: "search",
             },
+            {
+              name: "Cadastrar Serviço",
+              path: "/servico/cadastro",
+              icon: "plus-square",
+            },
+
+            {
+              name: "Consultar Serviço",
+              path: "/servico/consulta",
+              icon: "search",
+            },
           ],
         },
         {
