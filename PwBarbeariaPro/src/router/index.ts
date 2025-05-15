@@ -71,6 +71,21 @@ const router = createRouter({
           name: "profissional-editar",
           component: () => import("@/views/ProfissionalEditarView.vue"),
         },
+        {
+          path: "/servico/cadastro",
+          name: "servico-cadastro",
+          component: () => import("@/views/ServicoCadastroView.vue"),
+        },
+        {
+          path: "/servico/consulta",
+          name: "servico-consulta",
+          component: () => import("@/views/ServicoConsultaView.vue"),
+        },
+        {
+          path: "/servico/editar/:nome",
+          name: "servico-editar",
+          component: () => import("@/views/ServicoEditarView.vue"),
+        },
       ],
     },
     {
