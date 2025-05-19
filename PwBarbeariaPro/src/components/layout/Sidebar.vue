@@ -79,6 +79,27 @@ export default defineComponent({
               path: "/servico/consulta",
               icon: "search",
             },
+            {
+              name: "Agendar",
+              path: "/agendamento/cadastro",
+              icon: "calendar",
+            },
+
+            {
+              name: "Consultar Agendamento",
+              path: "/agendamento/consulta",
+              icon: "search",
+            },
+            {
+              name: "Cadastrar Pagamento",
+              path: "/pagamento/cadastro",
+              icon: "dollar-sign",
+            },
+            {
+              name: "Consultar Pagamento",
+              path: "/pagamento/consulta",
+              icon: "dollar-sign",
+            },
           ],
         },
         {

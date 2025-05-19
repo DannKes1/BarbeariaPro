@@ -86,6 +86,38 @@ const router = createRouter({
           name: "servico-editar",
           component: () => import("@/views/ServicoEditarView.vue"),
         },
+        {
+          path: "/agendamento/cadastro",
+          name: "AgendamentoCadastro",
+          component: () => import("@/views/AgendamentoCadastroView.vue"),
+        },
+        {
+          path: "agendamento/consulta",
+          name: "agendamento-consulta",
+          component: () => import("@/views/AgendamentoConsultaView.vue"),
+        },
+        {
+          path: "/agendamento/editar/:id",
+          name: "agendamento-editar",
+          component: () => import("@/views/AgendamentoEditarView.vue"),
+        },
+        {
+          path: "/pagamento/cadastro",
+          name: "pagamento-cadastro",
+          component: () => import("@/views/PagamentoCadastroView.vue"),
+        },
+
+        {
+          path: "/pagamento/editar/:id",
+          name: "pagamento-editar",
+          component: () => import("@/views/PagamentoEditarView.vue"),
+        },
+
+        {
+          path: "/pagamento/consulta",
+          name: "pagamento-consulta",
+          component: () => import("@/views/PagamentoConsultaView.vue"),
+        },
       ],
     },
     {
