@@ -118,6 +118,42 @@ const router = createRouter({
           name: "pagamento-consulta",
           component: () => import("@/views/PagamentoConsultaView.vue"),
         },
+
+        {
+          path: "/caixa/abrir",
+          name: "caixa-abrir",
+          component: () => import("@/views/AbrirCaixaView.vue"),
+        },
+        {
+          path: "/caixa/entrada",
+          name: "caixa-entrada",
+          component: () => import("@/views/RegistrarEntradaView.vue"),
+        },
+        {
+          path: "/caixa/saida",
+          name: "caixa-saida",
+          component: () => import("@/views/RegistrarSaidaView.vue"),
+        },
+        {
+          path: "/caixa/fechar",
+          name: "caixa-fechar",
+          component: () => import("@/views/FecharCaixaView.vue"),
+        },
+        {
+          path: "/caixa/extrato",
+          name: "caixa-extrato",
+          component: () => import("@/views/ExtratoCaixaConsultaView.vue"),
+        },
+        {
+          path: "/caixa/sangria",
+          name: "caixa-sangria",
+          component: () => import("@/views/SangriaCaixaView.vue"),
+        },
+        {
+          path: "/caixa/consulta",
+          name: "caixa-consulta",
+          component: () => import("@/views/CaixaConsultaView.vue"),
+        },
       ],
     },
     {
