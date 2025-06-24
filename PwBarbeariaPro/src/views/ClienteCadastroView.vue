@@ -9,6 +9,7 @@
           class="input"
           required
           pattern="[A-Za-zÀ-ü ]+"
+          :disabled="isLoading"
         />
       </div>
 
@@ -19,6 +20,7 @@
           class="input"
           required
           pattern="[A-Za-zÀ-ü ]+"
+          :disabled="isLoading"
         />
       </div>
 
@@ -30,6 +32,7 @@
           required
           pattern="\\(\\d{2}\\) \\d{5}-\\d{4}"
           placeholder="(11) 98765-4321"
+          :disabled="isLoading"
         />
       </div>
 
@@ -41,13 +44,19 @@
           required
           pattern="\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}"
           @blur="validarCPF"
+          :disabled="isLoading"
         />
         <p v-if="erros.cpf" class="text-red-500 text-sm">{{ erros.cpf }}</p>
       </div>
 
       <div>
         <label>E-mail</label>
-        <input v-model="cliente.email" class="input" type="email" />
+        <input
+          v-model="cliente.email"
+          class="input"
+          type="email"
+          :disabled="isLoading"
+        />
       </div>
 
       <div>
@@ -58,27 +67,55 @@
           required
           type="date"
           @change="validarIdade"
+          :disabled="isLoading"
         />
         <p v-if="erros.dataNascimento" class="text-red-500 text-sm">
           {{ erros.dataNascimento }}
         </p>
       </div>
 
-      <button class="btn" type="submit">Cadastrar</button>
+      <div class="flex gap-2">
+        <button class="btn" type="submit" :disabled="isLoading">
+          <span
+            v-if="isLoading"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          {{ isLoading ? "Cadastrando..." : "Cadastrar" }}
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary"
+          @click="limparFormulario"
+          :disabled="isLoading"
+        >
+          Limpar
+        </button>
+      </div>
     </form>
-    <p v-if="sucesso" class="text-green-600 mt-4">
-      Cliente cadastrado com sucesso!
-    </p>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
+import { useSweetAlert } from "@/composables/useSweetAlert";
 import feather from "feather-icons";
 
 export default defineComponent({
   name: "ClienteCadastroView",
   setup() {
+    const {
+      showToast,
+      showError,
+      showSuccess,
+      showLoading,
+      hideLoading,
+      confirmAction,
+    } = useSweetAlert();
+
+    const isLoading = ref(false);
+
     const cliente = ref({
       nome: "",
       sobrenome: "",
@@ -90,7 +127,6 @@ export default defineComponent({
     });
 
     const erros = ref({ cpf: "", dataNascimento: "" });
-    const sucesso = ref(false);
 
     function validarCPF() {
       const cpf = cliente.value.cpf.replace(/[\\.\\-]/g, "");
@@ -137,28 +173,121 @@ export default defineComponent({
       return true;
     }
 
-    function submitForm() {
-      if (validarCPF() && validarIdade()) {
-        console.log("Cliente registrado:", cliente.value);
-        sucesso.value = true;
-        setTimeout(() => (sucesso.value = false), 3000);
-        Object.assign(cliente.value, {
-          nome: "",
-          sobrenome: "",
-          telefone: "",
-          cpf: "",
-          email: "",
-          dataNascimento: "",
-          historico: [],
-        });
+    async function submitForm() {
+      // Validar campos obrigatórios
+      if (!cliente.value.nome.trim()) {
+        showError("Campo obrigatório", "Por favor, informe o nome do cliente.");
+        return;
       }
+
+      if (!cliente.value.sobrenome.trim()) {
+        showError(
+          "Campo obrigatório",
+          "Por favor, informe o sobrenome do cliente."
+        );
+        return;
+      }
+
+      if (!cliente.value.telefone.trim()) {
+        showError(
+          "Campo obrigatório",
+          "Por favor, informe o telefone do cliente."
+        );
+        return;
+      }
+
+      if (!cliente.value.cpf.trim()) {
+        showError("Campo obrigatório", "Por favor, informe o CPF do cliente.");
+        return;
+      }
+
+      if (!cliente.value.dataNascimento) {
+        showError(
+          "Campo obrigatório",
+          "Por favor, informe a data de nascimento."
+        );
+        return;
+      }
+
+      // Validar CPF e idade
+      if (!validarCPF() || !validarIdade()) {
+        showError(
+          "Dados inválidos",
+          "Por favor, corrija os erros no formulário."
+        );
+        return;
+      }
+
+      // Confirmar cadastro
+      const confirmed = await confirmAction(
+        "Confirmar cadastro",
+        `Deseja cadastrar o cliente ${cliente.value.nome} ${cliente.value.sobrenome}?`,
+        "Sim, cadastrar"
+      );
+
+      if (!confirmed) return;
+
+      isLoading.value = true;
+      showLoading("Cadastrando cliente...");
+
+      try {
+        // Simular chamada de API
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        hideLoading();
+
+        // Mostrar sucesso
+        showSuccess(
+          "Cliente cadastrado!",
+          `${cliente.value.nome} ${cliente.value.sobrenome} foi cadastrado com sucesso.`,
+          "Continuar"
+        );
+
+        // Limpar formulário
+        limparFormulario();
+
+        // Toast de confirmação
+        showToast.success("Cliente cadastrado com sucesso!");
+      } catch (error) {
+        hideLoading();
+        showError(
+          "Erro no servidor",
+          "Ocorreu um erro ao cadastrar o cliente. Tente novamente."
+        );
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    function limparFormulario() {
+      Object.assign(cliente.value, {
+        nome: "",
+        sobrenome: "",
+        telefone: "",
+        cpf: "",
+        email: "",
+        dataNascimento: "",
+        historico: [],
+      });
+
+      erros.value = { cpf: "", dataNascimento: "" };
+
+      showToast.info("Formulário limpo");
     }
 
     onMounted(() => {
       feather.replace();
     });
 
-    return { cliente, erros, sucesso, validarCPF, validarIdade, submitForm };
+    return {
+      cliente,
+      erros,
+      isLoading,
+      validarCPF,
+      validarIdade,
+      submitForm,
+      limparFormulario,
+    };
   },
 });
 </script>
@@ -175,5 +304,23 @@ export default defineComponent({
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
 }
 </style>

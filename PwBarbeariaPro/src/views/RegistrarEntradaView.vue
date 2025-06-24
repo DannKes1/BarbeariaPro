@@ -4,20 +4,20 @@
 
     <form @submit.prevent="registrarEntrada" class="space-y-4">
       <div>
-        <label>Origem</label>
-        <select v-model="entrada.origem" class="input" required>
-          <option disabled value="">Selecione</option>
-          <option>Pagamento de Agendamento</option>
-          <option>Venda de Produto</option>
-          <option>Outros</option>
-        </select>
+        <label>Descrição</label>
+        <input
+          v-model="entrada.descricao"
+          class="input"
+          required
+          placeholder="Ex: Venda de produto"
+        />
       </div>
 
       <div>
-        <label>Valor</label>
+        <label>Valor (R$)</label>
         <input
+          v-model="entrada.valor"
           type="number"
-          v-model.number="entrada.valor"
           step="0.01"
           class="input"
           required
@@ -25,73 +25,76 @@
       </div>
 
       <div>
-        <label>Forma de Pagamento</label>
-        <select v-model="entrada.formaPagamento" class="input" required>
-          <option disabled value="">Selecione</option>
-          <option>Dinheiro</option>
-          <option>Cartão</option>
-          <option>PIX</option>
+        <label>Categoria</label>
+        <select v-model="entrada.categoria" class="input" required>
+          <option value="">Selecione</option>
+          <option value="servico">Serviço</option>
+          <option value="produto">Produto</option>
+          <option value="outros">Outros</option>
         </select>
       </div>
 
-      <button type="submit" class="btn">Registrar</button>
+      <div>
+        <label>Observações</label>
+        <textarea
+          v-model="entrada.observacoes"
+          class="input"
+          rows="3"
+        ></textarea>
+      </div>
 
-      <p v-if="sucesso" class="text-green-600 mt-2">
-        Entrada registrada com sucesso!
-      </p>
+      <button class="btn w-full" type="submit" :disabled="isLoading">
+        {{ isLoading ? "Registrando..." : "Registrar Entrada" }}
+      </button>
     </form>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
+import { useSweetAlert } from "@/composables/useSweetAlert";
 
 export default defineComponent({
   name: "RegistrarEntradaView",
   setup() {
+    const { showSuccess, showLoading, hideLoading } = useSweetAlert();
+
+    const isLoading = ref(false);
     const entrada = ref({
-      origem: "",
-      valor: 0,
-      formaPagamento: "",
+      descricao: "",
+      valor: "",
+      categoria: "",
+      observacoes: "",
     });
 
-    const sucesso = ref(false);
+    async function registrarEntrada() {
+      isLoading.value = true;
+      showLoading("Registrando entrada...");
 
-    function registrarEntrada() {
-      if (
-        !entrada.value.origem ||
-        !entrada.value.formaPagamento ||
-        entrada.value.valor <= 0
-      ) {
-        alert("Preencha todos os campos corretamente.");
-        return;
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        hideLoading();
+        showSuccess(
+          "Entrada registrada!",
+          `Entrada de R$ ${entrada.value.valor} foi registrada com sucesso.`
+        );
+
+        // Limpar formulário
+        entrada.value = {
+          descricao: "",
+          valor: "",
+          categoria: "",
+          observacoes: "",
+        };
+      } catch (error) {
+        hideLoading();
+      } finally {
+        isLoading.value = false;
       }
-
-      console.log("Entrada registrada:", entrada.value);
-      sucesso.value = true;
-      setTimeout(() => (sucesso.value = false), 3000);
     }
 
-    return {
-      entrada,
-      sucesso,
-      registrarEntrada,
-    };
+    return { entrada, isLoading, registrarEntrada };
   },
 });
 </script>
-
-<style scoped>
-.input {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.5rem;
-  width: 100%;
-}
-.btn {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-}
-</style>

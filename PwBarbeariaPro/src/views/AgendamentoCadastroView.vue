@@ -5,12 +5,25 @@
     <form @submit.prevent="cadastrarAgendamento" class="space-y-4">
       <div>
         <label>Cliente</label>
-        <select v-model="agendamento.cliente" class="input" required>
+        <select
+          v-model="agendamento.cliente"
+          class="input"
+          required
+          :disabled="isLoading"
+        >
           <option disabled value="">Selecione um cliente</option>
           <option v-for="c in clientes" :key="c.cpf" :value="c.nome">
-            {{ c.nome }} {{ c.sobrenome }}
+            {{ c.nome }} {{ c.sobrenome }} - {{ c.cpf }}
           </option>
         </select>
+        <button
+          type="button"
+          class="text-blue-600 text-sm mt-1"
+          @click="adicionarNovoCliente"
+          :disabled="isLoading"
+        >
+          + Cadastrar novo cliente
+        </button>
       </div>
 
       <div>
@@ -20,18 +33,30 @@
           class="input"
           required
           @change="filtrarProfissionais"
+          :disabled="isLoading"
         >
           <option disabled value="">Selecione um serviço</option>
           <option v-for="s in servicos" :key="s.nome" :value="s.nome">
-            {{ s.nome }}
+            {{ s.nome }} - R$ {{ s.preco }} ({{ s.duracao }}min)
           </option>
         </select>
       </div>
 
       <div>
         <label>Profissional</label>
-        <select v-model="agendamento.profissional" class="input" required>
-          <option disabled value="">Selecione um profissional</option>
+        <select
+          v-model="agendamento.profissional"
+          class="input"
+          required
+          :disabled="isLoading || !agendamento.servico"
+        >
+          <option disabled value="">
+            {{
+              agendamento.servico
+                ? "Selecione um profissional"
+                : "Primeiro selecione um serviço"
+            }}
+          </option>
           <option
             v-for="p in profissionaisFiltrados"
             :key="p.nome"
@@ -42,164 +67,337 @@
         </select>
       </div>
 
-      <div>
-        <label>Data</label>
-        <input type="date" v-model="agendamento.data" class="input" required />
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label>Data</label>
+          <input
+            type="date"
+            v-model="agendamento.data"
+            class="input"
+            required
+            :min="dataMinima"
+            :disabled="isLoading"
+          />
+        </div>
+
+        <div>
+          <label>Horário</label>
+          <select
+            v-model="agendamento.horario"
+            class="input"
+            required
+            :disabled="isLoading || !agendamento.data"
+          >
+            <option disabled value="">
+              {{
+                agendamento.data
+                  ? "Selecione um horário"
+                  : "Primeiro selecione uma data"
+              }}
+            </option>
+            <option v-for="h in horariosDisponiveis" :key="h" :value="h">
+              {{ h }}
+            </option>
+          </select>
+        </div>
       </div>
 
       <div>
-        <label>Horário</label>
-        <input
-          type="time"
-          v-model="agendamento.horario"
+        <label>Observações</label>
+        <textarea
+          v-model="agendamento.observacoes"
           class="input"
-          required
-        />
+          rows="3"
+          placeholder="Observações adicionais (opcional)"
+          :disabled="isLoading"
+        ></textarea>
       </div>
 
-      <button class="btn" type="submit">Confirmar Agendamento</button>
-    </form>
+      <div class="bg-gray-100 p-4 rounded">
+        <h3 class="font-semibold mb-2">Resumo do Agendamento</h3>
+        <div
+          v-if="agendamento.servico && agendamento.data && agendamento.horario"
+        >
+          <p><strong>Serviço:</strong> {{ agendamento.servico }}</p>
+          <p>
+            <strong>Profissional:</strong>
+            {{ agendamento.profissional || "Não selecionado" }}
+          </p>
+          <p><strong>Data/Hora:</strong> {{ formatarDataHora() }}</p>
+          <p><strong>Valor:</strong> R$ {{ obterPrecoServico() }}</p>
+        </div>
+        <p v-else class="text-gray-500">Preencha os campos para ver o resumo</p>
+      </div>
 
-    <p v-if="sucesso" class="text-green-600 mt-4">
-      Agendamento realizado com sucesso!
-    </p>
+      <div class="flex gap-2">
+        <button
+          class="btn"
+          type="submit"
+          :disabled="isLoading || !formularioCompleto"
+        >
+          <span
+            v-if="isLoading"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          {{ isLoading ? "Agendando..." : "Confirmar Agendamento" }}
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary"
+          @click="limparFormulario"
+          :disabled="isLoading"
+        >
+          Limpar
+        </button>
+      </div>
+    </form>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
-
-interface Cliente {
-  nome: string;
-  sobrenome: string;
-  cpf: string;
-}
-
-interface Servico {
-  nome: string;
-  especialidade: string;
-}
-
-interface Profissional {
-  nome: string;
-  especialidade: string;
-}
-
-interface Agendamento {
-  cliente: string;
-  servico: string;
-  profissional: string;
-  data: string;
-  horario: string;
-}
-
-interface AgendamentoExistente {
-  profissional: string;
-  data: string;
-  horario: string;
-}
+import { defineComponent, ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useSweetAlert } from "@/composables/useSweetAlert";
+import feather from "feather-icons";
 
 export default defineComponent({
   name: "AgendamentoCadastroView",
   setup() {
-    const clientes = ref<Cliente[]>([
+    const router = useRouter();
+    const {
+      showToast,
+      showError,
+      showSuccess,
+      showLoading,
+      hideLoading,
+      confirmAction,
+      showInput,
+    } = useSweetAlert();
+
+    const isLoading = ref(false);
+
+    const clientes = ref([
       { nome: "João", sobrenome: "Silva", cpf: "123.456.789-00" },
       { nome: "Maria", sobrenome: "Santos", cpf: "987.654.321-00" },
     ]);
 
-    const servicos = ref<Servico[]>([
-      { nome: "Corte Masculino", especialidade: "Barbeiro" },
-      { nome: "Limpeza de Pele", especialidade: "Esteticista" },
+    const servicos = ref([
+      {
+        nome: "Corte Masculino",
+        preco: "25.00",
+        duracao: "30",
+        especialidade: "Barbeiro",
+      },
+      {
+        nome: "Corte Feminino",
+        preco: "45.00",
+        duracao: "60",
+        especialidade: "Cabeleireiro",
+      },
+      {
+        nome: "Barba",
+        preco: "15.00",
+        duracao: "20",
+        especialidade: "Barbeiro",
+      },
     ]);
 
-    const profissionais = ref<Profissional[]>([
+    const profissionais = ref([
       { nome: "Carlos", especialidade: "Barbeiro" },
-      { nome: "Ana", especialidade: "Esteticista" },
-      { nome: "Lucas", especialidade: "Barbeiro" },
+      { nome: "Ana", especialidade: "Cabeleireiro" },
+      { nome: "Pedro", especialidade: "Barbeiro" },
     ]);
 
-    const profissionaisFiltrados = ref<Profissional[]>([]);
-
-    const agendamentosExistentes = ref<AgendamentoExistente[]>([
-      {
-        profissional: "Carlos",
-        data: "2024-05-15",
-        horario: "14:00",
-      },
-      {
-        profissional: "Ana",
-        data: "2024-05-16",
-        horario: "09:30",
-      },
-    ]);
-
-    const agendamento = ref<Agendamento>({
+    const agendamento = ref({
       cliente: "",
       servico: "",
       profissional: "",
       data: "",
       horario: "",
+      observacoes: "",
     });
 
-    const sucesso = ref(false);
+    const profissionaisFiltrados = computed(() => {
+      if (!agendamento.value.servico) return [];
 
-    function filtrarProfissionais() {
       const servicoSelecionado = servicos.value.find(
         (s) => s.nome === agendamento.value.servico
       );
-      if (servicoSelecionado) {
-        profissionaisFiltrados.value = profissionais.value.filter(
-          (p) => p.especialidade === servicoSelecionado.especialidade
-        );
-        agendamento.value.profissional = "";
-      }
-    }
+      if (!servicoSelecionado) return [];
 
-    function temConflito() {
-      return agendamentosExistentes.value.some(
-        (a) =>
-          a.profissional === agendamento.value.profissional &&
-          a.data === agendamento.value.data &&
-          a.horario === agendamento.value.horario
+      return profissionais.value.filter(
+        (p) => p.especialidade === servicoSelecionado.especialidade
       );
+    });
+
+    const dataMinima = computed(() => {
+      return new Date().toISOString().split("T")[0];
+    });
+
+    const horariosDisponiveis = computed(() => {
+      // Simular horários disponíveis
+      return [
+        "08:00",
+        "08:30",
+        "09:00",
+        "09:30",
+        "10:00",
+        "10:30",
+        "11:00",
+        "11:30",
+        "14:00",
+        "14:30",
+        "15:00",
+        "15:30",
+        "16:00",
+        "16:30",
+        "17:00",
+        "17:30",
+        "18:00",
+      ];
+    });
+
+    const formularioCompleto = computed(() => {
+      return (
+        agendamento.value.cliente &&
+        agendamento.value.servico &&
+        agendamento.value.profissional &&
+        agendamento.value.data &&
+        agendamento.value.horario
+      );
+    });
+
+    function filtrarProfissionais() {
+      agendamento.value.profissional = "";
     }
 
-    function cadastrarAgendamento() {
-      if (
-        !agendamento.value.cliente ||
-        !agendamento.value.servico ||
-        !agendamento.value.profissional ||
-        !agendamento.value.data ||
-        !agendamento.value.horario
-      ) {
-        alert("Preencha todos os campos.");
+    function formatarDataHora() {
+      if (!agendamento.value.data || !agendamento.value.horario) return "";
+
+      const data = new Date(agendamento.value.data);
+      const dataFormatada = data.toLocaleDateString("pt-BR");
+      return `${dataFormatada} às ${agendamento.value.horario}`;
+    }
+
+    function obterPrecoServico() {
+      const servico = servicos.value.find(
+        (s) => s.nome === agendamento.value.servico
+      );
+      return servico ? servico.preco : "0.00";
+    }
+
+    async function adicionarNovoCliente() {
+      const nome = await showInput(
+        "Cadastro rápido de cliente",
+        "Digite o nome completo do cliente",
+        "text"
+      );
+
+      if (nome) {
+        showToast.info("Redirecionando para cadastro completo...");
+        router.push(`/cliente/cadastro?nome=${encodeURIComponent(nome)}`);
+      }
+    }
+
+    async function cadastrarAgendamento() {
+      if (!formularioCompleto.value) {
+        showError(
+          "Formulário incompleto",
+          "Por favor, preencha todos os campos obrigatórios."
+        );
         return;
       }
 
-      if (temConflito()) {
-        alert("Já existe um agendamento com esse profissional nesse horário.");
+      // Verificar se a data não é no passado
+      const dataAgendamento = new Date(
+        agendamento.value.data + "T" + agendamento.value.horario
+      );
+      const agora = new Date();
+
+      if (dataAgendamento <= agora) {
+        showError(
+          "Data inválida",
+          "O agendamento deve ser para uma data e horário futuros."
+        );
         return;
       }
 
-      console.log("Agendamento cadastrado:", agendamento.value);
-      agendamentosExistentes.value.push({
-        profissional: agendamento.value.profissional,
-        data: agendamento.value.data,
-        horario: agendamento.value.horario,
+      // Confirmar agendamento
+      const confirmed = await confirmAction(
+        "Confirmar agendamento",
+        `Confirmar agendamento para ${agendamento.value.cliente}?\\n\\n${formatarDataHora()}\\nServiço: ${agendamento.value.servico}\\nProfissional: ${agendamento.value.profissional}\\nValor: R$ ${obterPrecoServico()}`,
+        "Sim, agendar"
+      );
+
+      if (!confirmed) return;
+
+      isLoading.value = true;
+      showLoading("Criando agendamento...");
+
+      try {
+        // Simular chamada de API
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        hideLoading();
+
+        // Mostrar sucesso
+        showSuccess(
+          "Agendamento criado!",
+          `Agendamento para ${agendamento.value.cliente} foi criado com sucesso para ${formatarDataHora()}.`,
+          "Continuar"
+        );
+
+        // Limpar formulário
+        limparFormulario();
+
+        // Toast de confirmação
+        showToast.success("Agendamento criado com sucesso!");
+      } catch (error) {
+        hideLoading();
+        showError(
+          "Erro no servidor",
+          "Ocorreu um erro ao criar o agendamento. Tente novamente."
+        );
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    function limparFormulario() {
+      Object.assign(agendamento.value, {
+        cliente: "",
+        servico: "",
+        profissional: "",
+        data: "",
+        horario: "",
+        observacoes: "",
       });
-      sucesso.value = true;
-      setTimeout(() => (sucesso.value = false), 3000);
+
+      showToast.info("Formulário limpo");
     }
+
+    onMounted(() => {
+      feather.replace();
+    });
 
     return {
       clientes,
       servicos,
       profissionais,
-      profissionaisFiltrados,
       agendamento,
-      sucesso,
+      profissionaisFiltrados,
+      dataMinima,
+      horariosDisponiveis,
+      formularioCompleto,
+      isLoading,
       filtrarProfissionais,
+      formatarDataHora,
+      obterPrecoServico,
+      adicionarNovoCliente,
       cadastrarAgendamento,
+      limparFormulario,
     };
   },
 });
@@ -212,11 +410,32 @@ export default defineComponent({
   padding: 0.5rem;
   width: 100%;
 }
-
 .btn {
   background-color: #4f46e5;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+textarea.input {
+  resize: vertical;
+  min-height: 80px;
 }
 </style>
