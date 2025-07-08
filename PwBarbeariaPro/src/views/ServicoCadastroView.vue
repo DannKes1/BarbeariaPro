@@ -4,135 +4,256 @@
     <form @submit.prevent="submitForm" class="space-y-4">
       <div>
         <label>Nome do Serviço</label>
-        <input v-model="servico.nome" class="input" required />
-        <p v-if="erros.nome" class="text-red-500 text-sm">{{ erros.nome }}</p>
+        <input
+          v-model="servico.nome"
+          class="input"
+          required
+          placeholder="Ex: Corte de Cabelo Masculino"
+          :disabled="isLoading"
+        />
       </div>
 
       <div>
         <label>Descrição</label>
-        <textarea v-model="servico.descricao" class="input" required></textarea>
-        <p v-if="erros.descricao" class="text-red-500 text-sm">
-          {{ erros.descricao }}
-        </p>
+        <textarea
+          v-model="servico.descricao"
+          class="input"
+          rows="3"
+          placeholder="Descreva o serviço..."
+          :disabled="isLoading"
+        ></textarea>
       </div>
 
       <div>
-        <label>Preço</label>
-        <input
-          v-model="servico.preco"
-          class="input"
+        <label>Categoria</label>
+        <select 
+          v-model="servico.categoria" 
+          class="input" 
           required
-          placeholder="R$ 00,00"
-          @input="formatarPreco"
-        />
-        <p v-if="erros.preco" class="text-red-500 text-sm">{{ erros.preco }}</p>
+          :disabled="isLoading"
+        >
+          <option value="">Selecione uma categoria</option>
+          <option value="Cabelo">Cabelo</option>
+          <option value="Barba">Barba</option>
+          <option value="Estética">Estética</option>
+          <option value="Unhas">Unhas</option>
+          <option value="Massagem">Massagem</option>
+          <option value="Combo">Combo</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label>Preço (R$)</label>
+          <input
+            v-model="servico.preco"
+            class="input"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            placeholder="0,00"
+            :disabled="isLoading"
+          />
+        </div>
+
+        <div>
+          <label>Duração (minutos)</label>
+          <input
+            v-model="servico.duracao"
+            class="input"
+            type="number"
+            min="15"
+            step="15"
+            required
+            placeholder="60"
+            :disabled="isLoading"
+          />
+        </div>
       </div>
 
       <div>
-        <label>Duração Estimada (minutos)</label>
-        <input
-          v-model="servico.duracao"
-          class="input"
-          required
-          type="number"
-          min="1"
-        />
-        <p v-if="erros.duracao" class="text-red-500 text-sm">
-          {{ erros.duracao }}
+        <label>Profissionais Habilitados</label>
+        <div class="space-y-2">
+          <label v-for="prof in profissionaisDisponiveis" :key="prof.id" class="flex items-center">
+            <input 
+              type="checkbox" 
+              :value="prof.id"
+              v-model="servico.profissionais"
+              class="mr-2"
+              :disabled="isLoading"
+            />
+            {{ prof.nome }} - {{ prof.especialidade }}
+          </label>
+        </div>
+        <p v-if="servico.profissionais.length === 0" class="text-yellow-600 text-sm mt-1">
+          ⚠️ Selecione pelo menos um profissional
         </p>
       </div>
 
-      <button class="btn" type="submit">Cadastrar</button>
+      <div class="flex items-center">
+        <input 
+          type="checkbox" 
+          v-model="servico.ativo"
+          class="mr-2"
+          :disabled="isLoading"
+        />
+        <label>Serviço ativo (disponível para agendamento)</label>
+      </div>
+
+      <div class="flex gap-2">
+        <button 
+          class="btn" 
+          type="submit"
+          :disabled="isLoading"
+        >
+          <span v-if="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ isLoading ? 'Cadastrando...' : 'Cadastrar' }}
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn-secondary"
+          @click="limparFormulario"
+          :disabled="isLoading"
+        >
+          Limpar
+        </button>
+      </div>
     </form>
-    <p v-if="sucesso" class="text-green-600 mt-4">
-      Serviço cadastrado com sucesso!
-    </p>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
+import { useSweetAlert } from '@/composables/useSweetAlert'
 import feather from "feather-icons";
 
 export default defineComponent({
   name: "ServicoCadastroView",
   setup() {
+    const { 
+      showToast, 
+      showError, 
+      showSuccess, 
+      showLoading, 
+      hideLoading,
+      confirmAction 
+    } = useSweetAlert()
+    
+    const isLoading = ref(false)
+    
     const servico = ref({
       nome: "",
       descricao: "",
+      categoria: "",
       preco: "",
       duracao: "",
+      profissionais: [] as number[],
+      ativo: true
     });
 
-    const sucesso = ref(false);
-    const erros = ref({
-      nome: "",
-      descricao: "",
-      preco: "",
-      duracao: "",
-    });
+    const profissionaisDisponiveis = ref([
+      { id: 1, nome: "João Silva", especialidade: "Barbeiro" },
+      { id: 2, nome: "Maria Santos", especialidade: "Cabeleireira" },
+      { id: 3, nome: "Pedro Oliveira", especialidade: "Esteticista" },
+    ])
+
+    async function submitForm() {
+      // Validar campos obrigatórios
+      if (!servico.value.nome.trim()) {
+        showError('Campo obrigatório', 'Por favor, informe o nome do serviço.')
+        return
+      }
+      
+      if (!servico.value.categoria) {
+        showError('Campo obrigatório', 'Por favor, selecione uma categoria.')
+        return
+      }
+      
+      if (!servico.value.preco || parseFloat(servico.value.preco) <= 0) {
+        showError('Preço inválido', 'Por favor, informe um preço válido.')
+        return
+      }
+      
+      if (!servico.value.duracao || parseInt(servico.value.duracao) < 15) {
+        showError('Duração inválida', 'A duração mínima é de 15 minutos.')
+        return
+      }
+      
+      if (servico.value.profissionais.length === 0) {
+        showError('Profissionais obrigatórios', 'Selecione pelo menos um profissional habilitado.')
+        return
+      }
+
+      // Confirmar cadastro
+      const profissionaisSelecionados = profissionaisDisponiveis.value
+        .filter(p => servico.value.profissionais.includes(p.id))
+        .map(p => p.nome)
+        .join(', ')
+
+      const confirmed = await confirmAction(
+        'Confirmar cadastro',
+        `Deseja cadastrar o serviço "${servico.value.nome}" por R$ ${servico.value.preco}?\\n\\nProfissionais: ${profissionaisSelecionados}`,
+        'Sim, cadastrar'
+      )
+      
+      if (!confirmed) return
+
+      isLoading.value = true
+      showLoading('Cadastrando serviço...')
+
+      try {
+        // Simular chamada de API
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        hideLoading()
+        
+        // Mostrar sucesso
+        showSuccess(
+          'Serviço cadastrado!',
+          `"${servico.value.nome}" foi cadastrado com sucesso por R$ ${servico.value.preco}.`,
+          'Continuar'
+        )
+        
+        // Limpar formulário
+        limparFormulario()
+        
+        // Toast de confirmação
+        showToast.success('Serviço cadastrado com sucesso!')
+        
+      } catch (error) {
+        hideLoading()
+        showError('Erro no servidor', 'Ocorreu um erro ao cadastrar o serviço. Tente novamente.')
+      } finally {
+        isLoading.value = false
+      }
+    }
+
+    function limparFormulario() {
+      Object.assign(servico.value, {
+        nome: "",
+        descricao: "",
+        categoria: "",
+        preco: "",
+        duracao: "",
+        profissionais: [],
+        ativo: true
+      });
+      
+      showToast.info('Formulário limpo')
+    }
 
     onMounted(() => {
       feather.replace();
     });
 
-    function formatarPreco() {
-      let valor = servico.value.preco.replace(/[^\d]/g, "");
-      if (valor.length < 3) valor = valor.padStart(3, "0");
-      const reais = valor.slice(0, valor.length - 2);
-      const centavos = valor.slice(-2);
-      servico.value.preco = `R$ ${reais},${centavos}`;
-    }
-
-    function validar() {
-      let valido = true;
-      erros.value = { nome: "", descricao: "", preco: "", duracao: "" };
-
-      if (!servico.value.nome.trim()) {
-        erros.value.nome = "Nome é obrigatório.";
-        valido = false;
-      }
-
-      if (!servico.value.descricao || servico.value.descricao.length < 20) {
-        erros.value.descricao = "Descrição deve ter pelo menos 20 caracteres.";
-        valido = false;
-      }
-
-      if (!/^R\$ \d+,\d{2}$/.test(servico.value.preco)) {
-        erros.value.preco = "Preço no formato R$ 00,00.";
-        valido = false;
-      }
-
-      const duracao = parseInt(servico.value.duracao);
-      if (!Number.isInteger(duracao) || duracao <= 0) {
-        erros.value.duracao = "Duração deve ser um número positivo.";
-        valido = false;
-      }
-
-      return valido;
-    }
-
-    function submitForm() {
-      if (validar()) {
-        console.log("Serviço cadastrado:", servico.value);
-        sucesso.value = true;
-        setTimeout(() => (sucesso.value = false), 3000);
-
-        servico.value = {
-          nome: "",
-          descricao: "",
-          preco: "",
-          duracao: "",
-        };
-      }
-    }
-
-    return {
-      servico,
-      sucesso,
-      erros,
+    return { 
+      servico, 
+      profissionaisDisponiveis,
+      isLoading,
       submitForm,
-      formatarPreco,
+      limparFormulario
     };
   },
 });
@@ -150,5 +271,27 @@ export default defineComponent({
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+textarea.input {
+  resize: vertical;
+  min-height: 80px;
 }
 </style>
