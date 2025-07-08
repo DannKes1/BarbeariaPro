@@ -19,14 +19,12 @@ export interface CookieConfig {
   path?: string;
 }
 
-// Interface para configurações exportadas/importadas
 export interface CookieSettings {
   consent?: any;
   preferences?: Record<string, any>;
   timestamp?: string;
 }
 
-// Configurações padrão para diferentes tipos de cookies
 export const COOKIE_CONFIGS = {
   // Preferências de interface
   SIDEBAR_COLLAPSED: {

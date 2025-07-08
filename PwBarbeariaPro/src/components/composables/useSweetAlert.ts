@@ -1,4 +1,3 @@
-// src/composables/useSweetAlert.ts
 import {
   Swal,
   Toast,
@@ -9,7 +8,6 @@ import {
 } from "@/plugins/sweetalert";
 import type { SweetAlertResult } from "sweetalert2";
 
-// Interfaces para tipagem
 export interface Estatisticas {
   vendas: number;
   vendasVariacao: number;
@@ -57,7 +55,6 @@ export interface Pagamento {
 }
 
 export function useSweetAlert() {
-  /* ──────────────── Toasts ──────────────── */
   const showToast = {
     success: (message: string): Promise<SweetAlertResult> =>
       Toast.fire({ icon: "success", title: message }),

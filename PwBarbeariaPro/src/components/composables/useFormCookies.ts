@@ -1,13 +1,12 @@
-// src/composables/useFormCookies.ts
 import { ref, watch, onMounted } from "vue";
 import { useCookies } from "@/composables/useCookies";
 
 export interface FormCookieOptions {
   formKey: string;
-  rememberFields?: string[]; // Campos para lembrar valores
-  rememberFilters?: boolean; // Lembrar filtros aplicados
-  rememberPagination?: boolean; // Lembrar configurações de paginação
-  expirationDays?: number; // Dias para expirar os cookies
+  rememberFields?: string[]; 
+  rememberFilters?: boolean; 
+  rememberPagination?: boolean; 
+  expirationDays?: number;
 }
 
 export function useFormCookies(formData: any, options: FormCookieOptions) {
@@ -23,17 +22,14 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
   const savedFilters = ref<Record<string, any>>({});
   const savedPagination = ref<Record<string, any>>({});
 
-  // Verificar se pode usar cookies
   const checkCookieConsent = () => {
     canUseCookies.value = hasConsent.value && hasConsentForCategory("functionality");
   };
 
-  // Gerar chave do cookie baseada no formulário
   const getCookieKey = (type: string) => {
     return `form_${options.formKey}_${type}`;
   };
 
-  // Salvar últimos valores dos campos
   const saveLastValues = () => {
     if (!canUseCookies.value || !options.rememberFields) return;
 
@@ -60,7 +56,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     }
   };
 
-  // Carregar últimos valores dos campos
   const loadLastValues = () => {
     if (!canUseCookies.value || !options.rememberFields) return;
 
@@ -70,7 +65,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
         const parsedData = JSON.parse(savedData);
         lastValues.value = parsedData;
         
-        // Aplicar valores salvos ao formulário apenas se os campos estão vazios
         options.rememberFields.forEach(field => {
           if (parsedData[field] && (!formData[field] || formData[field] === "")) {
             formData[field] = parsedData[field];
@@ -82,7 +76,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     }
   };
 
-  // Salvar filtros aplicados
   const saveFilters = (filters: Record<string, any>) => {
     if (!canUseCookies.value || !options.rememberFilters) return;
 
@@ -99,7 +92,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     savedFilters.value = filters;
   };
 
-  // Carregar filtros salvos
   const loadFilters = (): Record<string, any> => {
     if (!canUseCookies.value || !options.rememberFilters) return {};
 
@@ -116,7 +108,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     return {};
   };
 
-  // Salvar configurações de paginação
   const savePagination = (pagination: Record<string, any>) => {
     if (!canUseCookies.value || !options.rememberPagination) return;
 
@@ -133,7 +124,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     savedPagination.value = pagination;
   };
 
-  // Carregar configurações de paginação
   const loadPagination = (): Record<string, any> => {
     if (!canUseCookies.value || !options.rememberPagination) return {};
 
@@ -150,11 +140,9 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     return {};
   };
 
-  // Limpar todos os cookies do formulário
   const clearFormCookies = () => {
     if (!canUseCookies.value) return;
 
-    // Definir cookies com data passada para removê-los
     const expiredDate = new Date(0).toUTCString();
     
     document.cookie = `${getCookieKey("last_values")}=; expires=${expiredDate}; path=/`;
@@ -166,7 +154,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     savedPagination.value = {};
   };
 
-  // Obter informações sobre cookies salvos
   const getCookieInfo = () => {
     return {
       hasLastValues: Object.keys(lastValues.value).length > 0,
@@ -179,17 +166,14 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     };
   };
 
-  // Configurar watchers para salvar automaticamente
   const setupWatchers = () => {
     if (!options.rememberFields) return;
 
-    // Watch para mudanças nos campos especificados
     options.rememberFields.forEach(field => {
       watch(
         () => formData[field],
         (newValue) => {
           if (newValue && newValue !== "") {
-            // Debounce para evitar muitas gravações
             setTimeout(() => {
               saveLastValues();
             }, 1000);
@@ -199,7 +183,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     });
   };
 
-  // Inicialização
   onMounted(() => {
     checkCookieConsent();
     
@@ -209,7 +192,6 @@ export function useFormCookies(formData: any, options: FormCookieOptions) {
     }
   });
 
-  // Watch para mudanças no consentimento
   watch([hasConsent, () => hasConsentForCategory("functionality")], () => {
     checkCookieConsent();
     
