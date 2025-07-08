@@ -4,43 +4,44 @@ import Layout from "@/components/layout/Layout.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // Redirecionamento inicial para login
     {
       path: "/",
+      redirect: "/login",
+    },
+    // Rotas de autenticação (fora do Layout)
+    {
+      path: "/login",
+      name: "sign-in",
+      component: () => import("@/views/SignInView.vue"),
+    },
+    {
+      path: "/sign-up",
+      name: "sign-up",
+      component: () => import("@/views/SignUpView.vue"),
+    },
+    // Rotas autenticadas (dentro do Layout)
+    {
+      path: "/app",
       component: Layout,
       children: [
         {
-          path: "",
+          path: "/dashboard",
           name: "dashboard",
           component: () => import("@/views/DashboardView.vue"),
         },
         {
-          path: "profile",
+          path: "/profile",
           name: "profile",
           component: () => import("@/views/ProfileView.vue"),
         },
         {
-          path: "sign-in",
-          name: "sign-in",
-          component: () => import("@/views/SignInView.vue"),
-        },
-        {
-          path: "sign-up",
-          name: "sign-up",
-          component: () => import("@/views/SignUpView.vue"),
-        },
-        {
-          path: "icons",
+          path: "/icons",
           name: "IconsFeather",
           component: () => import("@/views/IconsFeatherView.vue"),
         },
-
         {
-          path: "blank",
-          name: "blank",
-          component: () => import("@/views/BlankPageView.vue"),
-        },
-        {
-          path: "cliente/cadastro",
+          path: "/cliente/cadastro",
           name: "cliente-cadastro",
           component: () => import("@/views/ClienteCadastroView.vue"),
         },
@@ -59,13 +60,11 @@ const router = createRouter({
           name: "profissional-cadastro",
           component: () => import("@/views/ProfissionalCadastroView.vue"),
         },
-
         {
           path: "/profissional/consulta",
           name: "profissional-consulta",
           component: () => import("@/views/ProfissionalConsultaView.vue"),
         },
-
         {
           path: "/profissional/editar/:cpf",
           name: "profissional-editar",
@@ -92,7 +91,7 @@ const router = createRouter({
           component: () => import("@/views/AgendamentoCadastroView.vue"),
         },
         {
-          path: "agendamento/consulta",
+          path: "/agendamento/consulta",
           name: "agendamento-consulta",
           component: () => import("@/views/AgendamentoConsultaView.vue"),
         },
@@ -106,19 +105,16 @@ const router = createRouter({
           name: "pagamento-cadastro",
           component: () => import("@/views/PagamentoCadastroView.vue"),
         },
-
         {
           path: "/pagamento/editar/:id",
           name: "pagamento-editar",
           component: () => import("@/views/PagamentoEditarView.vue"),
         },
-
         {
           path: "/pagamento/consulta",
           name: "pagamento-consulta",
           component: () => import("@/views/PagamentoConsultaView.vue"),
         },
-
         {
           path: "/caixa/abrir",
           name: "caixa-abrir",
@@ -155,16 +151,6 @@ const router = createRouter({
           component: () => import("@/views/CaixaConsultaView.vue"),
         },
       ],
-    },
-    {
-      path: "/login",
-      name: "sign-in",
-      component: () => import("@/views/SignInView.vue"),
-    },
-    {
-      path: "/sign-up",
-      name: "sign-up",
-      component: () => import("@/views/SignUpView.vue"),
     },
   ],
 });

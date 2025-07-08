@@ -12,12 +12,11 @@
           <div class="card-body">
             <div class="profile-avatar mb-4">
               <img
-                :src="usuario.avatar || '/default-avatar.png'"
+                :src="usuario.avatar || defaultAvatar"
                 :alt="usuario.nome"
                 class="avatar-img"
                 @error="handleImageError"
               />
-              <button class="avatar-edit-btn" @click="alterarFoto">📷</button>
             </div>
             <h3>{{ usuario.nome }} {{ usuario.sobrenome }}</h3>
             <p class="text-muted">{{ usuario.cargo }}</p>
@@ -233,10 +232,15 @@ export default defineComponent({
       confirmAction,
       showLoading,
       hideLoading,
-      Swal, // agora Swal está disponível
     } = useSweetAlert();
 
     const isLoading = ref(false);
+
+ 
+    const defaultAvatar =
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYpPhduYGQv9LSNTSUDUM5MA7PmvllhukP6Q&s";
+
+   
 
     /**
      * Estado do usuário
@@ -277,8 +281,16 @@ export default defineComponent({
      * True se houve qualquer alteração nos dados do usuário
      */
     const temAlteracoes = computed(() => {
+      const atual = usuario.value;
+      const original = usuarioOriginal.value;
+
       return (
-        JSON.stringify(usuario.value) !== JSON.stringify(usuarioOriginal.value)
+        atual.nome !== original.nome ||
+        atual.sobrenome !== original.sobrenome ||
+        atual.email !== original.email ||
+        atual.telefone !== original.telefone ||
+        atual.cargo !== original.cargo ||
+        atual.status !== original.status
       );
     });
 
@@ -293,33 +305,8 @@ export default defineComponent({
     }
 
     function handleImageError(event: Event) {
-      (event.target as HTMLImageElement).src = "/default-avatar.png";
-    }
-
-    /**
-     * Seleciona nova foto do perfil
-     */
-    async function alterarFoto() {
-      const { value: file } = await Swal.fire({
-        title: "Alterar foto do perfil",
-        input: "file",
-        inputAttributes: {
-          accept: "image/*",
-          "aria-label": "Upload da foto do perfil",
-        },
-        showCancelButton: true,
-        confirmButtonText: "Upload",
-        cancelButtonText: "Cancelar",
-      });
-
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          usuario.value.avatar = (e.target?.result as string) || null;
-          showSuccess("Foto alterada!", "Sua foto de perfil foi atualizada.");
-        };
-        reader.readAsDataURL(file);
-      }
+      // Fallback para imagem padrão em caso de erro
+      (event.target as HTMLImageElement).src = defaultAvatar;
     }
 
     /**
@@ -342,7 +329,15 @@ export default defineComponent({
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        usuarioOriginal.value = { ...usuario.value };
+        usuarioOriginal.value = {
+          nome: usuario.value.nome,
+          sobrenome: usuario.value.sobrenome,
+          email: usuario.value.email,
+          telefone: usuario.value.telefone,
+          cargo: usuario.value.cargo,
+          status: usuario.value.status,
+          avatar: usuario.value.avatar,
+        };
 
         hideLoading();
         showSuccess(
@@ -359,7 +354,15 @@ export default defineComponent({
     }
 
     function resetarFormulario() {
-      usuario.value = { ...usuarioOriginal.value };
+      usuario.value = {
+        nome: usuarioOriginal.value.nome,
+        sobrenome: usuarioOriginal.value.sobrenome,
+        email: usuarioOriginal.value.email,
+        telefone: usuarioOriginal.value.telefone,
+        cargo: usuarioOriginal.value.cargo,
+        status: usuarioOriginal.value.status,
+        avatar: usuarioOriginal.value.avatar,
+      };
       showToast.info("Alterações canceladas");
     }
 
@@ -435,10 +438,10 @@ export default defineComponent({
       estatisticas,
       isLoading,
       temAlteracoes,
+      defaultAvatar, // Exportar a variável da imagem
       getStatusClass,
       getStatusText,
       handleImageError,
-      alterarFoto,
       salvarPerfil,
       resetarFormulario,
       alterarSenha,
@@ -460,20 +463,6 @@ export default defineComponent({
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid #e5e7eb;
-}
-
-.avatar-edit-btn {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  font-size: 1.2rem;
 }
 
 .card {

@@ -1,6 +1,32 @@
 <template>
   <div class="p-6 max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Cadastrar Cliente</h1>
+
+    <!-- Indicador de valores lembrados -->
+    <div
+      v-if="cookieInfo.hasLastValues"
+      class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md"
+    >
+      <div class="flex items-center">
+        <svg
+          class="w-4 h-4 text-blue-500 mr-2"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm text-blue-700">
+          Alguns campos foram preenchidos com valores anteriores.
+          <button
+            @click="clearRememberedValues"
+            class="text-blue-600 underline ml-1"
+          >
+            Limpar valores salvos
+          </button>
+        </span>
+      </div>
+    </div>
+
     <form @submit.prevent="submitForm" class="space-y-4">
       <div>
         <label>Nome</label>
@@ -10,7 +36,11 @@
           required
           pattern="[A-Za-zÀ-ü ]+"
           :disabled="isLoading"
+          @blur="rememberFieldValue('nome')"
         />
+        <small v-if="hasRememberedValue('nome')" class="text-gray-500">
+          💾 Valor lembrado dos últimos dados inseridos
+        </small>
       </div>
 
       <div>
@@ -21,7 +51,11 @@
           required
           pattern="[A-Za-zÀ-ü ]+"
           :disabled="isLoading"
+          @blur="rememberFieldValue('sobrenome')"
         />
+        <small v-if="hasRememberedValue('sobrenome')" class="text-gray-500">
+          💾 Valor lembrado dos últimos dados inseridos
+        </small>
       </div>
 
       <div>
@@ -33,7 +67,11 @@
           pattern="\\(\\d{2}\\) \\d{5}-\\d{4}"
           placeholder="(11) 98765-4321"
           :disabled="isLoading"
+          @blur="rememberFieldValue('telefone')"
         />
+        <small v-if="hasRememberedValue('telefone')" class="text-gray-500">
+          💾 Valor lembrado dos últimos dados inseridos
+        </small>
       </div>
 
       <div>
@@ -56,7 +94,11 @@
           class="input"
           type="email"
           :disabled="isLoading"
+          @blur="rememberFieldValue('email')"
         />
+        <small v-if="hasRememberedValue('email')" class="text-gray-500">
+          💾 Valor lembrado dos últimos dados inseridos
+        </small>
       </div>
 
       <div>
@@ -94,12 +136,30 @@
         </button>
       </div>
     </form>
+
+    <!-- Debug info (apenas para demonstração) -->
+    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
+      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
+      <pre class="text-xs">{{ JSON.stringify(cookieInfo, null, 2) }}</pre>
+      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
+        Ocultar debug
+      </button>
+    </div>
+
+    <button
+      v-else
+      @click="showDebugInfo = true"
+      class="mt-4 text-sm text-gray-500 underline"
+    >
+      Mostrar informações dos cookies (debug)
+    </button>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, onMounted, computed } from "vue";
 import { useSweetAlert } from "@/composables/useSweetAlert";
+import { useFormCookies } from "@/composables/useFormCookies";
 import feather from "feather-icons";
 
 export default defineComponent({
@@ -115,6 +175,7 @@ export default defineComponent({
     } = useSweetAlert();
 
     const isLoading = ref(false);
+    const showDebugInfo = ref(false);
 
     const cliente = ref({
       nome: "",
@@ -127,6 +188,26 @@ export default defineComponent({
     });
 
     const erros = ref({ cpf: "", dataNascimento: "" });
+
+    // Configurar cookies para o formulário
+    const {
+      canUseCookies,
+      lastValues,
+      saveLastValues,
+      loadLastValues,
+      clearFormCookies,
+      getCookieInfo,
+      rememberValue,
+      getRememberedValue,
+      hasRememberedValue,
+    } = useFormCookies(cliente.value, {
+      formKey: "cliente_cadastro",
+      rememberFields: ["nome", "sobrenome", "telefone", "email"],
+      expirationDays: 30,
+    });
+
+    // Computed para informações dos cookies
+    const cookieInfo = computed(() => getCookieInfo());
 
     function validarCPF() {
       const cpf = cliente.value.cpf.replace(/[\\.\\-]/g, "");
@@ -171,6 +252,22 @@ export default defineComponent({
       }
       erros.value.dataNascimento = "";
       return true;
+    }
+
+    // Função para lembrar valor de campo específico
+    function rememberFieldValue(field: string) {
+      if (cliente.value[field as keyof typeof cliente.value]) {
+        rememberValue(
+          field,
+          cliente.value[field as keyof typeof cliente.value]
+        );
+      }
+    }
+
+    // Função para limpar valores lembrados
+    function clearRememberedValues() {
+      clearFormCookies();
+      showToast.info("Valores salvos foram limpos");
     }
 
     async function submitForm() {
@@ -231,6 +328,9 @@ export default defineComponent({
       showLoading("Cadastrando cliente...");
 
       try {
+        // Salvar valores nos cookies antes de enviar
+        saveLastValues();
+
         // Simular chamada de API
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -283,10 +383,16 @@ export default defineComponent({
       cliente,
       erros,
       isLoading,
+      showDebugInfo,
+      cookieInfo,
       validarCPF,
       validarIdade,
       submitForm,
       limparFormulario,
+      rememberFieldValue,
+      clearRememberedValues,
+      hasRememberedValue,
+      canUseCookies,
     };
   },
 });

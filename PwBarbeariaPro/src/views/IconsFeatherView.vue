@@ -31,7 +31,7 @@
 <script lang="ts">
 import { defineComponent, onMounted } from "vue";
 import feather from "feather-icons";
-import iconList from "@/data/feather-icons.json"; // veja abaixo como criar
+import iconList from "@/data/feather-icons.json";
 
 export default defineComponent({
   name: "IconsFeatherView",

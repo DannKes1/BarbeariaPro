@@ -61,9 +61,8 @@ export default defineComponent({
           header: "Geral",
           expanded: true,
           items: [
-            { name: "Dashboard", path: "/", icon: "sliders" },
+            { name: "Dashboard", path: "/dashboard", icon: "sliders" },
             { name: "Profile", path: "/profile", icon: "user" },
-            { name: "Blank", path: "/blank", icon: "book" },
           ],
         },
         {
@@ -165,15 +164,6 @@ export default defineComponent({
               path: "/caixa/sangria",
               icon: "corner-down-left",
             },
-          ],
-        },
-        {
-          header: "Extras",
-          expanded: false,
-          items: [
-            { name: "Charts", path: "/plugins/charts", icon: "bar-chart-2" },
-            { name: "Maps", path: "/plugins/maps", icon: "map" },
-            { name: "Icons", path: "/ui/icons", icon: "coffee" },
           ],
         },
       ] as MenuSection[],

@@ -7,30 +7,116 @@
       </button>
     </div>
 
-    <div class="mb-4">
-      <input
-        v-model="busca"
-        type="text"
-        placeholder="Buscar por CPF, Nome ou E-mail"
-        class="input w-full"
-      />
+    <!-- Filtros com cookies -->
+    <div class="mb-4 p-4 bg-gray-50 border rounded-md">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Buscar</label>
+          <input
+            v-model="filtros.busca"
+            type="text"
+            placeholder="CPF, Nome ou E-mail"
+            class="input w-full"
+            @input="aplicarFiltros"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Ordenar por</label>
+          <select
+            v-model="filtros.ordenarPor"
+            class="input w-full"
+            @change="aplicarFiltros"
+          >
+            <option value="nome">Nome</option>
+            <option value="cpf">CPF</option>
+            <option value="email">E-mail</option>
+            <option value="dataNascimento">Data de Nascimento</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Itens por página</label>
+          <select
+            v-model="paginacao.itensPorPagina"
+            class="input w-full"
+            @change="aplicarPaginacao"
+          >
+            <option :value="5">5</option>
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Indicador de filtros salvos -->
+      <div
+        v-if="cookieInfo.hasFilters || cookieInfo.hasPagination"
+        class="mt-3 flex items-center justify-between"
+      >
+        <div class="flex items-center text-sm text-blue-600">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Filtros e configurações foram restaurados dos cookies
+        </div>
+        <button
+          @click="limparFiltrosSalvos"
+          class="text-sm text-gray-600 underline"
+        >
+          Limpar configurações salvas
+        </button>
+      </div>
     </div>
 
-    <div v-if="clientesFiltrados.length">
+    <div v-if="clientesPaginados.length">
       <div class="overflow-x-auto">
         <table class="min-w-full border text-sm">
           <thead class="bg-gray-100">
             <tr>
-              <th class="border px-4 py-2">Nome</th>
+              <th
+                class="border px-4 py-2 cursor-pointer"
+                @click="alternarOrdem('nome')"
+              >
+                Nome
+                <span v-if="filtros.ordenarPor === 'nome'">
+                  {{ filtros.ordemCrescente ? "↑" : "↓" }}
+                </span>
+              </th>
               <th class="border px-4 py-2">Telefone</th>
-              <th class="border px-4 py-2">CPF</th>
-              <th class="border px-4 py-2">E-mail</th>
-              <th class="border px-4 py-2">Data de Nascimento</th>
+              <th
+                class="border px-4 py-2 cursor-pointer"
+                @click="alternarOrdem('cpf')"
+              >
+                CPF
+                <span v-if="filtros.ordenarPor === 'cpf'">
+                  {{ filtros.ordemCrescente ? "↑" : "↓" }}
+                </span>
+              </th>
+              <th
+                class="border px-4 py-2 cursor-pointer"
+                @click="alternarOrdem('email')"
+              >
+                E-mail
+                <span v-if="filtros.ordenarPor === 'email'">
+                  {{ filtros.ordemCrescente ? "↑" : "↓" }}
+                </span>
+              </th>
+              <th
+                class="border px-4 py-2 cursor-pointer"
+                @click="alternarOrdem('dataNascimento')"
+              >
+                Data de Nascimento
+                <span v-if="filtros.ordenarPor === 'dataNascimento'">
+                  {{ filtros.ordemCrescente ? "↑" : "↓" }}
+                </span>
+              </th>
               <th class="border px-4 py-2">Ações</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="cliente in clientesFiltrados" :key="cliente.cpf">
+            <tr v-for="cliente in clientesPaginados" :key="cliente.cpf">
               <td class="border px-4 py-2">
                 {{ cliente.nome }} {{ cliente.sobrenome }}
               </td>
@@ -70,16 +156,48 @@
         </table>
       </div>
 
-      <div class="mt-4 text-sm text-gray-600">
-        Mostrando {{ clientesFiltrados.length }} de
-        {{ clientes.length }} clientes
+      <!-- Paginação -->
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+          Mostrando
+          {{ (paginacao.paginaAtual - 1) * paginacao.itensPorPagina + 1 }} a
+          {{
+            Math.min(
+              paginacao.paginaAtual * paginacao.itensPorPagina,
+              clientesFiltrados.length
+            )
+          }}
+          de {{ clientesFiltrados.length }} clientes
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            class="btn-sm"
+            @click="irParaPagina(paginacao.paginaAtual - 1)"
+            :disabled="paginacao.paginaAtual === 1"
+          >
+            ← Anterior
+          </button>
+
+          <span class="px-3 py-1 text-sm">
+            Página {{ paginacao.paginaAtual }} de {{ totalPaginas }}
+          </span>
+
+          <button
+            class="btn-sm"
+            @click="irParaPagina(paginacao.paginaAtual + 1)"
+            :disabled="paginacao.paginaAtual === totalPaginas"
+          >
+            Próxima →
+          </button>
+        </div>
       </div>
     </div>
 
     <div v-else class="text-center py-8">
       <p class="text-gray-600 mb-4">
         {{
-          busca
+          filtros.busca
             ? "Nenhum cliente encontrado para a busca."
             : "Nenhum cliente cadastrado."
         }}
@@ -88,148 +206,298 @@
         Cadastrar Primeiro Cliente
       </button>
     </div>
+
+    <!-- Debug info (apenas para demonstração) -->
+    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
+      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
+      <div class="text-xs space-y-2">
+        <div>
+          <strong>Filtros salvos:</strong>
+          {{ JSON.stringify(cookieInfo.savedFilters) }}
+        </div>
+        <div>
+          <strong>Paginação salva:</strong>
+          {{ JSON.stringify(cookieInfo.savedPagination) }}
+        </div>
+        <div>
+          <strong>Pode usar cookies:</strong> {{ cookieInfo.canUseCookies }}
+        </div>
+      </div>
+      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
+        Ocultar debug
+      </button>
+    </div>
+
+    <button
+      v-else
+      @click="showDebugInfo = true"
+      class="mt-4 text-sm text-gray-500 underline"
+    >
+      Mostrar informações dos cookies (debug)
+    </button>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from "vue";
+import { defineComponent, ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useSweetAlert } from "@/composables/useSweetAlert";
+import { useFormCookies } from "@/composables/useFormCookies";
 import feather from "feather-icons";
 
 export default defineComponent({
   name: "ClienteConsultaView",
   setup() {
     const router = useRouter();
-    const { showToast, confirmDelete, showSuccess, showError, Swal } =
-      useSweetAlert();
+    const { showToast, showError, confirmAction } = useSweetAlert();
+    const showDebugInfo = ref(false);
 
-    const busca = ref("");
-
+    // Dados dos clientes (simulado)
     const clientes = ref([
       {
         nome: "João",
         sobrenome: "Silva",
-        telefone: "(11) 99999-1111",
-        cpf: "123.456.789-00",
-        email: "joao@teste.com",
-        dataNascimento: "1990-05-01",
+        telefone: "(11) 98765-4321",
+        cpf: "123.456.789-01",
+        email: "joao@email.com",
+        dataNascimento: "1990-05-15",
       },
       {
         nome: "Maria",
         sobrenome: "Santos",
-        telefone: "(21) 98765-4321",
-        cpf: "987.654.321-00",
-        email: "maria@teste.com",
-        dataNascimento: "1985-03-12",
+        telefone: "(11) 87654-3210",
+        cpf: "987.654.321-09",
+        email: "maria@email.com",
+        dataNascimento: "1985-08-22",
       },
       {
         nome: "Pedro",
         sobrenome: "Oliveira",
-        telefone: "(31) 91234-5678",
-        cpf: "456.789.123-00",
-        email: "",
-        dataNascimento: "1992-08-20",
+        telefone: "(11) 76543-2109",
+        cpf: "456.789.123-45",
+        email: "pedro@email.com",
+        dataNascimento: "1992-12-03",
       },
     ]);
 
-    const clientesFiltrados = computed(() => {
-      const filtro = busca.value.toLowerCase();
-      return clientes.value.filter((c) => {
-        return (
-          c.nome.toLowerCase().includes(filtro) ||
-          c.sobrenome.toLowerCase().includes(filtro) ||
-          c.cpf.includes(filtro) ||
-          (c.email && c.email.toLowerCase().includes(filtro))
-        );
-      });
+    // Estados para filtros e paginação
+    const filtros = ref({
+      busca: "",
+      ordenarPor: "nome",
+      ordemCrescente: true,
     });
 
-    function formatarData(data: string) {
-      return new Date(data).toLocaleDateString("pt-BR");
-    }
+    const paginacao = ref({
+      paginaAtual: 1,
+      itensPorPagina: 10,
+    });
 
-    async function visualizar(cliente: any) {
-      await Swal.fire({
-        title: `${cliente.nome} ${cliente.sobrenome}`,
-        html: `
-          <div class="text-left">
-            <p><strong>CPF:</strong> ${cliente.cpf}</p>
-            <p><strong>Telefone:</strong> ${cliente.telefone}</p>
-            <p><strong>Email:</strong> ${cliente.email || "Não informado"}</p>
-            <p><strong>Data de Nascimento:</strong> ${formatarData(cliente.dataNascimento)}</p>
-            <p><strong>Idade:</strong> ${calcularIdade(cliente.dataNascimento)} anos</p>
-          </div>
-        `,
-        confirmButtonText: "Fechar",
-        customClass: {
-          confirmButton: "btn btn-primary",
-        },
-        buttonsStyling: false,
-        width: "500px",
-      });
-    }
+    // Configurar cookies para filtros e paginação
+    const {
+      canUseCookies,
+      saveFilters,
+      loadFilters,
+      savePagination,
+      loadPagination,
+      clearFormCookies,
+      getCookieInfo,
+    } = useFormCookies(
+      {},
+      {
+        formKey: "cliente_consulta",
+        rememberFilters: true,
+        rememberPagination: true,
+        expirationDays: 30,
+      }
+    );
 
-    function calcularIdade(dataNascimento: string): number {
-      const hoje = new Date();
-      const nascimento = new Date(dataNascimento);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const mes = hoje.getMonth() - nascimento.getMonth();
+    // Computed para informações dos cookies
+    const cookieInfo = computed(() => getCookieInfo());
 
-      if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
-        idade--;
+    // Computed para clientes filtrados
+    const clientesFiltrados = computed(() => {
+      let resultado = [...clientes.value];
+
+      // Aplicar busca
+      if (filtros.value.busca) {
+        const termo = filtros.value.busca.toLowerCase();
+        resultado = resultado.filter(
+          (cliente) =>
+            cliente.nome.toLowerCase().includes(termo) ||
+            cliente.sobrenome.toLowerCase().includes(termo) ||
+            cliente.cpf.includes(termo) ||
+            (cliente.email && cliente.email.toLowerCase().includes(termo))
+        );
       }
 
-      return idade;
-    }
+      // Aplicar ordenação
+      resultado.sort((a, b) => {
+        const campo = filtros.value.ordenarPor as keyof typeof a;
+        let valorA = a[campo] || "";
+        let valorB = b[campo] || "";
 
-    function editar(cliente: any) {
-      showToast.info("Redirecionando para edição...");
-      router.push(`/cliente/editar/${cliente.cpf}`);
-    }
+        if (campo === "nome") {
+          valorA = `${a.nome} ${a.sobrenome}`;
+          valorB = `${b.nome} ${b.sobrenome}`;
+        }
 
-    async function excluir(cliente: any) {
-      const confirmed = await confirmDelete(
-        "Excluir cliente",
-        `Tem certeza que deseja excluir o cliente ${cliente.nome} ${cliente.sobrenome}? Esta ação não pode ser desfeita.`,
-        "Sim, excluir cliente"
+        const comparacao = valorA.toString().localeCompare(valorB.toString());
+        return filtros.value.ordemCrescente ? comparacao : -comparacao;
+      });
+
+      return resultado;
+    });
+
+    // Computed para total de páginas
+    const totalPaginas = computed(() => {
+      return Math.ceil(
+        clientesFiltrados.value.length / paginacao.value.itensPorPagina
       );
+    });
 
-      if (confirmed) {
-        try {
-          // Simular chamada de API
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Computed para clientes da página atual
+    const clientesPaginados = computed(() => {
+      const inicio =
+        (paginacao.value.paginaAtual - 1) * paginacao.value.itensPorPagina;
+      const fim = inicio + paginacao.value.itensPorPagina;
+      return clientesFiltrados.value.slice(inicio, fim);
+    });
 
-          // Remover da lista
-          clientes.value = clientes.value.filter((c) => c.cpf !== cliente.cpf);
+    // Funções para gerenciar filtros
+    function aplicarFiltros() {
+      paginacao.value.paginaAtual = 1; // Resetar para primeira página
+      saveFilters(filtros.value);
+    }
 
-          showSuccess(
-            "Cliente excluído!",
-            `${cliente.nome} ${cliente.sobrenome} foi excluído com sucesso.`
-          );
+    function aplicarPaginacao() {
+      savePagination(paginacao.value);
+    }
 
-          showToast.success("Cliente excluído com sucesso!");
-        } catch (error) {
-          showError(
-            "Erro ao excluir",
-            "Ocorreu um erro ao excluir o cliente. Tente novamente."
-          );
+    function alternarOrdem(campo: string) {
+      if (filtros.value.ordenarPor === campo) {
+        filtros.value.ordemCrescente = !filtros.value.ordemCrescente;
+      } else {
+        filtros.value.ordenarPor = campo;
+        filtros.value.ordemCrescente = true;
+      }
+      aplicarFiltros();
+    }
+
+    function irParaPagina(pagina: number) {
+      if (pagina >= 1 && pagina <= totalPaginas.value) {
+        paginacao.value.paginaAtual = pagina;
+        aplicarPaginacao();
+      }
+    }
+
+    function limparFiltrosSalvos() {
+      clearFormCookies();
+
+      // Resetar para valores padrão
+      filtros.value = {
+        busca: "",
+        ordenarPor: "nome",
+        ordemCrescente: true,
+      };
+
+      paginacao.value = {
+        paginaAtual: 1,
+        itensPorPagina: 10,
+      };
+
+      showToast.info("Configurações de filtros e paginação foram limpas");
+    }
+
+    // Carregar configurações salvas
+    function carregarConfiguracoesSalvas() {
+      if (canUseCookies.value) {
+        const filtrosSalvos = loadFilters();
+        const paginacaoSalva = loadPagination();
+
+        if (Object.keys(filtrosSalvos).length > 0) {
+          Object.assign(filtros.value, filtrosSalvos);
+        }
+
+        if (Object.keys(paginacaoSalva).length > 0) {
+          Object.assign(paginacao.value, paginacaoSalva);
         }
       }
     }
 
+    // Funções de ação
+    function formatarData(data: string) {
+      return new Date(data).toLocaleDateString("pt-BR");
+    }
+
+    function visualizar(cliente: any) {
+      showToast.info(`Visualizando ${cliente.nome} ${cliente.sobrenome}`);
+    }
+
+    function editar(cliente: any) {
+      router.push(`/cliente/editar/${cliente.cpf}`);
+    }
+
+    async function excluir(cliente: any) {
+      const confirmado = await confirmAction(
+        "Confirmar exclusão",
+        `Deseja realmente excluir o cliente ${cliente.nome} ${cliente.sobrenome}?`,
+        "Sim, excluir"
+      );
+
+      if (confirmado) {
+        const index = clientes.value.findIndex((c) => c.cpf === cliente.cpf);
+        if (index > -1) {
+          clientes.value.splice(index, 1);
+          showToast.success("Cliente excluído com sucesso!");
+        }
+      }
+    }
+
+    // Watchers para salvar automaticamente
+    watch(
+      filtros,
+      () => {
+        if (canUseCookies.value) {
+          saveFilters(filtros.value);
+        }
+      },
+      { deep: true }
+    );
+
+    watch(
+      paginacao,
+      () => {
+        if (canUseCookies.value) {
+          savePagination(paginacao.value);
+        }
+      },
+      { deep: true }
+    );
+
     onMounted(() => {
       feather.replace();
+      carregarConfiguracoesSalvas();
     });
 
     return {
-      busca,
       clientes,
+      filtros,
+      paginacao,
       clientesFiltrados,
+      clientesPaginados,
+      totalPaginas,
+      showDebugInfo,
+      cookieInfo,
+      aplicarFiltros,
+      aplicarPaginacao,
+      alternarOrdem,
+      irParaPagina,
+      limparFiltrosSalvos,
       formatarData,
       visualizar,
       editar,
       excluir,
+      canUseCookies,
     };
   },
 });
@@ -240,7 +508,9 @@ export default defineComponent({
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 0.5rem;
+  width: 100%;
 }
+
 .btn {
   background-color: #4f46e5;
   color: white;
@@ -249,8 +519,14 @@ export default defineComponent({
   border: none;
   cursor: pointer;
 }
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-sm {
-  background-color: #4f46e5;
+  background-color: #6b7280;
   color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
@@ -258,6 +534,12 @@ export default defineComponent({
   cursor: pointer;
   font-size: 0.875rem;
 }
+
+.btn-sm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-danger-sm {
   background-color: #dc2626;
   color: white;
@@ -267,8 +549,12 @@ export default defineComponent({
   cursor: pointer;
   font-size: 0.875rem;
 }
-.btn-sm:hover,
-.btn-danger-sm:hover {
-  opacity: 0.8;
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  background-color: #f3f4f6;
 }
 </style>
