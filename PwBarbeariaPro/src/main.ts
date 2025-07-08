@@ -10,6 +10,8 @@ import "simplebar";
 import "simplebar/dist/simplebar.css"; 
 import "@/assets/js/app"; 
 
+// Importar SweetAlert2 CSS
+import 'sweetalert2/dist/sweetalert2.min.css'
 
 import feather from "feather-icons";
 
