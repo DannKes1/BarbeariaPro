@@ -1,4 +1,3 @@
-// src/composables/useCookies.ts
 import { ref, computed, watch } from "vue";
 
 export interface CookieOptions {
@@ -13,7 +12,7 @@ export interface CookieOptions {
 export interface CookieConfig {
   name: string;
   defaultValue?: any;
-  expires?: number; // dias
+  expires?: number; 
   secure?: boolean;
   sameSite?: "Strict" | "Lax" | "None";
   path?: string;
@@ -26,7 +25,6 @@ export interface CookieSettings {
 }
 
 export const COOKIE_CONFIGS = {
-  // Preferências de interface
   SIDEBAR_COLLAPSED: {
     name: "barbearia_sidebar_collapsed",
     defaultValue: false,
@@ -52,7 +50,6 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Autenticação
   AUTH_TOKEN: {
     name: "barbearia_auth_token",
     defaultValue: null,
@@ -86,7 +83,6 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Dashboard
   DASHBOARD_CONFIG: {
     name: "barbearia_dashboard_config",
     defaultValue: null,
@@ -117,7 +113,6 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Filtros e consultas
   SAVED_FILTERS: {
     name: "barbearia_saved_filters",
     defaultValue: {} as Record<string, any>,
@@ -143,7 +138,6 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Notificações
   NOTIFICATION_PREFS: {
     name: "barbearia_notification_prefs",
     defaultValue: {
@@ -168,7 +162,6 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Formulários
   FORM_DRAFTS: {
     name: "barbearia_form_drafts",
     defaultValue: {} as Record<string, any>,
@@ -191,7 +184,6 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Consentimento LGPD
   COOKIE_CONSENT: {
     name: "barbearia_cookie_consent",
     defaultValue: null,
@@ -201,12 +193,11 @@ export const COOKIE_CONFIGS = {
     path: "/",
   },
 
-  // Performance e Cache
   CACHE_PREFERENCES: {
     name: "barbearia_cache_preferences",
     defaultValue: {
       enableCache: true,
-      cacheTimeout: 300000, // 5 minutos
+      cacheTimeout: 300000, 
       preloadData: false,
     },
     expires: 365,
