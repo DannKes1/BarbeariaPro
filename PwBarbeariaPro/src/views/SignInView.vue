@@ -3,7 +3,7 @@
     class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
   >
     <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
+      
       <div>
         <div
           class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100"
@@ -18,7 +18,7 @@
         </p>
       </div>
 
-      <!-- Formulário de Login -->
+ 
       <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
@@ -64,7 +64,7 @@
           </div>
         </div>
 
-        <!-- Opções de login -->
+        
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <input
@@ -91,7 +91,7 @@
           </div>
         </div>
 
-        <!-- Botão de login -->
+        
         <div>
           <button
             type="submit"
@@ -113,7 +113,7 @@
           </button>
         </div>
 
-        <!-- Link para cadastro -->
+        
         <div class="text-center">
           <span class="text-sm text-gray-600">
             Não tem uma conta?
@@ -127,7 +127,7 @@
         </div>
       </form>
 
-      <!-- Informações de usuário lembrado -->
+    
       <div v-if="rememberedUser" class="mt-4 p-3 bg-blue-50 rounded-md">
         <div class="flex items-center">
           <i class="feather-icon text-blue-400 mr-2" data-feather="user"></i>
@@ -147,7 +147,7 @@
         </div>
       </div>
 
-      <!-- Configurações de privacidade -->
+      
       <div class="mt-4 text-center">
         <button
           @click="showPrivacySettings = !showPrivacySettings"
@@ -158,7 +158,7 @@
         </button>
       </div>
 
-      <!-- Modal de configurações de privacidade -->
+      
       <div v-if="showPrivacySettings" class="mt-4 p-4 bg-gray-50 rounded-md">
         <h4 class="text-sm font-medium text-gray-900 mb-3">
           Configurações de Privacidade
@@ -226,14 +226,6 @@
         </div>
       </div>
 
-      <!-- Debug info (apenas em desenvolvimento) -->
-      <div v-if="isDevelopment" class="mt-4 p-3 bg-yellow-50 rounded text-xs">
-        <strong>Debug:</strong><br />
-        Cookies habilitados: {{ cookiesEnabled ? "Sim" : "Não" }}<br />
-        Usuário lembrado: {{ rememberedUser ? "Sim" : "Não" }}<br />
-        Última rota: {{ lastRoute || "Nenhuma" }}<br />
-        Configurações salvas: {{ Object.keys(privacySettings).length }}
-      </div>
     </div>
   </div>
 </template>
@@ -245,7 +237,7 @@ import { useCookies } from "@/composables/useCookies";
 import { useSweetAlert } from "@/composables/useSweetAlert";
 import feather from "feather-icons";
 
-// Interfaces
+
 interface LoginForm {
   email: string;
   password: string;
@@ -264,7 +256,7 @@ interface PrivacySettings {
   keepSession: boolean;
 }
 
-// Composables
+
 const router = useRouter();
 const route = useRoute();
 const {
@@ -275,38 +267,38 @@ const {
 } = useCookies();
 const { showToast, showError, showSuccess, confirmAction } = useSweetAlert();
 
-// Estados
+
 const isLoading = ref(false);
 const showPassword = ref(false);
 const showPrivacySettings = ref(false);
 const isDevelopment = import.meta.env.DEV;
 
-// Cookies states
+
 const rememberUserState = useCookieState(COOKIE_CONFIGS.REMEMBER_USER);
 const lastRouteState = useCookieState(COOKIE_CONFIGS.LAST_ROUTE);
 const authTokenState = useCookieState(COOKIE_CONFIGS.AUTH_TOKEN);
 const userDataState = useCookieState(COOKIE_CONFIGS.USER_DATA);
 
-// Estados computados
+
 const cookiesEnabled = computed(() => areCookiesEnabled());
 const rememberedUser = computed(() => rememberUserState.value.value);
 const lastRoute = computed(() => lastRouteState.value.value);
 
-// Formulário de login
+
 const loginForm = reactive<LoginForm>({
   email: "",
   password: "",
   rememberMe: false,
 });
 
-// Configurações de privacidade
+
 const privacySettings = reactive<PrivacySettings>({
   rememberLogin: true,
   autoRedirect: true,
   keepSession: false,
 });
 
-// Validação do formulário
+
 const isFormValid = computed(() => {
   return (
     loginForm.email.trim() &&
@@ -315,7 +307,7 @@ const isFormValid = computed(() => {
   );
 });
 
-// Carregar dados lembrados
+
 const loadRememberedData = () => {
   if (rememberedUser.value && privacySettings.rememberLogin) {
     loginForm.email = rememberedUser.value.email;
@@ -323,7 +315,7 @@ const loadRememberedData = () => {
   }
 };
 
-// Salvar usuário lembrado
+
 const saveRememberedUser = (userData: any) => {
   if (loginForm.rememberMe && hasConsentForCategory("preferences")) {
     const rememberedData: RememberedUser = {
@@ -335,7 +327,7 @@ const saveRememberedUser = (userData: any) => {
   }
 };
 
-// Limpar usuário lembrado
+
 const clearRememberedUser = () => {
   rememberUserState.deleteValue();
   loginForm.email = "";
@@ -343,7 +335,7 @@ const clearRememberedUser = () => {
   showToast.info("Dados de login removidos");
 };
 
-// Salvar última rota
+
 const saveLastRoute = () => {
   if (privacySettings.autoRedirect && hasConsentForCategory("functionality")) {
     const currentRoute = (route.query.redirect as string) || route.fullPath;
@@ -353,20 +345,20 @@ const saveLastRoute = () => {
   }
 };
 
-// Salvar configurações de privacidade
+
 const savePrivacySettings = () => {
-  // Aqui você pode salvar as configurações em cookies se necessário
+  
   showToast.success("Configurações de privacidade salvas!");
   showPrivacySettings.value = false;
 };
 
-// Handle esqueceu a senha
+
 const handleForgotPassword = () => {
   showToast.info("Funcionalidade em desenvolvimento");
-  // Aqui você implementaria a lógica de recuperação de senha
+  
 };
 
-// Verificar se já está logado
+
 const checkExistingLogin = async () => {
   if (authTokenState.value.value && userDataState.value.value) {
     const shouldRedirect = await confirmAction(
@@ -381,7 +373,7 @@ const checkExistingLogin = async () => {
   }
 };
 
-// Handle do login
+
 const handleLogin = async () => {
   if (!isFormValid.value) {
     showError(
@@ -394,15 +386,15 @@ const handleLogin = async () => {
   try {
     isLoading.value = true;
 
-    // Simular chamada de API
+    
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Simular validação de credenciais
+    
     if (
       loginForm.email === "admin@barbearia.com" &&
       loginForm.password === "123456"
     ) {
-      // Dados simulados do usuário
+      
       const userData = {
         id: 1,
         name: "João Silva",
@@ -411,28 +403,28 @@ const handleLogin = async () => {
         permissions: ["read", "write", "delete"],
       };
 
-      // Salvar token de autenticação
+      
       if (hasConsentForCategory("essential")) {
         const token = "jwt_token_" + Date.now();
         authTokenState.setValue(token);
         userDataState.setValue(userData);
       }
 
-      // Salvar dados lembrados se solicitado
+      
       if (loginForm.rememberMe) {
         saveRememberedUser(userData);
       }
 
-      // Definir para onde redirecionar
+      
       const redirectTo =
         (route.query.redirect as string) ||
         (privacySettings.autoRedirect ? lastRoute.value : null) ||
-        "/dashboard"; // Redirecionando para o dashboard
+        "/dashboard"; 
 
-      // Mostrar modal de sucesso e aguardar o usuário fechar
+      
       await showSuccess("Login realizado!", `Bem-vindo, ${userData.name}!`);
 
-      // Redirecionar após o modal ser fechado
+      
       await router.push(redirectTo);
     } else {
       throw new Error("Credenciais inválidas");
@@ -445,29 +437,29 @@ const handleLogin = async () => {
   }
 };
 
-// Watch para salvar rota quando mudar
+
 watch(() => route.fullPath, saveLastRoute);
 
-// Watch para carregar dados quando cookies mudarem
+
 watch(rememberedUser, loadRememberedData);
 
-// Lifecycle
+
 onMounted(async () => {
-  // Carregar dados lembrados
+  
   loadRememberedData();
 
-  // Salvar rota atual como última rota
+  
   saveLastRoute();
 
-  // Verificar se já está logado
+  
   await checkExistingLogin();
 
-  // Inicializar ícones
+
   await nextTick();
   feather.replace();
 });
 
-// Watch para atualizar ícones
+
 watch([showPassword, isLoading, showPrivacySettings], async () => {
   await nextTick();
   feather.replace();
@@ -541,7 +533,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   border-color: #3b82f6;
 }
 
-/* Estilos para elementos de formulário */
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -603,7 +595,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   color: #60a5fa;
 }
 
-/* Estilos para layout */
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -642,7 +634,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   margin-bottom: calc(-1px * var(--tw-space-y-reverse));
 }
 
-/* Cores e backgrounds */
+
 .bg-gray-50 {
   background-color: #f9fafb;
 }
@@ -699,7 +691,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   color: #2563eb;
 }
 
-/* Bordas */
+
 .border {
   border-width: 1px;
 }
@@ -724,7 +716,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   border-radius: 9999px;
 }
 
-/* Posicionamento */
+
 .relative {
   position: relative;
 }
@@ -746,7 +738,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   right: 0;
 }
 
-/* Flexbox */
+
 .flex {
   display: flex;
 }
@@ -767,7 +759,7 @@ watch([showPassword, isLoading, showPrivacySettings], async () => {
   justify-content: flex-end;
 }
 
-/* Dimensões */
+
 .w-full {
   width: 100%;
 }

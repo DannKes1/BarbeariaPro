@@ -137,7 +137,7 @@ export default defineComponent({
 
       if (!confirmado) return;
 
-      // Simulando verificação de agendamentos futuros (a vida é uma simulação mesmo)
+      
       const temAgendamentosFuturos = false;
 
       if (temAgendamentosFuturos) {
@@ -181,7 +181,7 @@ export default defineComponent({
   display: inline-block;
   text-align: center;
   cursor: pointer;
-  margin: 0; /* removido o margin-top torto */
+  margin: 0; 
 }
 
 .btn-danger {
@@ -192,6 +192,6 @@ export default defineComponent({
   display: inline-block;
   text-align: center;
   cursor: pointer;
-  margin: 0; /* removido o margin-top torto */
+  margin: 0; 
 }
 </style>

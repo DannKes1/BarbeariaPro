@@ -38,7 +38,7 @@ export default defineComponent({
     const valor = ref(0);
     const sucesso = ref(false);
 
-    const caixaAberto = true; // Simulando um caixa aberto
+    const caixaAberto = true; 
 
     function registrarSangria() {
       if (!caixaAberto) {

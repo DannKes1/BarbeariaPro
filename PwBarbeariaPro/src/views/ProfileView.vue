@@ -6,7 +6,6 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Foto e Informações Básicas -->
       <div class="col-span-1">
         <div class="card text-center">
           <div class="card-body">
@@ -29,7 +28,6 @@
         </div>
       </div>
 
-      <!-- Formulário de Edição -->
       <div class="col-span-2">
         <div class="card">
           <div class="card-header">
@@ -118,7 +116,6 @@
           </div>
         </div>
 
-        <!-- Alterar Senha -->
         <div class="card mt-4">
           <div class="card-header">
             <h5>Alterar Senha</h5>
@@ -164,7 +161,6 @@
       </div>
     </div>
 
-    <!-- Estatísticas do Usuário -->
     <div class="card mt-6">
       <div class="card-header">
         <h5>Minhas Estatísticas</h5>
@@ -236,15 +232,9 @@ export default defineComponent({
 
     const isLoading = ref(false);
 
- 
     const defaultAvatar =
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYpPhduYGQv9LSNTSUDUM5MA7PmvllhukP6Q&s";
 
-   
-
-    /**
-     * Estado do usuário
-     */
     const usuario = ref<Usuario>({
       nome: "João",
       sobrenome: "Silva",
@@ -255,21 +245,14 @@ export default defineComponent({
       avatar: null,
     });
 
-    // Mantém cópia para detectar alterações
     const usuarioOriginal = ref<Usuario>({ ...usuario.value });
 
-    /**
-     * Formulário de senhas
-     */
     const senhas = ref<Senhas>({
       atual: "",
       nova: "",
       confirmar: "",
     });
 
-    /**
-     * Estatísticas mockadas
-     */
     const estatisticas = ref<Estatisticas>({
       agendamentosHoje: 8,
       clientesAtendidos: 156,
@@ -277,9 +260,6 @@ export default defineComponent({
       diasTrabalhados: 245,
     });
 
-    /**
-     * True se houve qualquer alteração nos dados do usuário
-     */
     const temAlteracoes = computed(() => {
       const atual = usuario.value;
       const original = usuarioOriginal.value;
@@ -305,13 +285,9 @@ export default defineComponent({
     }
 
     function handleImageError(event: Event) {
-      // Fallback para imagem padrão em caso de erro
       (event.target as HTMLImageElement).src = defaultAvatar;
     }
 
-    /**
-     * Persiste dados de perfil
-     */
     async function salvarPerfil() {
       if (!temAlteracoes.value) return;
 
@@ -366,9 +342,6 @@ export default defineComponent({
       showToast.info("Alterações canceladas");
     }
 
-    /**
-     * Troca a senha do usuário
-     */
     async function alterarSenha() {
       if (senhas.value.nova !== senhas.value.confirmar) {
         showError(
@@ -412,9 +385,6 @@ export default defineComponent({
       }
     }
 
-    /**
-     * Faz logout do sistema
-     */
     async function logout() {
       const confirmed = await confirmAction(
         "Sair do sistema",
@@ -428,9 +398,7 @@ export default defineComponent({
       }
     }
 
-    onMounted(() => {
-      // Simular carregamento de dados do usuário
-    });
+    onMounted(() => {});
 
     return {
       usuario,
@@ -438,7 +406,7 @@ export default defineComponent({
       estatisticas,
       isLoading,
       temAlteracoes,
-      defaultAvatar, // Exportar a variável da imagem
+      defaultAvatar,
       getStatusClass,
       getStatusText,
       handleImageError,
@@ -496,6 +464,7 @@ export default defineComponent({
   border-radius: 0.375rem;
   border: none;
   cursor: pointer;
+  margin: 0 10px;
 }
 
 .btn-secondary {

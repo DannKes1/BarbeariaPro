@@ -173,9 +173,9 @@ interface Agendamento {
   cliente: string;
   servico: string;
   profissional: string;
-  data: string; // ISO date
-  horario: string; // HH:mm
-  valor: number; // em reais, sem formatação
+  data: string; 
+  horario: string; 
+  valor: number; 
 }
 
 interface Pagamento {
@@ -183,7 +183,7 @@ interface Pagamento {
   forma: string;
   valor: number;
   status: string;
-  parcelas: string; // mantido como string para v-model do select
+  parcelas: string; 
   observacoes: string;
 }
 
@@ -201,7 +201,7 @@ export default defineComponent({
 
     const isLoading = ref(false);
 
-    // MOCK ----------------------------------
+    
     const agendamentosPendentes = ref<Agendamento[]>([
       {
         id: 1,
@@ -231,7 +231,7 @@ export default defineComponent({
         valor: 15.0,
       },
     ]);
-    // ---------------------------------------
+    
 
     const pagamento = ref<Pagamento>({
       agendamentoId: "",
@@ -290,7 +290,7 @@ export default defineComponent({
     }
 
     async function registrarPagamento() {
-      // Validações
+      
       if (!formularioValido.value) {
         showError(
           "Formulário incompleto",
@@ -312,7 +312,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar pagamento
+      
       const troco = calcularTroco();
       const confirmed = await confirmAction(
         "Confirmar pagamento",
@@ -326,24 +326,24 @@ export default defineComponent({
       showLoading("Registrando pagamento...");
 
       try {
-        // Simular chamada de API
+        
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         hideLoading();
 
-        // Mostrar sucesso
+   
         showSuccess(
           "Pagamento registrado!",
           `Pagamento de R$ ${valorPago.toFixed(2)} foi registrado com sucesso.\n\nCliente: ${agendamentoSelecionado.value.cliente}\nTroco: R$ ${troco}`,
           "Continuar"
         );
 
-        // Remover agendamento da lista
+        
         agendamentosPendentes.value = agendamentosPendentes.value.filter(
           (ag) => ag.id.toString() !== pagamento.value.agendamentoId
         );
 
-        // Limpar formulário
+       
         limparFormulario();
 
         showToast.success("Pagamento registrado com sucesso!");

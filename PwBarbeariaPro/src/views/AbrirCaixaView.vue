@@ -133,7 +133,7 @@ export default defineComponent({
     }
 
     async function abrirCaixa() {
-      // Validações
+     
       if (!caixa.value.saldoInicial || parseFloat(caixa.value.saldoInicial) < 0) {
         showError('Saldo inválido', 'Por favor, informe um saldo inicial válido.');
         return;
@@ -144,7 +144,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar abertura
+ 
       const confirmed = await confirmAction(
         'Confirmar abertura do caixa',
         `Abrir caixa com saldo inicial de R$ ${caixa.value.saldoInicial}?\\n\\nResponsável: ${caixa.value.responsavel}`,
@@ -157,10 +157,10 @@ export default defineComponent({
       showLoading('Abrindo caixa...');
 
       try {
-        // Simular chamada de API
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Simular abertura do caixa
+  
         caixaAtual.value = {
           responsavel: caixa.value.responsavel,
           saldoInicial: caixa.value.saldoInicial,
@@ -172,17 +172,17 @@ export default defineComponent({
         
         hideLoading();
         
-        // Mostrar sucesso
+
         showSuccess(
           'Caixa aberto!',
           `Caixa aberto com sucesso por ${caixa.value.responsavel}.\\nSaldo inicial: R$ ${caixa.value.saldoInicial}`,
           'Continuar'
         );
         
-        // Limpar formulário
+      
         limparFormulario();
         
-        // Toast de confirmação
+      
         showToast.success('Caixa aberto com sucesso!');
         
       } catch (error) {
@@ -194,7 +194,7 @@ export default defineComponent({
     }
 
     async function fecharCaixa() {
-      // Solicitar saldo final
+     
       const result = await confirmWithInput(
         'Fechar caixa',
         'Digite o saldo final em dinheiro (R$)',
@@ -213,7 +213,7 @@ export default defineComponent({
       showLoading('Fechando caixa...');
 
       try {
-        // Simular chamada de API
+        
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const saldoInicial = parseFloat(caixaAtual.value.saldoInicial);
@@ -221,7 +221,7 @@ export default defineComponent({
         
         hideLoading();
         
-        // Mostrar resultado do fechamento
+
         showSuccess(
           'Caixa fechado!',
           `Caixa fechado com sucesso.\\n\\nSaldo inicial: R$ ${saldoInicial.toFixed(2)}\\nSaldo final: R$ ${saldoFinal.toFixed(2)}\\nDiferença: R$ ${diferenca.toFixed(2)}`,
@@ -259,8 +259,7 @@ export default defineComponent({
     onMounted(() => {
       feather.replace();
       
-      // Simular verificação se já existe caixa aberto
-      // Em produção, isso viria de uma API
+      
       const caixaExistente = localStorage.getItem('caixaAberto');
       if (caixaExistente) {
         caixaAtual.value = JSON.parse(caixaExistente);

@@ -244,10 +244,10 @@ export default defineComponent({
       erro.value = "";
 
       try {
-        // Simular chamada de API
+      
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // Dados simulados
+        
         const clienteData = {
           nome: "João",
           sobrenome: "Silva",
@@ -296,7 +296,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar alterações
+      
       const alteracoes = listarAlteracoes();
       const confirmed = await confirmAction(
         "Confirmar alterações",
@@ -310,12 +310,12 @@ export default defineComponent({
       showLoading("Salvando alterações...");
 
       try {
-        // Simular chamada de API
+     
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         hideLoading();
 
-        // Atualizar dados originais
+        
         clienteOriginal.value = { ...cliente.value };
 
         showSuccess(
@@ -355,7 +355,7 @@ export default defineComponent({
       showLoading("Excluindo cliente...");
 
       try {
-        // Simular chamada de API
+        
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         hideLoading();
@@ -367,7 +367,6 @@ export default defineComponent({
 
         showToast.success("Cliente excluído com sucesso!");
 
-        // Redirecionar para consulta
         router.push("/cliente/consulta");
       } catch (error) {
         hideLoading();

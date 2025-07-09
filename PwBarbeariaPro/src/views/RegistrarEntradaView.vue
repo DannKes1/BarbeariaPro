@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="content-wrapper">
-      <!-- Header -->
+      
       <div class="header">
         <div class="icon-container">
           <svg
@@ -22,11 +22,11 @@
         <p class="subtitle">Adicione uma nova entrada financeira ao sistema</p>
       </div>
 
-      <!-- Form Card -->
+      
       <div class="form-card">
         <div class="form-content">
           <form @submit.prevent="handleSubmit" class="form" novalidate>
-            <!-- Descrição -->
+            
             <div class="form-group">
               <label for="descricao" class="form-label">Descrição *</label>
               <div class="input-container">
@@ -65,7 +65,7 @@
               </div>
             </div>
 
-            <!-- Valor -->
+            
             <div class="form-group">
               <label for="valor" class="form-label">Valor (R$) *</label>
               <div class="input-container">
@@ -103,7 +103,7 @@
               }}</span>
             </div>
 
-            <!-- Categoria -->
+            
             <div class="form-group">
               <label for="categoria" class="form-label">Categoria *</label>
               <div class="input-container">
@@ -138,7 +138,7 @@
               }}</span>
             </div>
 
-            <!-- Observações -->
+            
             <div class="form-group">
               <label for="observacoes" class="form-label">
                 Observações
@@ -160,7 +160,7 @@
               </div>
             </div>
 
-            <!-- Submit Button -->
+            
             <div class="submit-container">
               <button
                 type="submit"
@@ -207,7 +207,7 @@
           </form>
         </div>
 
-        <!-- Form Summary -->
+        
         <div v-if="isFormValid && !hasErrors" class="form-summary">
           <div class="summary-content">
             <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -392,12 +392,12 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Reset e base */
+
 * {
   box-sizing: border-box;
 }
 
-/* Container principal */
+
 .page-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -412,7 +412,7 @@ export default defineComponent({
   margin: 0 auto;
 }
 
-/* Header */
+
 .header {
   text-align: center;
   margin-bottom: 2rem;
@@ -448,7 +448,7 @@ export default defineComponent({
   font-size: 1rem;
 }
 
-/* Form Card */
+
 .form-card {
   background: #ffffff;
   border-radius: 1rem;
@@ -467,7 +467,7 @@ export default defineComponent({
   gap: 1.5rem;
 }
 
-/* Form Groups */
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -488,14 +488,14 @@ export default defineComponent({
   font-weight: 400;
 }
 
-/* Input Container */
+
 .input-container {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-/* Form Inputs */
+
 .form-input,
 .form-select,
 .form-textarea {
@@ -523,7 +523,7 @@ export default defineComponent({
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
-/* Input with prefix */
+
 .input-with-prefix {
   padding-left: 3rem;
 }
@@ -545,7 +545,7 @@ export default defineComponent({
   font-size: 0.875rem;
 }
 
-/* Error states */
+
 .input-error {
   border-color: #fca5a5 !important;
   box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1) !important;
@@ -569,7 +569,7 @@ export default defineComponent({
   color: #ef4444;
 }
 
-/* Select specific */
+
 .form-select {
   appearance: none;
   cursor: pointer;
@@ -580,20 +580,20 @@ export default defineComponent({
   padding-right: 2.5rem;
 }
 
-/* Textarea */
+
 .form-textarea {
   resize: vertical;
   min-height: 6rem;
 }
 
-/* Error messages */
+
 .error-message {
   font-size: 0.875rem;
   color: #dc2626;
   font-weight: 500;
 }
 
-/* Input footers */
+
 .input-footer {
   display: flex;
   justify-content: space-between;
@@ -612,7 +612,7 @@ export default defineComponent({
   color: #9ca3af;
 }
 
-/* Submit button */
+
 .submit-container {
   padding-top: 1rem;
 }
@@ -667,7 +667,7 @@ export default defineComponent({
   height: 1.25rem;
 }
 
-/* Loading spinner */
+
 .loading-spinner {
   width: 1.25rem;
   height: 1.25rem;
@@ -691,7 +691,7 @@ export default defineComponent({
   }
 }
 
-/* Form summary */
+
 .form-summary {
   background-color: #f8fafc;
   padding: 1rem 2rem;
@@ -712,7 +712,7 @@ export default defineComponent({
   margin-right: 0.5rem;
 }
 
-/* Animations */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -724,7 +724,7 @@ export default defineComponent({
   }
 }
 
-/* Responsive */
+
 @media (max-width: 640px) {
   .page-container {
     padding: 1rem 0.5rem;
@@ -737,7 +737,7 @@ export default defineComponent({
   .form-input,
   .form-select,
   .form-textarea {
-    font-size: 1rem; /* Prevent zoom on iOS */
+    font-size: 1rem; 
   }
 
   .title {

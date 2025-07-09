@@ -7,7 +7,6 @@
       </button>
     </div>
 
-    <!-- Filtros com cookies -->
     <div class="mb-4 p-4 bg-gray-50 border rounded-md">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -50,7 +49,6 @@
         </div>
       </div>
 
-      <!-- Indicador de filtros salvos -->
       <div
         v-if="cookieInfo.hasFilters || cookieInfo.hasPagination"
         class="mt-3 flex items-center justify-between"
@@ -156,7 +154,6 @@
         </table>
       </div>
 
-      <!-- Paginação -->
       <div class="mt-4 flex items-center justify-between">
         <div class="text-sm text-gray-600">
           Mostrando
@@ -206,35 +203,6 @@
         Cadastrar Primeiro Cliente
       </button>
     </div>
-
-    <!-- Debug info (apenas para demonstração) -->
-    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
-      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
-      <div class="text-xs space-y-2">
-        <div>
-          <strong>Filtros salvos:</strong>
-          {{ JSON.stringify(cookieInfo.savedFilters) }}
-        </div>
-        <div>
-          <strong>Paginação salva:</strong>
-          {{ JSON.stringify(cookieInfo.savedPagination) }}
-        </div>
-        <div>
-          <strong>Pode usar cookies:</strong> {{ cookieInfo.canUseCookies }}
-        </div>
-      </div>
-      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
-        Ocultar debug
-      </button>
-    </div>
-
-    <button
-      v-else
-      @click="showDebugInfo = true"
-      class="mt-4 text-sm text-gray-500 underline"
-    >
-      Mostrar informações dos cookies (debug)
-    </button>
   </div>
 </template>
 
@@ -252,7 +220,6 @@ export default defineComponent({
     const { showToast, showError, confirmAction } = useSweetAlert();
     const showDebugInfo = ref(false);
 
-    // Dados dos clientes (simulado)
     const clientes = ref([
       {
         nome: "João",
@@ -280,7 +247,6 @@ export default defineComponent({
       },
     ]);
 
-    // Estados para filtros e paginação
     const filtros = ref({
       busca: "",
       ordenarPor: "nome",
@@ -292,7 +258,6 @@ export default defineComponent({
       itensPorPagina: 10,
     });
 
-    // Configurar cookies para filtros e paginação
     const {
       canUseCookies,
       saveFilters,
@@ -311,14 +276,11 @@ export default defineComponent({
       }
     );
 
-    // Computed para informações dos cookies
     const cookieInfo = computed(() => getCookieInfo());
 
-    // Computed para clientes filtrados
     const clientesFiltrados = computed(() => {
       let resultado = [...clientes.value];
 
-      // Aplicar busca
       if (filtros.value.busca) {
         const termo = filtros.value.busca.toLowerCase();
         resultado = resultado.filter(
@@ -330,7 +292,6 @@ export default defineComponent({
         );
       }
 
-      // Aplicar ordenação
       resultado.sort((a, b) => {
         const campo = filtros.value.ordenarPor as keyof typeof a;
         let valorA = a[campo] || "";
@@ -348,14 +309,12 @@ export default defineComponent({
       return resultado;
     });
 
-    // Computed para total de páginas
     const totalPaginas = computed(() => {
       return Math.ceil(
         clientesFiltrados.value.length / paginacao.value.itensPorPagina
       );
     });
 
-    // Computed para clientes da página atual
     const clientesPaginados = computed(() => {
       const inicio =
         (paginacao.value.paginaAtual - 1) * paginacao.value.itensPorPagina;
@@ -363,9 +322,8 @@ export default defineComponent({
       return clientesFiltrados.value.slice(inicio, fim);
     });
 
-    // Funções para gerenciar filtros
     function aplicarFiltros() {
-      paginacao.value.paginaAtual = 1; // Resetar para primeira página
+      paginacao.value.paginaAtual = 1;
       saveFilters(filtros.value);
     }
 
@@ -393,7 +351,6 @@ export default defineComponent({
     function limparFiltrosSalvos() {
       clearFormCookies();
 
-      // Resetar para valores padrão
       filtros.value = {
         busca: "",
         ordenarPor: "nome",
@@ -408,7 +365,6 @@ export default defineComponent({
       showToast.info("Configurações de filtros e paginação foram limpas");
     }
 
-    // Carregar configurações salvas
     function carregarConfiguracoesSalvas() {
       if (canUseCookies.value) {
         const filtrosSalvos = loadFilters();
@@ -424,7 +380,6 @@ export default defineComponent({
       }
     }
 
-    // Funções de ação
     function formatarData(data: string) {
       return new Date(data).toLocaleDateString("pt-BR");
     }
@@ -453,7 +408,6 @@ export default defineComponent({
       }
     }
 
-    // Watchers para salvar automaticamente
     watch(
       filtros,
       () => {

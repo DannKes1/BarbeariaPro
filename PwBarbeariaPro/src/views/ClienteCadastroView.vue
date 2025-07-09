@@ -2,7 +2,6 @@
   <div class="p-6 max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Cadastrar Cliente</h1>
 
-    <!-- Indicador de valores lembrados -->
     <div
       v-if="cookieInfo.hasLastValues"
       class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md"
@@ -136,23 +135,6 @@
         </button>
       </div>
     </form>
-
-    <!-- Debug info (apenas para demonstração) -->
-    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
-      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
-      <pre class="text-xs">{{ JSON.stringify(cookieInfo, null, 2) }}</pre>
-      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
-        Ocultar debug
-      </button>
-    </div>
-
-    <button
-      v-else
-      @click="showDebugInfo = true"
-      class="mt-4 text-sm text-gray-500 underline"
-    >
-      Mostrar informações dos cookies (debug)
-    </button>
   </div>
 </template>
 
@@ -189,7 +171,6 @@ export default defineComponent({
 
     const erros = ref({ cpf: "", dataNascimento: "" });
 
-    // Configurar cookies para o formulário
     const {
       canUseCookies,
       lastValues,
@@ -206,7 +187,6 @@ export default defineComponent({
       expirationDays: 30,
     });
 
-    // Computed para informações dos cookies
     const cookieInfo = computed(() => getCookieInfo());
 
     function validarCPF() {
@@ -254,7 +234,6 @@ export default defineComponent({
       return true;
     }
 
-    // Função para lembrar valor de campo específico
     function rememberFieldValue(field: string) {
       if (cliente.value[field as keyof typeof cliente.value]) {
         rememberValue(
@@ -264,14 +243,12 @@ export default defineComponent({
       }
     }
 
-    // Função para limpar valores lembrados
     function clearRememberedValues() {
       clearFormCookies();
       showToast.info("Valores salvos foram limpos");
     }
 
     async function submitForm() {
-      // Validar campos obrigatórios
       if (!cliente.value.nome.trim()) {
         showError("Campo obrigatório", "Por favor, informe o nome do cliente.");
         return;
@@ -306,7 +283,6 @@ export default defineComponent({
         return;
       }
 
-      // Validar CPF e idade
       if (!validarCPF() || !validarIdade()) {
         showError(
           "Dados inválidos",
@@ -315,7 +291,6 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar cadastro
       const confirmed = await confirmAction(
         "Confirmar cadastro",
         `Deseja cadastrar o cliente ${cliente.value.nome} ${cliente.value.sobrenome}?`,
@@ -328,25 +303,20 @@ export default defineComponent({
       showLoading("Cadastrando cliente...");
 
       try {
-        // Salvar valores nos cookies antes de enviar
         saveLastValues();
 
-        // Simular chamada de API
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         hideLoading();
 
-        // Mostrar sucesso
         showSuccess(
           "Cliente cadastrado!",
           `${cliente.value.nome} ${cliente.value.sobrenome} foi cadastrado com sucesso.`,
           "Continuar"
         );
 
-        // Limpar formulário
         limparFormulario();
 
-        // Toast de confirmação
         showToast.success("Cliente cadastrado com sucesso!");
       } catch (error) {
         hideLoading();
@@ -412,6 +382,7 @@ export default defineComponent({
   border-radius: 0.375rem;
   border: none;
   cursor: pointer;
+  margin: 0 10px;
 }
 .btn:disabled {
   opacity: 0.6;

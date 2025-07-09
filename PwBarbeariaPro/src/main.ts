@@ -18,7 +18,7 @@ import feather from "feather-icons";
 const app = createApp(App);
 
 app.config.globalProperties.$cookieDefaults = {
-  secure: import.meta.env.PROD, // Apenas HTTPS em produção
+  secure: import.meta.env.PROD, 
   sameSite: "Strict",
   path: "/",
 };

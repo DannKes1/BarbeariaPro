@@ -137,9 +137,9 @@ export default defineComponent({
     } = useSweetAlert();
 
     const isLoading = ref(false);
-    const caixaAberto = ref(true); // Simular caixa aberto
+    const caixaAberto = ref(true); 
 
-    // Dados simulados do caixa
+   
     const saldoInicial = ref(100.0);
     const entradas = ref(850.0);
     const saidas = ref(120.0);
@@ -154,7 +154,7 @@ export default defineComponent({
     const divergencia = computed(() => saldoFinal.value - saldoEsperado.value);
 
     async function fecharCaixa() {
-      // Validações
+      
       if (saldoFinal.value <= 0) {
         showError(
           "Saldo inválido",
@@ -171,7 +171,7 @@ export default defineComponent({
         return;
       }
 
-      // Mostrar resumo antes de confirmar
+      
       const resumoHtml = `
         <div class="text-left">
           <p><strong>Saldo Inicial:</strong> R$ ${saldoInicial.value.toFixed(2)}</p>
@@ -211,24 +211,24 @@ export default defineComponent({
       showLoading("Fechando caixa...");
 
       try {
-        // Simular chamada de API
+  
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
         hideLoading();
 
-        // Mostrar resultado do fechamento
+        
         await showSuccess(
           "Caixa fechado com sucesso!",
           `O caixa foi fechado em ${new Date().toLocaleString("pt-BR")}.\\n\\nDiferença: R$ ${Math.abs(divergencia.value).toFixed(2)} ${divergencia.value >= 0 ? "(sobra)" : "(falta)"}`,
           "Continuar"
         );
 
-        // Simular fechamento do caixa
+       
         caixaAberto.value = false;
 
         showToast.success("Caixa fechado com sucesso!");
 
-        // Redirecionar para consulta
+       
         router.push("/caixa/consulta");
       } catch (error) {
         hideLoading();
@@ -248,7 +248,7 @@ export default defineComponent({
     onMounted(() => {
       feather.replace();
 
-      // Simular verificação de caixa aberto
+     
       const caixaExistente = localStorage.getItem("caixaAberto");
       if (!caixaExistente) {
         caixaAberto.value = false;

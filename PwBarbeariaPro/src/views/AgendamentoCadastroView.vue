@@ -237,7 +237,7 @@ export default defineComponent({
     });
 
     const horariosDisponiveis = computed(() => {
-      // Simular horários disponíveis
+      
       return [
         "08:00",
         "08:30",
@@ -310,7 +310,7 @@ export default defineComponent({
         return;
       }
 
-      // Verificar se a data não é no passado
+      
       const dataAgendamento = new Date(
         agendamento.value.data + "T" + agendamento.value.horario
       );
@@ -324,7 +324,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar agendamento
+     
       const confirmed = await confirmAction(
         "Confirmar agendamento",
         `Confirmar agendamento para ${agendamento.value.cliente}?\\n\\n${formatarDataHora()}\\nServiço: ${agendamento.value.servico}\\nProfissional: ${agendamento.value.profissional}\\nValor: R$ ${obterPrecoServico()}`,
@@ -337,22 +337,21 @@ export default defineComponent({
       showLoading("Criando agendamento...");
 
       try {
-        // Simular chamada de API
+        
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         hideLoading();
 
-        // Mostrar sucesso
+       
         showSuccess(
           "Agendamento criado!",
           `Agendamento para ${agendamento.value.cliente} foi criado com sucesso para ${formatarDataHora()}.`,
           "Continuar"
         );
 
-        // Limpar formulário
         limparFormulario();
 
-        // Toast de confirmação
+       
         showToast.success("Agendamento criado com sucesso!");
       } catch (error) {
         hideLoading();

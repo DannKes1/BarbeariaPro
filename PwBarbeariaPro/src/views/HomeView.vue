@@ -1,6 +1,6 @@
 <template>
   <div class="home-container">
-    <!-- Configurações de Visualização (usando cookies) -->
+    
     <div v-if="showConfigPanel" class="config-panel">
       <div class="config-content">
         <div class="config-header">
@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <!-- Botão de Configurações -->
+    
     <button
       class="config-toggle-btn"
       @click="showConfigPanel = !showConfigPanel"
@@ -76,7 +76,7 @@
       ⚙️
     </button>
 
-    <!-- Hero Section -->
+
     <section class="hero-section" :class="getThemeClass()">
       <div class="hero-content">
         <div class="hero-text">
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- Estatísticas (controladas por cookie) -->
+      
         <div v-if="viewPreferences.showStatistics" class="hero-image">
           <div class="floating-card">
             <div class="card-stats">
@@ -135,7 +135,7 @@
       </div>
     </section>
 
-    <!-- Features Section -->
+ 
     <section class="features-section">
       <div class="container">
         <div class="section-header">
@@ -168,7 +168,7 @@
       </div>
     </section>
 
-    <!-- Quick Actions Section (controlada por cookie) -->
+    
     <section
       v-if="viewPreferences.showQuickActions"
       class="quick-actions-section"
@@ -201,7 +201,7 @@
       </div>
     </section>
 
-    <!-- Status Section -->
+   
     <section class="status-section">
       <div class="container">
         <div class="status-grid">
@@ -231,7 +231,7 @@
             </div>
           </div>
 
-          <!-- Próximos Agendamentos (controlado por cookie) -->
+      
           <div
             v-if="viewPreferences.showUpcomingAppointments"
             class="status-card"
@@ -268,27 +268,7 @@
       </div>
     </section>
 
-    <!-- Debug info (apenas para demonstração) -->
-    <div v-if="showDebugInfo" class="debug-panel">
-      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
-      <div class="text-xs space-y-2">
-        <div>
-          <strong>Pode usar cookies:</strong> {{ cookieInfo.canUseCookies }}
-        </div>
-        <div>
-          <strong>Preferências salvas:</strong>
-          {{ JSON.stringify(cookieInfo.lastValues) }}
-        </div>
-        <div><strong>Tema atual:</strong> {{ viewPreferences.theme }}</div>
-      </div>
-      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
-        Ocultar debug
-      </button>
-    </div>
 
-    <button v-else @click="showDebugInfo = true" class="debug-toggle">
-      Debug cookies
-    </button>
   </div>
 </template>
 
@@ -342,7 +322,7 @@ export default defineComponent({
     const showConfigPanel = ref(false);
     const showDebugInfo = ref(false);
 
-    // Preferências de visualização (salvas em cookies)
+    
     const viewPreferences = ref({
       showStatistics: true,
       showQuickActions: true,
@@ -350,7 +330,7 @@ export default defineComponent({
       theme: "default",
     });
 
-    // Configurar cookies para preferências de visualização
+    
     const {
       canUseCookies,
       saveLastValues,
@@ -371,7 +351,7 @@ export default defineComponent({
       expirationDays: 90,
     });
 
-    // Computed para informações dos cookies
+    
     const cookieInfo = computed(() => getCookieInfo());
 
     const estatisticas = ref({
@@ -500,7 +480,7 @@ export default defineComponent({
       },
     ]);
 
-    // Funções para gerenciar preferências
+    
     function saveViewPreferences() {
       if (canUseCookies.value) {
         saveLastValues();
@@ -632,7 +612,7 @@ export default defineComponent({
     onMounted(() => {
       feather.replace();
 
-      // Carregar preferências salvas
+      
       if (canUseCookies.value) {
         loadLastValues();
       }
@@ -669,9 +649,9 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Estilos originais mantidos + novos estilos para configurações */
 
-/* Reset e Base */
+
+
 * {
   margin: 0;
   padding: 0;
@@ -689,7 +669,7 @@ export default defineComponent({
   position: relative;
 }
 
-/* Temas */
+
 .theme-light .hero-section {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: #1a202c;
@@ -700,7 +680,7 @@ export default defineComponent({
   color: #f7fafc;
 }
 
-/* Painel de Configurações */
+
 .config-toggle-btn {
   position: fixed;
   top: 20px;
@@ -826,7 +806,7 @@ export default defineComponent({
   font-size: 0.8rem;
 }
 
-/* Debug Panel */
+
 .debug-panel {
   position: fixed;
   bottom: 20px;
@@ -854,7 +834,7 @@ export default defineComponent({
   z-index: 1000;
 }
 
-/* Hero Section */
+
 .hero-section {
   padding: 80px 20px;
   min-height: 100vh;
@@ -955,7 +935,7 @@ export default defineComponent({
   transform: translateY(-2px);
 }
 
-/* Floating Card */
+
 .hero-image {
   display: flex;
   justify-content: center;
@@ -1020,7 +1000,7 @@ export default defineComponent({
   opacity: 0.8;
 }
 
-/* Features Section */
+
 .features-section {
   padding: 100px 20px;
   background: white;
@@ -1104,7 +1084,7 @@ export default defineComponent({
   color: #3b82f6;
 }
 
-/* Quick Actions Section */
+
 .quick-actions-section {
   padding: 100px 20px;
   background: #f9fafb;
@@ -1165,7 +1145,7 @@ export default defineComponent({
   font-weight: 600;
 }
 
-/* Status Section */
+
 .status-section {
   padding: 100px 20px;
   background: white;
@@ -1258,7 +1238,7 @@ export default defineComponent({
   color: #10b981;
 }
 
-/* Agendamentos */
+
 .agendamentos-list {
   display: flex;
   flex-direction: column;
@@ -1322,7 +1302,7 @@ export default defineComponent({
   color: #991b1b;
 }
 
-/* Utility Classes */
+
 .btn-sm {
   padding: 8px 16px;
   border-radius: 8px;
@@ -1340,7 +1320,7 @@ export default defineComponent({
   border-color: #9ca3af;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .config-panel {
     width: 100%;

@@ -2,7 +2,7 @@
   <div class="p-6 max-w-5xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Consultar Extrato de Caixa</h1>
 
-    <!-- Filtros -->
+    
     <form
       @submit.prevent="filtrarExtrato"
       class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
@@ -37,7 +37,7 @@
       </div>
     </form>
 
-    <!-- Tabela de resultados -->
+    
     <table class="w-full text-left border">
       <thead>
         <tr class="bg-gray-100">
@@ -64,7 +64,7 @@
       </tbody>
     </table>
 
-    <!-- Resumo Diário -->
+    
     <div class="mt-6 border-t pt-4">
       <h2 class="text-xl font-semibold mb-2">Resumo do Dia</h2>
       <ul>
@@ -77,7 +77,7 @@
       </ul>
     </div>
 
-    <!-- Exportar -->
+   
     <div class="mt-4 flex gap-2">
       <button class="btn">Exportar PDF</button>
       <button class="btn">Exportar Excel</button>
@@ -151,7 +151,7 @@ export default defineComponent({
     });
 
     function filtrarExtrato() {
-      // nada aqui — o filtro já é reativo com computed
+      
     }
 
     return {

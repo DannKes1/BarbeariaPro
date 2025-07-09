@@ -207,7 +207,7 @@ export default defineComponent({
     }
 
     async function submitForm() {
-      // Validar campos obrigatórios
+      
       if (!profissional.value.nome.trim()) {
         showError(
           "Campo obrigatório",
@@ -232,7 +232,7 @@ export default defineComponent({
         return;
       }
 
-      // Validar CPF e idade
+     
       if (!validarCPF() || !validarIdade()) {
         showError(
           "Dados inválidos",
@@ -241,7 +241,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar cadastro
+      
       const confirmed = await confirmAction(
         "Confirmar cadastro",
         `Deseja cadastrar o profissional ${profissional.value.nome} ${profissional.value.sobrenome} como ${profissional.value.especialidade}?`,
@@ -254,22 +254,22 @@ export default defineComponent({
       showLoading("Cadastrando profissional...");
 
       try {
-        // Simular chamada de API
+        
         await new Promise((resolve) => setTimeout(resolve, 2500));
 
         hideLoading();
 
-        // Mostrar sucesso
+       
         showSuccess(
           "Profissional cadastrado!",
           `${profissional.value.nome} ${profissional.value.sobrenome} foi cadastrado como ${profissional.value.especialidade}.`,
           "Continuar"
         );
 
-        // Limpar formulário
+        
         limparFormulario();
 
-        // Toast de confirmação
+       
         showToast.success("Profissional cadastrado com sucesso!");
       } catch (error) {
         hideLoading();

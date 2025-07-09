@@ -2,7 +2,6 @@
   <div class="p-6 max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Cadastrar Serviço</h1>
 
-    <!-- Indicador de valores lembrados -->
     <div
       v-if="cookieInfo.hasLastValues"
       class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md"
@@ -202,85 +201,6 @@
         </button>
       </div>
     </form>
-
-    <!-- Configurações de Formulário -->
-    <div class="mt-6 p-4 bg-gray-50 border rounded-md">
-      <h3 class="font-semibold mb-3">⚙️ Configurações do Formulário</h3>
-
-      <div class="space-y-2">
-        <label class="flex items-center">
-          <input
-            type="checkbox"
-            v-model="formPreferences.autoSaveEnabled"
-            @change="saveFormPreferences"
-            class="mr-2"
-          />
-          Salvar automaticamente valores dos campos
-        </label>
-
-        <label class="flex items-center">
-          <input
-            type="checkbox"
-            v-model="formPreferences.rememberCategory"
-            @change="saveFormPreferences"
-            class="mr-2"
-          />
-          Lembrar última categoria selecionada
-        </label>
-
-        <label class="flex items-center">
-          <input
-            type="checkbox"
-            v-model="formPreferences.rememberProfessionals"
-            @change="saveFormPreferences"
-            class="mr-2"
-          />
-          Lembrar profissionais selecionados
-        </label>
-      </div>
-
-      <div class="mt-3 text-xs text-gray-600">
-        <div v-if="cookieInfo.canUseCookies">
-          ✅ Cookies habilitados - Configurações serão salvas
-        </div>
-        <div v-else>
-          ❌ Cookies desabilitados - Aceite cookies de funcionalidade para
-          salvar configurações
-        </div>
-      </div>
-    </div>
-
-    <!-- Debug info (apenas para demonstração) -->
-    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
-      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
-      <div class="text-xs space-y-2">
-        <div>
-          <strong>Pode usar cookies:</strong> {{ cookieInfo.canUseCookies }}
-        </div>
-        <div>
-          <strong>Valores lembrados:</strong>
-          {{ JSON.stringify(cookieInfo.lastValues) }}
-        </div>
-        <div>
-          <strong>Preferências:</strong> {{ JSON.stringify(formPreferences) }}
-        </div>
-        <div>
-          <strong>Campos monitorados:</strong> nome, categoria, preco, duracao,
-          profissionais
-        </div>
-      </div>
-      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
-        Ocultar debug
-      </button>
-    </div>
-
-    <button
-      v-else
-      @click="showDebugInfo = true"
-      class="mt-4 text-sm text-gray-500 underline"
-    >
-      Mostrar informações dos cookies (debug)
-    </button>
   </div>
 </template>
 
@@ -327,7 +247,6 @@ export default defineComponent({
       { id: 3, nome: "Pedro Oliveira", especialidade: "Esteticista" },
     ]);
 
-    // Configurar cookies para valores do formulário
     const {
       canUseCookies,
       saveLastValues,
@@ -351,7 +270,6 @@ export default defineComponent({
       expirationDays: 30,
     });
 
-    // Configurar cookies para preferências do formulário
     const { saveLastValues: savePreferences, loadLastValues: loadPreferences } =
       useFormCookies(formPreferences.value, {
         formKey: "servico_form_preferences",
@@ -363,14 +281,11 @@ export default defineComponent({
         expirationDays: 90,
       });
 
-    // Computed para informações dos cookies
     const cookieInfo = computed(() => getCookieInfo());
 
-    // Função para lembrar valor de campo específico
     function rememberFieldValue(field: string) {
       if (!formPreferences.value.autoSaveEnabled) return;
 
-      // Verificar preferências específicas
       if (field === "categoria" && !formPreferences.value.rememberCategory)
         return;
       if (
@@ -389,7 +304,6 @@ export default defineComponent({
       }
     }
 
-    // Função para salvar preferências do formulário
     function saveFormPreferences() {
       if (canUseCookies.value) {
         savePreferences();
@@ -397,14 +311,12 @@ export default defineComponent({
       }
     }
 
-    // Função para limpar valores lembrados
     function clearRememberedValues() {
       clearFormCookies();
       showToast.info("Valores salvos foram limpos");
     }
 
     async function submitForm() {
-      // Validar campos obrigatórios
       if (!servico.value.nome.trim()) {
         showError("Campo obrigatório", "Por favor, informe o nome do serviço.");
         return;
@@ -433,7 +345,6 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar cadastro
       const profissionaisSelecionados = profissionaisDisponiveis.value
         .filter((p) => servico.value.profissionais.includes(p.id))
         .map((p) => p.nome)
@@ -451,27 +362,22 @@ export default defineComponent({
       showLoading("Cadastrando serviço...");
 
       try {
-        // Salvar valores nos cookies antes de enviar (se habilitado)
         if (formPreferences.value.autoSaveEnabled) {
           saveLastValues();
         }
 
-        // Simular chamada de API
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
         hideLoading();
 
-        // Mostrar sucesso
         showSuccess(
           "Serviço cadastrado!",
           `"${servico.value.nome}" foi cadastrado com sucesso por R$ ${servico.value.preco}.`,
           "Continuar"
         );
 
-        // Limpar formulário
         limparFormulario();
 
-        // Toast de confirmação
         showToast.success("Serviço cadastrado com sucesso!");
       } catch (error) {
         hideLoading();
@@ -498,12 +404,10 @@ export default defineComponent({
       showToast.info("Formulário limpo");
     }
 
-    // Watch para salvar automaticamente quando habilitado
     watch(
       servico,
       () => {
         if (formPreferences.value.autoSaveEnabled && canUseCookies.value) {
-          // Debounce para evitar muitas gravações
           setTimeout(() => {
             saveLastValues();
           }, 2000);
@@ -515,7 +419,6 @@ export default defineComponent({
     onMounted(() => {
       feather.replace();
 
-      // Carregar preferências e valores salvos
       if (canUseCookies.value) {
         loadPreferences();
         loadLastValues();

@@ -317,10 +317,10 @@ export default defineComponent({
 
       if (confirmed) {
         try {
-          // Simular chamada de API
+          
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
-          // Remover da lista
+          
           profissionais.value = profissionais.value.filter(
             (p) => p.cpf !== profissional.cpf
           );

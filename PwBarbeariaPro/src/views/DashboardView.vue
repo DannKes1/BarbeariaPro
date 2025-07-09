@@ -11,9 +11,9 @@
         </div>
       </div>
 
-      <!-- Cards de Estatísticas -->
+      
       <div class="row mb-4">
-        <!-- Vendas -->
+   
         <div class="col-sm-6 col-xl-3 d-flex">
           <div class="card flex-fill">
             <div class="card-body">
@@ -39,7 +39,7 @@
           </div>
         </div>
 
-        <!-- Faturamento -->
+        
         <div class="col-sm-6 col-xl-3 d-flex">
           <div class="card flex-fill">
             <div class="card-body">
@@ -65,7 +65,7 @@
           </div>
         </div>
 
-        <!-- Clientes -->
+       
         <div class="col-sm-6 col-xl-3 d-flex">
           <div class="card flex-fill">
             <div class="card-body">
@@ -91,7 +91,7 @@
           </div>
         </div>
 
-        <!-- Agendamentos -->
+   
         <div class="col-sm-6 col-xl-3 d-flex">
           <div class="card flex-fill">
             <div class="card-body">
@@ -110,7 +110,7 @@
         </div>
       </div>
 
-      <!-- Alertas e Notificações -->
+      
       <div v-if="alertas.length" class="row mb-4">
         <div class="col-12">
           <div class="card">
@@ -142,7 +142,7 @@
         </div>
       </div>
 
-      <!-- Próximos Agendamentos -->
+      
       <div class="row mb-4">
         <div class="col-md-6">
           <div class="card">
@@ -188,7 +188,7 @@
           </div>
         </div>
 
-        <!-- Resumo Financeiro -->
+        
         <div class="col-md-6">
           <div class="card">
             <div class="card-header">
@@ -237,7 +237,7 @@
         </div>
       </div>
 
-      <!-- Ações Rápidas -->
+      
       <div class="row">
         <div class="col-12">
           <div class="card">
@@ -373,7 +373,7 @@ export default defineComponent({
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Simular atualização dos dados
+        
         estatisticas.value.vendas += Math.floor(Math.random() * 5);
 
         hideLoading();
@@ -555,6 +555,8 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
+   margin: 0 10px;
+
 }
 .btn-danger {
   background-color: #dc2626;
