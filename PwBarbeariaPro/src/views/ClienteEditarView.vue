@@ -1,7 +1,7 @@
 <template>
-  <div class="p-6 max-w-2xl mx-auto">
+  <div class="p-6 max-w-2xl mx-auto bg-white rounded-lg shadow-md">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Editar Cliente</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Editar Cliente</h1>
       <button
         class="btn-secondary"
         @click="voltarParaConsulta"
@@ -26,25 +26,23 @@
       </button>
     </div>
 
-    <form v-if="cliente" @submit.prevent="submitForm" class="space-y-4">
+    <form v-if="cliente" @submit.prevent="submitForm" class="space-y-6">
       <div class="bg-blue-50 p-4 rounded mb-4">
         <h3 class="font-semibold text-blue-800 mb-2">👤 Dados Atuais</h3>
         <p class="text-blue-700">
           Editando:
-          <strong
-            >{{ clienteOriginal?.nome }}
-            {{ clienteOriginal?.sobrenome }}</strong
-          >
+          <strong>{{ clienteOriginal?.nome }} {{ clienteOriginal?.sobrenome }}</strong>
         </p>
         <p class="text-blue-700">
           CPF: <strong>{{ clienteOriginal?.cpf }}</strong>
         </p>
       </div>
 
-      <div>
-        <label>Nome</label>
+      <div class="form-group">
+        <label for="nome">Nome</label>
         <input
           v-model="cliente.nome"
+          id="nome"
           class="input"
           required
           pattern="[A-Za-zÀ-ü ]+"
@@ -52,10 +50,11 @@
         />
       </div>
 
-      <div>
-        <label>Sobrenome</label>
+      <div class="form-group">
+        <label for="sobrenome">Sobrenome</label>
         <input
           v-model="cliente.sobrenome"
+          id="sobrenome"
           class="input"
           required
           pattern="[A-Za-zÀ-ü ]+"
@@ -63,22 +62,23 @@
         />
       </div>
 
-      <div>
-        <label>Telefone</label>
+      <div class="form-group">
+        <label for="telefone">Telefone</label>
         <input
           v-model="cliente.telefone"
+          id="telefone"
           class="input"
           required
-          pattern="\\(\\d{2}\\) \\d{5}-\\d{4}"
           placeholder="(11) 98765-4321"
           :disabled="isLoading"
         />
       </div>
 
-      <div>
-        <label>CPF</label>
+      <div class="form-group">
+        <label for="cpf">CPF</label>
         <input
           v-model="cliente.cpf"
+          id="cpf"
           class="input bg-gray-100"
           readonly
           title="CPF não pode ser alterado"
@@ -86,20 +86,22 @@
         <small class="text-gray-600">CPF não pode ser alterado</small>
       </div>
 
-      <div>
-        <label>E-mail</label>
+      <div class="form-group">
+        <label for="email">E-mail</label>
         <input
           v-model="cliente.email"
+          id="email"
           class="input"
           type="email"
           :disabled="isLoading"
         />
       </div>
 
-      <div>
-        <label>Data de Nascimento</label>
+      <div class="form-group">
+        <label for="dataNascimento">Data de Nascimento</label>
         <input
           v-model="cliente.dataNascimento"
+          id="dataNascimento"
           class="input"
           required
           type="date"
@@ -111,18 +113,7 @@
         </p>
       </div>
 
-      <div v-if="temAlteracoes" class="bg-yellow-50 p-4 rounded">
-        <h3 class="font-semibold text-yellow-800 mb-2">
-          ⚠️ Alterações Detectadas
-        </h3>
-        <ul class="text-yellow-700 text-sm space-y-1">
-          <li v-for="alteracao in listarAlteracoes()" :key="alteracao">
-            • {{ alteracao }}
-          </li>
-        </ul>
-      </div>
-
-      <div class="flex gap-2">
+      <div class="flex gap-4">
         <button
           class="btn"
           type="submit"
@@ -163,6 +154,7 @@ import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSweetAlert } from "@/composables/useSweetAlert";
 import feather from "feather-icons";
+import { api } from "@/common/http";
 
 export default defineComponent({
   name: "ClienteEditarView",
@@ -198,45 +190,11 @@ export default defineComponent({
       );
     });
 
-    function listarAlteracoes() {
-      const alteracoes = [];
-
-      if (cliente.value.nome !== clienteOriginal.value.nome) {
-        alteracoes.push(
-          `Nome: "${clienteOriginal.value.nome}" → "${cliente.value.nome}"`
-        );
-      }
-      if (cliente.value.sobrenome !== clienteOriginal.value.sobrenome) {
-        alteracoes.push(
-          `Sobrenome: "${clienteOriginal.value.sobrenome}" → "${cliente.value.sobrenome}"`
-        );
-      }
-      if (cliente.value.telefone !== clienteOriginal.value.telefone) {
-        alteracoes.push(
-          `Telefone: "${clienteOriginal.value.telefone}" → "${cliente.value.telefone}"`
-        );
-      }
-      if (cliente.value.email !== clienteOriginal.value.email) {
-        alteracoes.push(
-          `Email: "${clienteOriginal.value.email}" → "${cliente.value.email}"`
-        );
-      }
-      if (
-        cliente.value.dataNascimento !== clienteOriginal.value.dataNascimento
-      ) {
-        alteracoes.push(
-          `Data de Nascimento: "${clienteOriginal.value.dataNascimento}" → "${cliente.value.dataNascimento}"`
-        );
-      }
-
-      return alteracoes;
-    }
-
     async function carregarCliente() {
-      const cpf = route.params.cpf as string;
+      const id = route.params.id as string;
 
-      if (!cpf) {
-        erro.value = "CPF não informado na URL";
+      if (!id) {
+        erro.value = "ID não informado na URL";
         return;
       }
 
@@ -244,21 +202,9 @@ export default defineComponent({
       erro.value = "";
 
       try {
-        // Simular chamada de API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Dados simulados
-        const clienteData = {
-          nome: "João",
-          sobrenome: "Silva",
-          telefone: "(11) 99999-1111",
-          cpf: cpf,
-          email: "joao@teste.com",
-          dataNascimento: "1990-05-01",
-        };
-
-        cliente.value = { ...clienteData };
-        clienteOriginal.value = { ...clienteData };
+        const response = await api.get(`/api/Cliente/${id}`);
+        cliente.value = response.data;
+        clienteOriginal.value = { ...response.data };
       } catch (error) {
         erro.value = "Erro ao carregar dados do cliente";
         showError(
@@ -296,11 +242,9 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar alterações
-      const alteracoes = listarAlteracoes();
       const confirmed = await confirmAction(
         "Confirmar alterações",
-        `Salvar as seguintes alterações?\\n\\n${alteracoes.join("\\n")}`,
+        `Salvar as seguintes alterações?`,
         "Sim, salvar"
       );
 
@@ -310,12 +254,9 @@ export default defineComponent({
       showLoading("Salvando alterações...");
 
       try {
-        // Simular chamada de API
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
+        const response = await api.put(`/api/Cliente/${cliente.value.id}`, cliente.value);
         hideLoading();
 
-        // Atualizar dados originais
         clienteOriginal.value = { ...cliente.value };
 
         showSuccess(
@@ -355,9 +296,7 @@ export default defineComponent({
       showLoading("Excluindo cliente...");
 
       try {
-        // Simular chamada de API
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
+        await api.delete(`/api/Cliente/${cliente.value.id}`);
         hideLoading();
 
         showSuccess(
@@ -367,7 +306,6 @@ export default defineComponent({
 
         showToast.success("Cliente excluído com sucesso!");
 
-        // Redirecionar para consulta
         router.push("/cliente/consulta");
       } catch (error) {
         hideLoading();
@@ -408,7 +346,6 @@ export default defineComponent({
       erro,
       isLoading,
       temAlteracoes,
-      listarAlteracoes,
       carregarCliente,
       validarIdade,
       submitForm,

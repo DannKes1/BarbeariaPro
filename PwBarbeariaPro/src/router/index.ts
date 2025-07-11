@@ -51,7 +51,7 @@ const router = createRouter({
           component: () => import("@/views/ClienteConsultaView.vue"),
         },
         {
-          path: "/cliente/editar/:cpf",
+          path: "/cliente/editar/:id",
           name: "cliente-editar",
           component: () => import("@/views/ClienteEditarView.vue"),
         },

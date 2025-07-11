@@ -7,7 +7,6 @@
       </button>
     </div>
 
-    <!-- Filtros com cookies -->
     <div class="mb-4 p-4 bg-gray-50 border rounded-md">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
@@ -50,7 +49,6 @@
         </div>
       </div>
 
-      <!-- Indicador de filtros salvos -->
       <div
         v-if="cookieInfo.hasFilters || cookieInfo.hasPagination"
         class="mt-3 flex items-center justify-between"
@@ -116,25 +114,18 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="cliente in clientesPaginados" :key="cliente.cpf">
+            <tr v-for="cliente in clientesPaginados" :key="cliente.id">
               <td class="border px-4 py-2">
                 {{ cliente.nome }} {{ cliente.sobrenome }}
               </td>
-              <td class="border px-4 py-2">{{ cliente.telefone }}</td>
-              <td class="border px-4 py-2">{{ cliente.cpf }}</td>
+            <td class="border px-4 py-2">{{ formatarTelefone(cliente.telefone) }}</td>
+            <td class="border px-4 py-2">{{ formatarCpf(cliente.cpf) }}</td>
               <td class="border px-4 py-2">{{ cliente.email || "-" }}</td>
               <td class="border px-4 py-2">
                 {{ formatarData(cliente.dataNascimento) }}
               </td>
               <td class="border px-4 py-2">
                 <div class="flex gap-2">
-                  <button
-                    class="btn-sm"
-                    @click="visualizar(cliente)"
-                    title="Visualizar"
-                  >
-                    👁️
-                  </button>
                   <button
                     class="btn-sm"
                     @click="editar(cliente)"
@@ -144,7 +135,7 @@
                   </button>
                   <button
                     class="btn-danger-sm"
-                    @click="excluir(cliente)"
+                    @click="excluirCliente(cliente.id)"
                     title="Excluir"
                   >
                     🗑️
@@ -156,7 +147,6 @@
         </table>
       </div>
 
-      <!-- Paginação -->
       <div class="mt-4 flex items-center justify-between">
         <div class="text-sm text-gray-600">
           Mostrando
@@ -206,35 +196,6 @@
         Cadastrar Primeiro Cliente
       </button>
     </div>
-
-    <!-- Debug info (apenas para demonstração) -->
-    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
-      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
-      <div class="text-xs space-y-2">
-        <div>
-          <strong>Filtros salvos:</strong>
-          {{ JSON.stringify(cookieInfo.savedFilters) }}
-        </div>
-        <div>
-          <strong>Paginação salva:</strong>
-          {{ JSON.stringify(cookieInfo.savedPagination) }}
-        </div>
-        <div>
-          <strong>Pode usar cookies:</strong> {{ cookieInfo.canUseCookies }}
-        </div>
-      </div>
-      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
-        Ocultar debug
-      </button>
-    </div>
-
-    <button
-      v-else
-      @click="showDebugInfo = true"
-      class="mt-4 text-sm text-gray-500 underline"
-    >
-      Mostrar informações dos cookies (debug)
-    </button>
   </div>
 </template>
 
@@ -244,6 +205,7 @@ import { useRouter } from "vue-router";
 import { useSweetAlert } from "@/composables/useSweetAlert";
 import { useFormCookies } from "@/composables/useFormCookies";
 import feather from "feather-icons";
+import { api } from "@/common/http";
 
 export default defineComponent({
   name: "ClienteConsultaView",
@@ -252,35 +214,10 @@ export default defineComponent({
     const { showToast, showError, confirmAction } = useSweetAlert();
     const showDebugInfo = ref(false);
 
-    // Dados dos clientes (simulado)
-    const clientes = ref([
-      {
-        nome: "João",
-        sobrenome: "Silva",
-        telefone: "(11) 98765-4321",
-        cpf: "123.456.789-01",
-        email: "joao@email.com",
-        dataNascimento: "1990-05-15",
-      },
-      {
-        nome: "Maria",
-        sobrenome: "Santos",
-        telefone: "(11) 87654-3210",
-        cpf: "987.654.321-09",
-        email: "maria@email.com",
-        dataNascimento: "1985-08-22",
-      },
-      {
-        nome: "Pedro",
-        sobrenome: "Oliveira",
-        telefone: "(11) 76543-2109",
-        cpf: "456.789.123-45",
-        email: "pedro@email.com",
-        dataNascimento: "1992-12-03",
-      },
-    ]);
+    // Dados dos clientes
+    const clientes = ref<any[]>([]);
 
-    // Estados para filtros e paginação
+    // Filtros e paginação
     const filtros = ref({
       busca: "",
       ordenarPor: "nome",
@@ -311,14 +248,12 @@ export default defineComponent({
       }
     );
 
-    // Computed para informações dos cookies
+    // Armazenar informações de cookies
     const cookieInfo = computed(() => getCookieInfo());
 
-    // Computed para clientes filtrados
     const clientesFiltrados = computed(() => {
       let resultado = [...clientes.value];
 
-      // Aplicar busca
       if (filtros.value.busca) {
         const termo = filtros.value.busca.toLowerCase();
         resultado = resultado.filter(
@@ -330,7 +265,6 @@ export default defineComponent({
         );
       }
 
-      // Aplicar ordenação
       resultado.sort((a, b) => {
         const campo = filtros.value.ordenarPor as keyof typeof a;
         let valorA = a[campo] || "";
@@ -348,24 +282,71 @@ export default defineComponent({
       return resultado;
     });
 
-    // Computed para total de páginas
     const totalPaginas = computed(() => {
-      return Math.ceil(
-        clientesFiltrados.value.length / paginacao.value.itensPorPagina
-      );
+      return Math.ceil(clientesFiltrados.value.length / paginacao.value.itensPorPagina);
     });
 
-    // Computed para clientes da página atual
     const clientesPaginados = computed(() => {
-      const inicio =
-        (paginacao.value.paginaAtual - 1) * paginacao.value.itensPorPagina;
+      const inicio = (paginacao.value.paginaAtual - 1) * paginacao.value.itensPorPagina;
       const fim = inicio + paginacao.value.itensPorPagina;
       return clientesFiltrados.value.slice(inicio, fim);
     });
 
-    // Funções para gerenciar filtros
+    const buscarClientes = async () => {
+      try {
+        const response = await api.get("/api/Cliente");
+        clientes.value = response.data;
+      } catch (error) {
+        console.error("Erro ao buscar clientes:", error);
+      }
+    };
+
+    const excluirCliente = async (id: number) => {
+      const confirmado = await confirmAction(
+        "Confirmar exclusão",
+        `Deseja realmente excluir o cliente?`,
+        "Sim, excluir"
+      );
+
+      if (confirmado) {
+        try {
+          await api.delete(`api/Cliente/${id}`);7
+          buscarClientes(); 
+          showToast.success("Cliente excluído com sucesso!");
+        } catch (error) {
+          showError("Erro ao excluir o cliente.");
+        }
+      }
+    };
+
+    const visualizar = (cliente: any) => {
+      showToast.info(`Visualizando ${cliente.nome} ${cliente.sobrenome}`);
+    };
+
+    const editar = (cliente: any) => {
+      router.push(`/cliente/editar/${cliente.id}`);
+    };
+
+    const formatarCpf = (cpf: string) => {
+      return cpf.replace(
+        /(\d{3})(\d{3})(\d{3})(\d{2})/,
+        "$1.$2.$3-$4"
+      );
+    };
+
+    const formatarTelefone = (telefone: string) => {
+      return telefone.replace(
+        /(\d{2})(\d{4})(\d{4})/,
+        "($1) $2-$3"
+      );
+    };
+
+    onMounted(() => {
+      buscarClientes();
+    });
+
     function aplicarFiltros() {
-      paginacao.value.paginaAtual = 1; // Resetar para primeira página
+      paginacao.value.paginaAtual = 1; 
       saveFilters(filtros.value);
     }
 
@@ -392,92 +373,14 @@ export default defineComponent({
 
     function limparFiltrosSalvos() {
       clearFormCookies();
-
-      // Resetar para valores padrão
-      filtros.value = {
-        busca: "",
-        ordenarPor: "nome",
-        ordemCrescente: true,
-      };
-
-      paginacao.value = {
-        paginaAtual: 1,
-        itensPorPagina: 10,
-      };
-
+      filtros.value = { busca: "", ordenarPor: "nome", ordemCrescente: true };
+      paginacao.value = { paginaAtual: 1, itensPorPagina: 10 };
       showToast.info("Configurações de filtros e paginação foram limpas");
     }
 
-    // Carregar configurações salvas
-    function carregarConfiguracoesSalvas() {
-      if (canUseCookies.value) {
-        const filtrosSalvos = loadFilters();
-        const paginacaoSalva = loadPagination();
-
-        if (Object.keys(filtrosSalvos).length > 0) {
-          Object.assign(filtros.value, filtrosSalvos);
-        }
-
-        if (Object.keys(paginacaoSalva).length > 0) {
-          Object.assign(paginacao.value, paginacaoSalva);
-        }
-      }
-    }
-
-    // Funções de ação
     function formatarData(data: string) {
       return new Date(data).toLocaleDateString("pt-BR");
     }
-
-    function visualizar(cliente: any) {
-      showToast.info(`Visualizando ${cliente.nome} ${cliente.sobrenome}`);
-    }
-
-    function editar(cliente: any) {
-      router.push(`/cliente/editar/${cliente.cpf}`);
-    }
-
-    async function excluir(cliente: any) {
-      const confirmado = await confirmAction(
-        "Confirmar exclusão",
-        `Deseja realmente excluir o cliente ${cliente.nome} ${cliente.sobrenome}?`,
-        "Sim, excluir"
-      );
-
-      if (confirmado) {
-        const index = clientes.value.findIndex((c) => c.cpf === cliente.cpf);
-        if (index > -1) {
-          clientes.value.splice(index, 1);
-          showToast.success("Cliente excluído com sucesso!");
-        }
-      }
-    }
-
-    // Watchers para salvar automaticamente
-    watch(
-      filtros,
-      () => {
-        if (canUseCookies.value) {
-          saveFilters(filtros.value);
-        }
-      },
-      { deep: true }
-    );
-
-    watch(
-      paginacao,
-      () => {
-        if (canUseCookies.value) {
-          savePagination(paginacao.value);
-        }
-      },
-      { deep: true }
-    );
-
-    onMounted(() => {
-      feather.replace();
-      carregarConfiguracoesSalvas();
-    });
 
     return {
       clientes,
@@ -488,6 +391,9 @@ export default defineComponent({
       totalPaginas,
       showDebugInfo,
       cookieInfo,
+      formatarCpf,
+      formatarTelefone,
+      excluirCliente,
       aplicarFiltros,
       aplicarPaginacao,
       alternarOrdem,
@@ -496,58 +402,107 @@ export default defineComponent({
       formatarData,
       visualizar,
       editar,
-      excluir,
-      canUseCookies,
     };
   },
 });
 </script>
 
+
 <style scoped>
 .input {
   border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.5rem;
+  border-radius: 8px;
+  padding: 0.75rem;
   width: 100%;
+  box-sizing: border-box;
+  font-size: 1rem;
 }
 
 .btn {
   background-color: #4f46e5;
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  display: inline-block;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn:hover {
+  background-color: #3b3be6;
 }
 
 .btn-sm {
   background-color: #6b7280;
   color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
+  transition: background-color 0.3s ease;
 }
 
-.btn-sm:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-sm:hover {
+  background-color: #4c4f52;
 }
 
 .btn-danger-sm {
   background-color: #dc2626;
   color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
+  transition: background-color 0.3s ease;
+}
+
+.btn-danger-sm:hover {
+  background-color: #b91c1c;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.border {
+  border: 1px solid #e5e7eb;
+}
+
+.rounded-md {
+  border-radius: 8px;
+}
+
+.min-w-full {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.text-gray-900 {
+  color: #111827;
+}
+
+.bg-gray-100 {
+  background-color: #f3f4f6;
 }
 
 .cursor-pointer {
@@ -557,4 +512,50 @@ export default defineComponent({
 .cursor-pointer:hover {
   background-color: #f3f4f6;
 }
+
+th {
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.cursor-pointer:hover {
+  background-color: #f3f4f6;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
 </style>
