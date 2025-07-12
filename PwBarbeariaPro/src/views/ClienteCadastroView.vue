@@ -64,9 +64,9 @@
           v-model="cliente.telefone"
           class="input"
           required
-          pattern="\\(\\d{2}\\) \\d{5}-\\d{4}"
           placeholder="(11) 98765-4321"
           :disabled="isLoading"
+          @input="formatarTelefone"
           @blur="rememberFieldValue('telefone')"
         />
         <small v-if="hasRememberedValue('telefone')" class="text-gray-500">
@@ -80,9 +80,8 @@
           v-model="cliente.cpf"
           class="input"
           required
-          pattern="\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}"
-          @blur="validarCPF"
           :disabled="isLoading"
+          @input="formatarCPF"
         />
         <p v-if="erros.cpf" class="text-red-500 text-sm">{{ erros.cpf }}</p>
       </div>
@@ -155,41 +154,35 @@
     </button>
   </div>
 </template>
-
+]
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from "vue";
-import { useSweetAlert } from "@/composables/useSweetAlert";
-import { useFormCookies } from "@/composables/useFormCookies";
-import feather from "feather-icons";
+import { defineComponent, ref, onMounted, computed } from 'vue';
+import { useSweetAlert } from '@/composables/useSweetAlert';
+import { useFormCookies } from '@/composables/useFormCookies';
+import { api } from '@/common/http';
 
 export default defineComponent({
-  name: "ClienteCadastroView",
+  name: 'ClienteCadastroView',
   setup() {
-    const {
-      showToast,
-      showError,
-      showSuccess,
-      showLoading,
-      hideLoading,
-      confirmAction,
-    } = useSweetAlert();
+    const { showToast, showError, showSuccess, showLoading, hideLoading, confirmAction } = useSweetAlert();
 
     const isLoading = ref(false);
     const showDebugInfo = ref(false);
 
     const cliente = ref({
-      nome: "",
-      sobrenome: "",
-      telefone: "",
-      cpf: "",
-      email: "",
-      dataNascimento: "",
-      historico: [],
+      nome: '',
+      sobrenome: '',
+      telefone: '',
+      cpf: '',
+      email: '',
+      dataNascimento: '',
     });
 
-    const erros = ref({ cpf: "", dataNascimento: "" });
+    const erros = ref({
+      cpf: '',
+      dataNascimento: '',
+    });
 
-    // Configurar cookies para o formulário
     const {
       canUseCookies,
       lastValues,
@@ -201,183 +194,139 @@ export default defineComponent({
       getRememberedValue,
       hasRememberedValue,
     } = useFormCookies(cliente.value, {
-      formKey: "cliente_cadastro",
-      rememberFields: ["nome", "sobrenome", "telefone", "email"],
+      formKey: 'cliente_cadastro',
+      rememberFields: ['nome', 'sobrenome', 'telefone', 'email'],
       expirationDays: 30,
     });
 
-    // Computed para informações dos cookies
     const cookieInfo = computed(() => getCookieInfo());
 
-    function validarCPF() {
-      const cpf = cliente.value.cpf.replace(/[\\.\\-]/g, "");
-      if (!/\\d{11}/.test(cpf) || cpf === cpf[0].repeat(11)) {
-        erros.value.cpf = "CPF inválido.";
-        return false;
-      }
-      let soma = 0,
-        resto;
-      for (let i = 1; i <= 9; i++)
-        soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-      resto = (soma * 10) % 11;
-      if (resto === 10 || resto === 11) resto = 0;
-      if (resto !== parseInt(cpf[9])) {
-        erros.value.cpf = "CPF inválido.";
-        return false;
-      }
-      soma = 0;
-      for (let i = 1; i <= 10; i++)
-        soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
-      resto = (soma * 10) % 11;
-      if (resto === 10 || resto === 11) resto = 0;
-      if (resto !== parseInt(cpf[10])) {
-        erros.value.cpf = "CPF inválido.";
-        return false;
-      }
-      erros.value.cpf = "";
-      return true;
-    }
-
-    function validarIdade() {
+    
+    function validarIdade(): boolean {
       const hoje = new Date();
       const nascimento = new Date(cliente.value.dataNascimento);
-      const idade = hoje.getFullYear() - nascimento.getFullYear();
-      const ajuste =
-        hoje.getMonth() < nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() &&
-          hoje.getDate() < nascimento.getDate());
-      if (idade - (ajuste ? 1 : 0) < 16) {
-        erros.value.dataNascimento = "Cliente deve ter pelo menos 16 anos.";
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+      const mesPassou = hoje.getMonth() > nascimento.getMonth() ||
+        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() >= nascimento.getDate());
+      if (!mesPassou) idade--;
+
+      if (idade < 16) {
+        erros.value.dataNascimento = 'Cliente deve ter pelo menos 16 anos.';
         return false;
       }
-      erros.value.dataNascimento = "";
+
+      erros.value.dataNascimento = '';
       return true;
-    }
-
-    // Função para lembrar valor de campo específico
-    function rememberFieldValue(field: string) {
-      if (cliente.value[field as keyof typeof cliente.value]) {
-        rememberValue(
-          field,
-          cliente.value[field as keyof typeof cliente.value]
-        );
-      }
-    }
-
-    // Função para limpar valores lembrados
-    function clearRememberedValues() {
-      clearFormCookies();
-      showToast.info("Valores salvos foram limpos");
     }
 
     async function submitForm() {
-      // Validar campos obrigatórios
-      if (!cliente.value.nome.trim()) {
-        showError("Campo obrigatório", "Por favor, informe o nome do cliente.");
+      if (!cliente.value.nome || !cliente.value.sobrenome || !cliente.value.telefone || !cliente.value.cpf || !cliente.value.dataNascimento) {
+        showError('Campos obrigatórios', 'Preencha todos os campos obrigatórios.');
         return;
       }
 
-      if (!cliente.value.sobrenome.trim()) {
-        showError(
-          "Campo obrigatório",
-          "Por favor, informe o sobrenome do cliente."
-        );
-        return;
-      }
 
-      if (!cliente.value.telefone.trim()) {
-        showError(
-          "Campo obrigatório",
-          "Por favor, informe o telefone do cliente."
-        );
-        return;
-      }
-
-      if (!cliente.value.cpf.trim()) {
-        showError("Campo obrigatório", "Por favor, informe o CPF do cliente.");
-        return;
-      }
-
-      if (!cliente.value.dataNascimento) {
-        showError(
-          "Campo obrigatório",
-          "Por favor, informe a data de nascimento."
-        );
-        return;
-      }
-
-      // Validar CPF e idade
-      if (!validarCPF() || !validarIdade()) {
-        showError(
-          "Dados inválidos",
-          "Por favor, corrija os erros no formulário."
-        );
-        return;
-      }
-
-      // Confirmar cadastro
-      const confirmed = await confirmAction(
-        "Confirmar cadastro",
-        `Deseja cadastrar o cliente ${cliente.value.nome} ${cliente.value.sobrenome}?`,
-        "Sim, cadastrar"
+      const confirmado = await confirmAction(
+        'Confirmar cadastro',
+        `Deseja cadastrar ${cliente.value.nome} ${cliente.value.sobrenome}?`,
+        'Sim, cadastrar'
       );
-
-      if (!confirmed) return;
+      if (!confirmado) return;
 
       isLoading.value = true;
-      showLoading("Cadastrando cliente...");
+      showLoading('Cadastrando cliente...');
 
       try {
-        // Salvar valores nos cookies antes de enviar
+        const dataFormatada = cliente.value.dataNascimento
+          ? new Date(cliente.value.dataNascimento).toISOString().split('T')[0]
+          : null;
+
+        const payload = {
+           id: Math.floor(Math.random() * 1000000),
+          nome: cliente.value.nome,
+          sobrenome: cliente.value.sobrenome,
+          telefone: cliente.value.telefone,
+          email: cliente.value.email,
+          cpf: cliente.value.cpf.replace(/[^\d]/g, ''),
+          dataNascimento: dataFormatada,
+        };
+
+        await api.post('/api/Cliente', payload);
+
         saveLastValues();
 
-        // Simular chamada de API
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        hideLoading();
-
-        // Mostrar sucesso
-        showSuccess(
-          "Cliente cadastrado!",
-          `${cliente.value.nome} ${cliente.value.sobrenome} foi cadastrado com sucesso.`,
-          "Continuar"
-        );
-
-        // Limpar formulário
+        showSuccess('Cliente cadastrado!', 'Cadastro realizado com sucesso.');
+        showToast.success('Cliente cadastrado com sucesso!');
         limparFormulario();
-
-        // Toast de confirmação
-        showToast.success("Cliente cadastrado com sucesso!");
-      } catch (error) {
-        hideLoading();
-        showError(
-          "Erro no servidor",
-          "Ocorreu um erro ao cadastrar o cliente. Tente novamente."
-        );
+      } catch (error: any) {
+        if (error.response?.status === 409) {
+          showError('CPF duplicado', 'Já existe um cliente com esse CPF.');
+        } else if (error.response?.data?.errors) {
+          const errosAPI = error.response.data.errors;
+          showError('Erro de validação', JSON.stringify(errosAPI, null, 2));
+        } else {
+          showError('Erro ao cadastrar', 'Não foi possível concluir o cadastro.');
+        }
       } finally {
+        hideLoading();
         isLoading.value = false;
       }
     }
 
     function limparFormulario() {
       Object.assign(cliente.value, {
-        nome: "",
-        sobrenome: "",
-        telefone: "",
-        cpf: "",
-        email: "",
-        dataNascimento: "",
-        historico: [],
+        nome: '',
+        sobrenome: '',
+        telefone: '',
+        cpf: '',
+        email: '',
+        dataNascimento: '',
       });
 
-      erros.value = { cpf: "", dataNascimento: "" };
+      erros.value = { cpf: '', dataNascimento: '' };
+      showToast.info('Formulário limpo');
+    }
 
-      showToast.info("Formulário limpo");
+    function rememberFieldValue(field: string) {
+      if (cliente.value[field as keyof typeof cliente.value]) {
+        rememberValue(field, cliente.value[field as keyof typeof cliente.value]);
+      }
+    }
+
+    function clearRememberedValues() {
+      clearFormCookies();
+      showToast.info('Valores salvos foram limpos');
     }
 
     onMounted(() => {
-      feather.replace();
+      loadLastValues();
     });
+
+    function formatarTelefone(e: Event) {
+      let valor = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+      if (valor.length > 11) valor = valor.slice(0, 11);
+
+      if (valor.length <= 10) {
+        cliente.value.telefone = valor.replace(
+          /(\d{2})(\d{4})(\d{0,4})/,
+          '($1) $2-$3'
+        );
+      } else {
+        cliente.value.telefone = valor.replace(
+          /(\d{2})(\d{5})(\d{0,4})/,
+          '($1) $2-$3'
+        );
+      }
+    }
+
+    function formatarCPF(e: Event) {
+      let valor = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+      if (valor.length > 11) valor = valor.slice(0, 11);
+      cliente.value.cpf = valor.replace(
+        /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
+        '$1.$2.$3-$4'
+      );
+    }
 
     return {
       cliente,
@@ -385,7 +334,6 @@ export default defineComponent({
       isLoading,
       showDebugInfo,
       cookieInfo,
-      validarCPF,
       validarIdade,
       submitForm,
       limparFormulario,
@@ -393,6 +341,8 @@ export default defineComponent({
       clearRememberedValues,
       hasRememberedValue,
       canUseCookies,
+      formatarCPF,
+      formatarTelefone
     };
   },
 });
