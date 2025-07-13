@@ -1,7 +1,6 @@
 <template>
   <div class="page-container">
     <div class="content-wrapper">
-      <!-- Header -->
       <div class="header">
         <div class="icon-container">
           <svg
@@ -22,11 +21,9 @@
         <p class="subtitle">Adicione uma nova entrada financeira ao sistema</p>
       </div>
 
-      <!-- Form Card -->
       <div class="form-card">
         <div class="form-content">
           <form @submit.prevent="handleSubmit" class="form" novalidate>
-            <!-- Descrição -->
             <div class="form-group">
               <label for="descricao" class="form-label">Descrição *</label>
               <div class="input-container">
@@ -207,7 +204,6 @@
           </form>
         </div>
 
-        <!-- Form Summary -->
         <div v-if="isFormValid && !hasErrors" class="form-summary">
           <div class="summary-content">
             <svg class="success-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -226,8 +222,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, reactive } from "vue";
+import { defineComponent, ref, computed, reactive, onMounted } from "vue";
 import { useSweetAlert } from "@/composables/useSweetAlert";
+import { api } from "@/common/http";
 
 interface FormData {
   descricao: string;
@@ -246,8 +243,7 @@ interface FormErrors {
 export default defineComponent({
   name: "RegistrarEntradaView",
   setup() {
-    const { showSuccess, showError, showLoading, hideLoading } =
-      useSweetAlert();
+    const { showSuccess, showError, showLoading, hideLoading } = useSweetAlert();
 
     const isLoading = ref(false);
     const form = reactive<FormData>({
@@ -257,6 +253,8 @@ export default defineComponent({
       observacoes: "",
     });
     const errors = reactive<FormErrors>({});
+
+    const caixaAberto = ref<any>(null);
 
     const validateField = (fieldName: keyof FormData): boolean => {
       switch (fieldName) {
@@ -317,16 +315,6 @@ export default defineComponent({
     const isFormValid = computed<boolean>(() => validateForm());
     const hasErrors = computed<boolean>(() => Object.keys(errors).length > 0);
 
-    const formatCurrency = (value: string): string => {
-      const num = parseFloat(value);
-      return isNaN(num)
-        ? "0,00"
-        : num.toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-    };
-
     const resetForm = (): void => {
       Object.assign(form, {
         descricao: "",
@@ -339,30 +327,56 @@ export default defineComponent({
 
     const handleSubmit = async (): Promise<void> => {
       if (!validateForm()) {
-        showError(
-          "Formulário inválido",
-          "Por favor, corrija os erros antes de continuar."
-        );
+        showError("Formulário inválido", "Corrija os erros antes de continuar.");
         return;
       }
+
+      if (!caixaAberto.value) {
+        showError("Caixa não encontrado", "Nenhum caixa aberto foi localizado.");
+        return;
+      }
+
       isLoading.value = true;
       showLoading("Registrando entrada financeira...");
+
       try {
-        await new Promise((r) => setTimeout(r, 2000));
+        const valorNum = parseFloat(form.valor);
+
+        const movimentacaoPayload = {
+          id: 0,
+          tipo: "Entrada",
+          valor: valorNum,
+          categoria: form.categoria,
+          descricao: form.descricao,
+          comprovantePath: "",
+          caixaFk: caixaAberto.value.id,
+        };
+
+        await api.post("/api/MovimentacaoCaixa", movimentacaoPayload);
+
+        const novoSaldoFinal = caixaAberto.value.saldoFinal + valorNum;
+
+        const caixaAtualizado = {
+          ...caixaAberto.value,
+          saldoFinal: novoSaldoFinal,
+        };
+
+        await api.put(`/api/Caixa/${caixaAberto.value.id}`, caixaAtualizado);
+
         hideLoading();
-        const valorFormatado = formatCurrency(form.valor);
         await showSuccess(
           "Entrada registrada com sucesso!",
-          `Entrada de R$ ${valorFormatado} foi registrada na categoria "${getCategoryLabel(form.categoria)}".`
+          `R$ ${valorNum.toFixed(2)} adicionados ao caixa.`
         );
         resetForm();
+        caixaAberto.value.saldoFinal = novoSaldoFinal;
       } catch (err) {
         hideLoading();
+        console.error(err);
         showError(
           "Erro ao registrar entrada",
-          "Ocorreu um erro inesperado. Tente novamente."
+          "Ocorreu um erro inesperado. Verifique sua conexão ou tente novamente."
         );
-        console.error(err);
       } finally {
         isLoading.value = false;
       }
@@ -376,6 +390,21 @@ export default defineComponent({
       };
       return labels[cat] || cat;
     };
+
+    onMounted(async () => {
+      try {
+        const res = await api.get("/api/Caixa/ultimo");
+        if (res.data?.status === "Aberto") {
+          console.log( res.data);
+          caixaAberto.value = res.data;
+
+        } else {
+          showError("Caixa fechado", "Abra o caixa antes de registrar uma entrada.");
+        }
+      } catch {
+        showError("Erro ao carregar caixa", "Não foi possível buscar o caixa atual.");
+      }
+    });
 
     return {
       form,
@@ -391,13 +420,12 @@ export default defineComponent({
 });
 </script>
 
+
 <style scoped>
-/* Reset e base */
 * {
   box-sizing: border-box;
 }
 
-/* Container principal */
 .page-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -412,7 +440,6 @@ export default defineComponent({
   margin: 0 auto;
 }
 
-/* Header */
 .header {
   text-align: center;
   margin-bottom: 2rem;

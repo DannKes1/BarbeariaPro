@@ -154,16 +154,6 @@ export default defineComponent({
               path: "/caixa/consulta",
               icon: "archive",
             },
-            {
-              name: "Consultar Extrato",
-              path: "/caixa/extrato",
-              icon: "file-text",
-            },
-            {
-              name: "Sangria de Caixa",
-              path: "/caixa/sangria",
-              icon: "corner-down-left",
-            },
           ],
         },
       ] as MenuSection[],

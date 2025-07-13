@@ -10,7 +10,6 @@ import "simplebar";
 import "simplebar/dist/simplebar.css";
 import "@/assets/js/app";
 
-// Importar SweetAlert2 CSS
 import "sweetalert2/dist/sweetalert2.min.css";
 
 import feather from "feather-icons";
@@ -18,7 +17,7 @@ import feather from "feather-icons";
 const app = createApp(App);
 
 app.config.globalProperties.$cookieDefaults = {
-  secure: import.meta.env.PROD, // Apenas HTTPS em produção
+  secure: import.meta.env.PROD,
   sameSite: "Strict",
   path: "/",
 };

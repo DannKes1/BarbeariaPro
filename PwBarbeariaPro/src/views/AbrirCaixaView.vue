@@ -161,9 +161,9 @@ export default defineComponent({
         const now = new Date();
 
         const payload = {
-          id: 0,
+          id: Math.floor(Math.random() * 1000000),
           saldoInicial: saldo,
-          saldoFinal: 0,
+          saldoFinal: saldo,
           dataAbertura: now.toISOString(),
           dataFechamento: now.toISOString(),
           status: "Aberto",

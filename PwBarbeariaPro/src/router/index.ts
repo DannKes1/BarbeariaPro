@@ -138,11 +138,6 @@ const router = createRouter({
           component: () => import("@/views/ExtratoCaixaConsultaView.vue"),
         },
         {
-          path: "/caixa/sangria",
-          name: "caixa-sangria",
-          component: () => import("@/views/SangriaCaixaView.vue"),
-        },
-        {
           path: "/caixa/consulta",
           name: "caixa-consulta",
           component: () => import("@/views/CaixaConsultaView.vue"),
