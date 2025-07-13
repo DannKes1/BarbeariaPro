@@ -163,33 +163,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Estatísticas do Usuário -->
-    <div class="card mt-6">
-      <div class="card-header">
-        <h5>Minhas Estatísticas</h5>
-      </div>
-      <div class="card-body">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <h3 class="text-primary">{{ estatisticas.agendamentosHoje }}</h3>
-            <p class="text-muted">Agendamentos Hoje</p>
-          </div>
-          <div>
-            <h3 class="text-success">{{ estatisticas.clientesAtendidos }}</h3>
-            <p class="text-muted">Clientes Atendidos</p>
-          </div>
-          <div>
-            <h3 class="text-warning">R$ {{ estatisticas.faturamento }}</h3>
-            <p class="text-muted">Faturamento</p>
-          </div>
-          <div>
-            <h3 class="text-info">{{ estatisticas.diasTrabalhados }}</h3>
-            <p class="text-muted">Dias Trabalhados</p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -236,11 +209,8 @@ export default defineComponent({
 
     const isLoading = ref(false);
 
- 
     const defaultAvatar =
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYpPhduYGQv9LSNTSUDUM5MA7PmvllhukP6Q&s";
-
-   
 
     /**
      * Estado do usuário
@@ -496,6 +466,7 @@ export default defineComponent({
   border-radius: 0.375rem;
   border: none;
   cursor: pointer;
+  margin-right: 10px;
 }
 
 .btn-secondary {
