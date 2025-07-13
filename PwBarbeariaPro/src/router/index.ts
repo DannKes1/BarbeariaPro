@@ -63,9 +63,10 @@ const router = createRouter({
           component: () => import("@/views/ProfissionalConsultaView.vue"),
         },
         {
-          path: "/profissional/editar/:cpf",
+          path: "/profissional/editar/:id",
           name: "profissional-editar",
           component: () => import("@/views/ProfissionalEditarView.vue"),
+          props: true,
         },
         {
           path: "/servico/cadastro",
