@@ -2,7 +2,6 @@
   <div class="p-6 max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Cadastrar Cliente</h1>
 
-    <!-- Indicador de valores lembrados -->
     <div
       v-if="cookieInfo.hasLastValues"
       class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md"
@@ -242,7 +241,7 @@ export default defineComponent({
           : null;
 
         const payload = {
-           id: Math.floor(Math.random() * 1000000),
+          id: Math.floor(Math.random() * 1000000),
           nome: cliente.value.nome,
           sobrenome: cliente.value.sobrenome,
           telefone: cliente.value.telefone,

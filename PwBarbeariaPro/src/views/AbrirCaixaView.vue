@@ -1,49 +1,53 @@
 <template>
-  <div class="p-6 max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Abrir Caixa</h1>
+  <div>
+    <h1 class="form-title">Abrir Caixa</h1>
 
-    <div v-if="caixaAberto" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-      <strong>Caixa já está aberto!</strong>
-      <p>Responsável: {{ caixaAtual.responsavel }}</p>
-      <p>Aberto em: {{ formatarDataHora(caixaAtual.dataAbertura) }}</p>
-      <p>Saldo inicial: R$ {{ caixaAtual.saldoInicial }}</p>
-      <button class="btn-danger mt-2" @click="fecharCaixa">
-        Fechar Caixa
-      </button>
+    <div v-if="caixaAberto" class="card-caixa-aberto">
+      <h2 class="mb-3 text-success">🟢 Caixa já está aberto!</h2>
+      <p><strong>Responsável:</strong> {{ caixaAtual.nomeUsuario }}</p>
+      <p><strong>Aberto em:</strong> {{ formatarDataHora(caixaAtual.dataAbertura) }}</p>
+      <p><strong>Saldo inicial:</strong> R$ {{ parseFloat(caixaAtual.saldoInicial).toFixed(2) }}</p>
+
+      <div class="mt-4">
+        <button class="btn btn-primary" @click="irParaFecharCaixa">
+          Fechar Caixa
+        </button>
+      </div>
     </div>
 
-    <form v-else @submit.prevent="abrirCaixa" class="space-y-4">
-      <div>
-        <label>Saldo Inicial (R$)</label>
+    <form v-else @submit.prevent="abrirCaixa" class="form-body">
+      <div class="form-group">
+        <label for="saldoInicial">Saldo Inicial (R$)</label>
         <input
+          id="saldoInicial"
           v-model="caixa.saldoInicial"
           type="number"
           step="0.01"
-          min="0"
           class="input"
           required
           placeholder="0,00"
           :disabled="isLoading"
         />
-        <small class="text-gray-600">Valor em dinheiro disponível no início do expediente</small>
+        <small class="helper-text">Valor em dinheiro disponível no início do expediente</small>
       </div>
 
-      <div>
-        <label>Responsável</label>
-        <select 
-          v-model="caixa.responsavel" 
-          class="input" 
+      <div class="form-group">
+        <label for="responsavel">Responsável</label>
+        <select
+          id="responsavel"
+          v-model="caixa.usuarioFk"
+          class="input"
           required
           :disabled="isLoading"
         >
-          <option disabled value="">Selecione um profissional</option>
-          <option v-for="p in profissionais" :key="p.nome" :value="p.nome">
-            {{ p.nome }} ({{ p.especialidade }})
+          <option disabled value="">Selecione um usuário</option>
+          <option v-for="u in usuarios" :key="u.id" :value="u.id">
+            {{ u.nome || u.perfil || 'Usuário' }} | {{ u.email }}
           </option>
         </select>
       </div>
 
-      <div>
+      <div class="form-group">
         <label>Observações</label>
         <textarea
           v-model="caixa.observacoes"
@@ -54,9 +58,9 @@
         ></textarea>
       </div>
 
-      <div class="bg-blue-50 p-4 rounded">
-        <h3 class="font-semibold text-blue-800 mb-2">ℹ️ Informações Importantes</h3>
-        <ul class="text-blue-700 text-sm space-y-1">
+      <div class="info-box">
+        <h3>ℹ️ Informações Importantes</h3>
+        <ul>
           <li>• O caixa deve ser aberto no início de cada expediente</li>
           <li>• Apenas um caixa pode estar aberto por vez</li>
           <li>• O responsável será registrado para auditoria</li>
@@ -64,19 +68,19 @@
         </ul>
       </div>
 
-      <div class="flex gap-2">
-        <button 
-          type="submit" 
-          class="btn"
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn btn-primary"
           :disabled="isLoading"
         >
-          <span v-if="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          <span v-if="isLoading" class="spinner"></span>
           {{ isLoading ? 'Abrindo...' : 'Abrir Caixa' }}
         </button>
-        
-        <button 
-          type="button" 
-          class="btn-secondary"
+
+        <button
+          type="button"
+          class="btn btn-secondary"
           @click="limparFormulario"
           :disabled="isLoading"
         >
@@ -89,39 +93,29 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
-import { useSweetAlert } from '@/composables/useSweetAlert'
+import { useRouter } from "vue-router";
+import { useSweetAlert } from '@/composables/useSweetAlert';
+import { api } from '@/common/http';
 import feather from "feather-icons";
 
 export default defineComponent({
   name: "AbrirCaixaView",
   setup() {
-    const { 
-      showToast, 
-      showError, 
-      showSuccess, 
-      showLoading, 
-      hideLoading,
-      confirmAction,
-      confirmWithInput
-    } = useSweetAlert()
-    
-    const isLoading = ref(false)
-    const caixaAberto = ref(false)
+    const { showToast, showError, showSuccess, showLoading, hideLoading, confirmAction } = useSweetAlert();
+    const router = useRouter();
 
-    const profissionais = ref([
-      { nome: "Carlos Silva", especialidade: "Barbeiro" },
-      { nome: "Ana Santos", especialidade: "Esteticista" },
-      { nome: "Pedro Oliveira", especialidade: "Gerente" },
-    ]);
+    const isLoading = ref(false);
+    const caixaAberto = ref(false);
+    const usuarios = ref([]);
 
     const caixa = ref({
       saldoInicial: "",
-      responsavel: "",
+      usuarioFk: "",
       observacoes: ""
     });
 
     const caixaAtual = ref({
-      responsavel: "",
+      nomeUsuario: "",
       saldoInicial: "",
       dataAbertura: "",
       observacoes: ""
@@ -132,115 +126,69 @@ export default defineComponent({
       return new Date(dataISO).toLocaleString('pt-BR');
     }
 
+    function irParaFecharCaixa() {
+      router.push("/caixa/fechar");
+    }
+
     async function abrirCaixa() {
-      // Validações
-      if (!caixa.value.saldoInicial || parseFloat(caixa.value.saldoInicial) < 0) {
-        showError('Saldo inválido', 'Por favor, informe um saldo inicial válido.');
+      const saldo = parseFloat(caixa.value.saldoInicial);
+      const usuarioId = parseInt(caixa.value.usuarioFk);
+
+      if (isNaN(saldo) || saldo < 0) {
+        showError('Saldo inválido', 'Informe um saldo inicial válido.');
         return;
       }
 
-      if (!caixa.value.responsavel) {
-        showError('Responsável obrigatório', 'Por favor, selecione um responsável.');
+      if (isNaN(usuarioId)) {
+        showError('Responsável obrigatório', 'Selecione um usuário responsável.');
         return;
       }
 
-      // Confirmar abertura
+      const user = usuarios.value.find(u => u.id === usuarioId);
+      const nomeUsuario = user?.nome || user?.perfil || 'Desconhecido';
+
       const confirmed = await confirmAction(
         'Confirmar abertura do caixa',
-        `Abrir caixa com saldo inicial de R$ ${caixa.value.saldoInicial}?\\n\\nResponsável: ${caixa.value.responsavel}`,
+        `Abrir caixa com saldo inicial de R$ ${saldo.toFixed(2)}?\n\nResponsável: ${nomeUsuario}`,
         'Sim, abrir caixa'
       );
-      
       if (!confirmed) return;
 
       isLoading.value = true;
       showLoading('Abrindo caixa...');
 
       try {
-        // Simular chamada de API
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Simular abertura do caixa
+        const now = new Date();
+
+        const payload = {
+          id: 0,
+          saldoInicial: saldo,
+          saldoFinal: 0,
+          dataAbertura: now.toISOString(),
+          dataFechamento: now.toISOString(),
+          status: "Aberto",
+          usuarioFk: usuarioId,
+          nomeUsuario: nomeUsuario
+        };
+
+        await api.post('/api/Caixa', payload);
+
         caixaAtual.value = {
-          responsavel: caixa.value.responsavel,
-          saldoInicial: caixa.value.saldoInicial,
-          dataAbertura: new Date().toISOString(),
+          nomeUsuario,
+          saldoInicial: saldo.toFixed(2),
+          dataAbertura: now.toISOString(),
           observacoes: caixa.value.observacoes
         };
-        
+
         caixaAberto.value = true;
-        
+
         hideLoading();
-        
-        // Mostrar sucesso
-        showSuccess(
-          'Caixa aberto!',
-          `Caixa aberto com sucesso por ${caixa.value.responsavel}.\\nSaldo inicial: R$ ${caixa.value.saldoInicial}`,
-          'Continuar'
-        );
-        
-        // Limpar formulário
-        limparFormulario();
-        
-        // Toast de confirmação
+        showSuccess('Caixa aberto!', `Caixa aberto com sucesso por ${nomeUsuario}.`, 'Continuar');
         showToast.success('Caixa aberto com sucesso!');
-        
+        limparFormulario();
       } catch (error) {
         hideLoading();
-        showError('Erro no servidor', 'Ocorreu um erro ao abrir o caixa. Tente novamente.');
-      } finally {
-        isLoading.value = false;
-      }
-    }
-
-    async function fecharCaixa() {
-      // Solicitar saldo final
-      const result = await confirmWithInput(
-        'Fechar caixa',
-        'Digite o saldo final em dinheiro (R$)',
-        'Fechar caixa'
-      );
-      
-      if (!result.isConfirmed) return;
-      
-      const saldoFinal = parseFloat(result.value);
-      if (isNaN(saldoFinal) || saldoFinal < 0) {
-        showError('Saldo inválido', 'Por favor, digite um valor válido.');
-        return;
-      }
-
-      isLoading.value = true;
-      showLoading('Fechando caixa...');
-
-      try {
-        // Simular chamada de API
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const saldoInicial = parseFloat(caixaAtual.value.saldoInicial);
-        const diferenca = saldoFinal - saldoInicial;
-        
-        hideLoading();
-        
-        // Mostrar resultado do fechamento
-        showSuccess(
-          'Caixa fechado!',
-          `Caixa fechado com sucesso.\\n\\nSaldo inicial: R$ ${saldoInicial.toFixed(2)}\\nSaldo final: R$ ${saldoFinal.toFixed(2)}\\nDiferença: R$ ${diferenca.toFixed(2)}`,
-          'Continuar'
-        );
-        
-        caixaAberto.value = false;
-        caixaAtual.value = {
-          responsavel: "",
-          saldoInicial: "",
-          dataAbertura: "",
-          observacoes: ""
-        };
-        
-        showToast.success('Caixa fechado com sucesso!');
-        
-      } catch (error) {
-        hideLoading();
-        showError('Erro no servidor', 'Ocorreu um erro ao fechar o caixa. Tente novamente.');
+        showError('Erro no servidor', 'Erro ao abrir o caixa.');
       } finally {
         isLoading.value = false;
       }
@@ -249,81 +197,208 @@ export default defineComponent({
     function limparFormulario() {
       Object.assign(caixa.value, {
         saldoInicial: "",
-        responsavel: "",
+        usuarioFk: "",
         observacoes: ""
       });
-      
       showToast.info('Formulário limpo');
     }
 
-    onMounted(() => {
+    onMounted(async () => {
       feather.replace();
-      
-      // Simular verificação se já existe caixa aberto
-      // Em produção, isso viria de uma API
-      const caixaExistente = localStorage.getItem('caixaAberto');
-      if (caixaExistente) {
-        caixaAtual.value = JSON.parse(caixaExistente);
-        caixaAberto.value = true;
+
+      try {
+        const responseUsuarios = await api.get('/api/Usuario');
+        usuarios.value = responseUsuarios.data;
+      } catch {
+        showError('Erro ao carregar usuários', 'Não foi possível buscar os usuários.');
+      }
+
+      try {
+        const responseCaixa = await api.get('/api/Caixa/ultimo');
+        const ultimo = responseCaixa.data;
+
+        if (ultimo && ultimo.status === "Aberto") {
+          const responsavel = await api.get(`/api/Usuario/${ultimo.usuarioFk}`);
+
+          caixaAberto.value = true;
+          caixaAtual.value = {
+            nomeUsuario: responsavel.data.nome || responsavel.data.perfil || "Desconhecido",
+            saldoInicial: ultimo.saldoInicial.toFixed(2),
+            dataAbertura: ultimo.dataAbertura,
+            observacoes: ultimo.observacoes || ""
+          };
+        } else {
+          if (ultimo?.saldoFinal != null) {
+            caixa.value.saldoInicial = ultimo.saldoFinal.toFixed(2);
+          }
+        }
+      } catch {
+        showError('Erro ao verificar caixa', 'Não foi possível obter o status do último caixa.');
       }
     });
 
     return {
-      profissionais,
+      usuarios,
       caixa,
       caixaAtual,
       caixaAberto,
       isLoading,
       formatarDataHora,
       abrirCaixa,
-      fecharCaixa,
-      limparFormulario
+      limparFormulario,
+      irParaFecharCaixa
     };
-  },
+  }
 });
 </script>
 
 <style scoped>
+.form-wrapper {
+  padding: 2rem;
+  max-width: 700px;
+  margin: 0 auto;
+  background: #f9fafb;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.form-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
 .input {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.625rem 0.75rem;
   width: 100%;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.btn {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
+
+.input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.btn-secondary {
-  background-color: #6b7280;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-}
-.btn-danger {
-  background-color: #dc2626;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-}
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
-}
+
 textarea.input {
   resize: vertical;
   min-height: 80px;
 }
+
+.helper-text {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
+.alert-success {
+  background-color: #d1fae5;
+  border: 1px solid #10b981;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  color: #065f46;
+}
+
+.info-box {
+  background-color: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1.5rem;
+  color: #1e3a8a;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+.card-caixa-aberto {
+  background-color: #f1f5f9;
+  border-left: 6px solid #10b981;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  margin: 2rem auto;
+  color: #1e293b;
+}
+
+.card-caixa-aberto p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+}
+
+.card-caixa-aberto .btn {
+  margin-top: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
 </style>

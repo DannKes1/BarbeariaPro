@@ -214,10 +214,8 @@ export default defineComponent({
     const { showToast, showError, confirmAction } = useSweetAlert();
     const showDebugInfo = ref(false);
 
-    // Dados dos clientes
     const clientes = ref<any[]>([]);
 
-    // Filtros e paginação
     const filtros = ref({
       busca: "",
       ordenarPor: "nome",
@@ -229,7 +227,6 @@ export default defineComponent({
       itensPorPagina: 10,
     });
 
-    // Configurar cookies para filtros e paginação
     const {
       canUseCookies,
       saveFilters,
@@ -248,7 +245,6 @@ export default defineComponent({
       }
     );
 
-    // Armazenar informações de cookies
     const cookieInfo = computed(() => getCookieInfo());
 
     const clientesFiltrados = computed(() => {

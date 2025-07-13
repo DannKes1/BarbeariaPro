@@ -4,12 +4,10 @@ import Layout from "@/components/layout/Layout.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // Redirecionamento inicial para login
     {
       path: "/",
       redirect: "/login",
     },
-    // Rotas de autenticação (fora do Layout)
     {
       path: "/login",
       name: "sign-in",
@@ -20,7 +18,6 @@ const router = createRouter({
       name: "sign-up",
       component: () => import("@/views/SignUpView.vue"),
     },
-    // Rotas autenticadas (dentro do Layout)
     {
       path: "/app",
       component: Layout,
