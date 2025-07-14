@@ -280,7 +280,7 @@ export default defineComponent({
       cep: "",
     });
 
-    // Computed para validar se o formulário está válido
+    
     const isFormValid = computed(() => {
       return (
         cliente.value.nome.trim() &&
@@ -293,7 +293,7 @@ export default defineComponent({
       );
     });
 
-    // Formatação automática do telefone
+   
     function formatarTelefone() {
       let valor = cliente.value.telefone.replace(/\D/g, "");
 
@@ -304,7 +304,7 @@ export default defineComponent({
       }
     }
 
-    // Formatação automática do CPF
+    
     function formatarCPF() {
       let valor = cliente.value.cpf.replace(/\D/g, "");
 
@@ -315,13 +315,13 @@ export default defineComponent({
         cliente.value.cpf = valor;
       }
 
-      // Limpar erro se o usuário está digitando
+      
       if (erros.value.cpf && valor.length < 14) {
         erros.value.cpf = "";
       }
     }
 
-    // Formatação automática do CEP
+    
     function formatarCEP() {
       let valor = cliente.value.cep.replace(/\D/g, "");
 
@@ -330,13 +330,13 @@ export default defineComponent({
         cliente.value.cep = valor;
       }
 
-      // Limpar erro se o usuário está digitando
+      
       if (erros.value.cep && valor.length < 9) {
         erros.value.cep = "";
       }
     }
 
-    // Validação do CPF
+    
     function validarCPF() {
       const cpf = cliente.value.cpf.replace(/[\.\-]/g, "");
 
@@ -380,7 +380,7 @@ export default defineComponent({
       return true;
     }
 
-    // Validação da idade
+    
     function validarIdade() {
       const hoje = new Date();
       const nascimento = new Date(cliente.value.dataNascimento);
@@ -399,7 +399,7 @@ export default defineComponent({
       return true;
     }
 
-    // Busca de CEP via API
+    
     async function buscarCEP() {
       const cep = cliente.value.cep.replace(/\D/g, "");
 
@@ -419,7 +419,7 @@ export default defineComponent({
           return;
         }
 
-        // Preencher automaticamente os campos de endereço
+       
         cliente.value.endereco = `${data.logradouro}, ${data.bairro}`;
         cliente.value.cidade = data.localidade;
         cliente.value.estado = data.uf;
@@ -433,9 +433,9 @@ export default defineComponent({
       }
     }
 
-    // Submissão do formulário
+    
     async function submitForm() {
-      // Validações finais
+    
       if (!isFormValid.value) {
         showError(
           "Formulário incompleto",
@@ -444,7 +444,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar cadastro
+     
       const confirmed = await confirmAction(
         "Confirmar cadastro",
         `Deseja cadastrar o cliente ${cliente.value.nome} ${cliente.value.sobrenome}?`,
@@ -457,7 +457,7 @@ export default defineComponent({
       showLoading("Cadastrando cliente...");
 
       try {
-        // Preparar dados para envio
+        
         const payload = {
           nome: cliente.value.nome.trim(),
           sobrenome: cliente.value.sobrenome.trim(),
@@ -473,7 +473,7 @@ export default defineComponent({
           comoConheceu: cliente.value.comoConheceu || null,
         };
 
-        // Chamada real à API
+        
         await api.post("/api/Cliente", payload);
 
         hideLoading();
@@ -486,7 +486,7 @@ export default defineComponent({
         limparFormulario();
         showToast.success("Cliente cadastrado com sucesso!");
 
-        // Redirecionar para consulta de clientes
+        
         router.push("/cliente/consulta");
       } catch (error: any) {
         hideLoading();
@@ -516,7 +516,7 @@ export default defineComponent({
       }
     }
 
-    // Limpar formulário
+    
     function limparFormulario() {
       Object.assign(cliente.value, {
         nome: "",
@@ -565,7 +565,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Container Principal */
+
 .form-container {
   max-width: 800px;
   margin: 0 auto;
@@ -577,7 +577,7 @@ export default defineComponent({
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Cabeçalho do Formulário */
+
 .form-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -598,14 +598,14 @@ export default defineComponent({
   margin: 0;
 }
 
-/* Formulário */
+
 .client-form {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
-/* Seções do Formulário */
+
 .form-section {
   background: #f9fafb;
   padding: 1.5rem;
@@ -622,7 +622,7 @@ export default defineComponent({
   border-bottom: 1px solid #d1d5db;
 }
 
-/* Layout dos Campos */
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -639,7 +639,7 @@ export default defineComponent({
   flex-direction: column;
 }
 
-/* Labels */
+
 .form-label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -647,7 +647,7 @@ export default defineComponent({
   margin-bottom: 0.5rem;
 }
 
-/* Inputs */
+
 .form-input,
 .form-select,
 .form-textarea {
@@ -686,7 +686,7 @@ export default defineComponent({
   min-height: 80px;
 }
 
-/* Estados de Erro */
+
 .input-error {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
@@ -699,7 +699,7 @@ export default defineComponent({
   font-weight: 500;
 }
 
-/* Área de Ações */
+
 .form-actions {
   margin-top: 2rem;
   padding-top: 2rem;
@@ -713,7 +713,7 @@ export default defineComponent({
   gap: 1rem;
 }
 
-/* Botões */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -761,7 +761,7 @@ export default defineComponent({
   transform: none !important;
 }
 
-/* Spinner de Loading */
+
 .loading-spinner {
   width: 1rem;
   height: 1rem;
@@ -777,7 +777,7 @@ export default defineComponent({
   }
 }
 
-/* Ícones */
+
 .icon-check::before {
   content: "✓";
 }
@@ -786,7 +786,7 @@ export default defineComponent({
   content: "↻";
 }
 
-/* Responsividade */
+
 @media (max-width: 768px) {
   .form-container {
     padding: 1rem;

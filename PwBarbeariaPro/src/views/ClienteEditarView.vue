@@ -340,7 +340,7 @@ export default defineComponent({
   props: {
     id: {
       type: String,
-      required: false, // Tornando opcional para permitir fallback
+      required: false, 
     },
   },
   setup(props) {
@@ -356,21 +356,21 @@ export default defineComponent({
       confirmDelete,
     } = useSweetAlert();
 
-    // Debug mode (remover em produção)
+
     const debugMode = ref(false);
 
-    // Obter ID de forma robusta
+    
     const routeId = computed(() => route.params.id as string);
 
     const clienteId = computed(() => {
-      // Primeiro tenta props, depois route params
+     
       const propId = props.id;
       const paramId = routeId.value;
 
       const id = propId || paramId;
       const numericId = Number(id);
 
-      // Log para debug
+  
       if (debugMode.value) {
         console.log("🔍 Debug ClienteEditarView:");
         console.log("Props ID:", propId, typeof propId);
@@ -396,7 +396,7 @@ export default defineComponent({
       cep: "",
     });
 
-    // Computed para validar se o formulário está válido
+  
     const isFormValid = computed(() => {
       if (!cliente.value) return false;
       return (
@@ -408,7 +408,7 @@ export default defineComponent({
       );
     });
 
-    // Computed para detectar alterações
+    
     const temAlteracoes = computed(() => {
       if (!cliente.value || !clienteOriginal.value) return false;
 
@@ -432,7 +432,7 @@ export default defineComponent({
       );
     });
 
-    // Função para verificar se um campo específico foi alterado
+
     const isFieldChanged = (campo: string) => {
       if (!cliente.value || !clienteOriginal.value) return false;
       return (
@@ -440,7 +440,7 @@ export default defineComponent({
       );
     };
 
-    // Carregar dados do cliente
+ 
     const carregarCliente = async () => {
       if (!isValidId.value) {
         erro.value =
@@ -458,7 +458,7 @@ export default defineComponent({
         cliente.value = { ...response.data };
         clienteOriginal.value = { ...response.data };
 
-        // Formatar campos se necessário
+        
         if (cliente.value.cpf) {
           cliente.value.cpf = formatarCPFDisplay(cliente.value.cpf);
         }
@@ -489,7 +489,7 @@ export default defineComponent({
       }
     };
 
-    // Formatação automática do telefone
+    
     function formatarTelefone() {
       let valor = cliente.value.telefone.replace(/\D/g, "");
 
@@ -500,7 +500,7 @@ export default defineComponent({
       }
     }
 
-    // Formatação automática do CEP
+   
     function formatarCEP() {
       let valor = cliente.value.cep.replace(/\D/g, "");
 
@@ -514,7 +514,7 @@ export default defineComponent({
       }
     }
 
-    // Funções auxiliares para formatação de display
+ 
     function formatarCPFDisplay(cpf: string) {
       const numeros = cpf.replace(/\D/g, "");
       return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -535,7 +535,7 @@ export default defineComponent({
       return numeros.replace(/(\d{5})(\d{3})/, "$1-$2");
     }
 
-    // Validação da idade
+  
     function validarIdade() {
       const hoje = new Date();
       const nascimento = new Date(cliente.value.dataNascimento);
@@ -554,7 +554,7 @@ export default defineComponent({
       return true;
     }
 
-    // Busca de CEP via API
+ 
     async function buscarCEP() {
       const cep = cliente.value.cep.replace(/\D/g, "");
 
@@ -574,7 +574,7 @@ export default defineComponent({
           return;
         }
 
-        // Preencher automaticamente os campos de endereço
+        
         cliente.value.endereco = `${data.logradouro}, ${data.bairro}`;
         cliente.value.cidade = data.localidade;
         cliente.value.estado = data.uf;
@@ -588,9 +588,9 @@ export default defineComponent({
       }
     }
 
-    // Submissão do formulário
+    
     async function submitForm() {
-      // Validações finais
+     
       if (!isFormValid.value) {
         showError(
           "Formulário incompleto",
@@ -604,7 +604,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar alterações
+      
       const confirmed = await confirmAction(
         "Confirmar alterações",
         `Deseja salvar as alterações do cliente ${cliente.value.nome} ${cliente.value.sobrenome}?`,
@@ -617,7 +617,7 @@ export default defineComponent({
       showLoading("Salvando alterações...");
 
       try {
-        // Preparar dados para envio
+        
         const payload = {
           id: clienteId.value,
           nome: cliente.value.nome.trim(),
@@ -637,7 +637,7 @@ export default defineComponent({
         console.log("💾 Salvando cliente:", payload);
         await api.put(`/api/Cliente/${clienteId.value}`, payload);
 
-        // Atualizar dados originais
+       
         clienteOriginal.value = { ...cliente.value };
 
         hideLoading();
@@ -676,14 +676,14 @@ export default defineComponent({
       }
     }
 
-    // Resetar formulário
+  
     function resetarFormulario() {
       cliente.value = { ...clienteOriginal.value };
       erros.value = { dataNascimento: "", cep: "" };
       showToast.info("Alterações desfeitas");
     }
 
-    // Excluir cliente
+    
     async function excluirCliente() {
       const confirmed = await confirmDelete(
         "Excluir cliente",
@@ -722,7 +722,7 @@ export default defineComponent({
       }
     }
 
-    // Voltar para consulta
+
     async function voltarParaConsulta() {
       if (temAlteracoes.value) {
         const confirmed = await confirmAction(
@@ -735,7 +735,7 @@ export default defineComponent({
       router.push("/cliente/consulta");
     }
 
-    // Prevenir saída acidental
+   
     const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
       if (temAlteracoes.value) {
         e.preventDefault();
@@ -761,14 +761,14 @@ export default defineComponent({
     });
 
     return {
-      // Props e computed
+  
       props,
       routeId,
       clienteId,
       isValidId,
       debugMode,
 
-      // Estado
+  
       cliente,
       erro,
       isLoading,
@@ -776,7 +776,7 @@ export default defineComponent({
       isFormValid,
       temAlteracoes,
 
-      // Funções
+      
       isFieldChanged,
       carregarCliente,
       formatarTelefone,
@@ -793,7 +793,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Debug Info */
+
 .debug-info {
   background: #fef3c7;
   border: 2px solid #f59e0b;
@@ -814,7 +814,7 @@ export default defineComponent({
   color: #78350f;
 }
 
-/* Container Principal */
+
 .form-container {
   max-width: 800px;
   margin: 0 auto;
@@ -826,7 +826,7 @@ export default defineComponent({
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Cabeçalho do Formulário */
+
 .form-header {
   display: flex;
   justify-content: space-between;
@@ -857,7 +857,7 @@ export default defineComponent({
   margin-left: 1rem;
 }
 
-/* Estados de Loading e Erro */
+
 .loading-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -911,14 +911,14 @@ export default defineComponent({
   flex-wrap: wrap;
 }
 
-/* Formulário */
+
 .client-form {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
-/* Seções do Formulário */
+
 .form-section {
   background: #f9fafb;
   padding: 1.5rem;
@@ -935,7 +935,7 @@ export default defineComponent({
   border-bottom: 1px solid #d1d5db;
 }
 
-/* Layout dos Campos */
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -952,7 +952,8 @@ export default defineComponent({
   flex-direction: column;
 }
 
-/* Labels */
+
+
 .form-label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -960,7 +961,8 @@ export default defineComponent({
   margin-bottom: 0.5rem;
 }
 
-/* Inputs */
+
+
 .form-input,
 .form-select,
 .form-textarea {
@@ -999,7 +1001,7 @@ export default defineComponent({
   min-height: 80px;
 }
 
-/* Estados Especiais dos Inputs */
+
 .input-readonly {
   background-color: #f9fafb !important;
   color: #6b7280 !important;
@@ -1030,7 +1032,7 @@ export default defineComponent({
   font-style: italic;
 }
 
-/* Indicador de Alterações */
+
 .changes-indicator {
   background: #fef3c7;
   border: 1px solid #f59e0b;
@@ -1047,7 +1049,7 @@ export default defineComponent({
   font-weight: 500;
 }
 
-/* Área de Ações */
+
 .form-actions {
   margin-top: 2rem;
   padding-top: 2rem;
@@ -1066,7 +1068,7 @@ export default defineComponent({
   gap: 1rem;
 }
 
-/* Botões */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -1126,7 +1128,7 @@ export default defineComponent({
   transform: none !important;
 }
 
-/* Spinner de Loading */
+
 .loading-spinner {
   width: 1rem;
   height: 1rem;
@@ -1142,7 +1144,7 @@ export default defineComponent({
   }
 }
 
-/* Ícones */
+
 .icon-check::before {
   content: "✓";
 }
@@ -1162,7 +1164,7 @@ export default defineComponent({
   content: "ℹ";
 }
 
-/* Responsividade */
+
 @media (max-width: 768px) {
   .form-container {
     padding: 1rem;

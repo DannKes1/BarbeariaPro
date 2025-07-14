@@ -63,7 +63,7 @@ export default defineComponent({
     const filtros = ref({ data: "", tipo: "" });
     const movimentos = ref<any[]>([]);
 
-    // Função para normalizar tipo (lowercase e sem acento)
+   
     function normalizeTipo(tipo: string) {
       return tipo
         .toLowerCase()
@@ -132,7 +132,7 @@ export default defineComponent({
         try {
           await api.delete(`/api/MovimentacaoCaixa/${movimento.id}`);
 
-          // Atualiza saldo do caixa
+         
           const caixaResponse = await api.get("/api/Caixa/ultimo");
           const caixa = caixaResponse.data;
 
