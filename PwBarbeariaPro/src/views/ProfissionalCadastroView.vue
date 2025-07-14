@@ -8,7 +8,7 @@
     </div>
 
     <form @submit.prevent="submitForm" class="professional-form">
-      <!-- Dados Pessoais -->
+     
       <div class="form-section">
         <h2 class="section-title">Dados Pessoais</h2>
 
@@ -100,7 +100,7 @@
         </div>
       </div>
 
-      <!-- Dados Profissionais -->
+      
       <div class="form-section">
         <h2 class="section-title">Dados Profissionais</h2>
 
@@ -139,7 +139,7 @@
         </div>
       </div>
 
-      <!-- Botões de Ação -->
+      
       <div class="form-actions">
         <div class="actions-group">
           <button

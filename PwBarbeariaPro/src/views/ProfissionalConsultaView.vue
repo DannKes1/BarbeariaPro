@@ -16,7 +16,7 @@
       </div>
     </div>
 
-    <!-- Seção de Filtros -->
+    
     <div class="form-section">
       <h2 class="section-title">Filtros de Busca</h2>
 
@@ -47,7 +47,7 @@
       </div>
     </div>
 
-    <!-- Seção de Resultados -->
+    
     <div v-if="profissionaisFiltrados.length" class="form-section">
       <div class="section-header">
         <h2 class="section-title">Resultados da Busca</h2>
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      <!-- Visualização em Cards -->
+      
       <div v-if="viewMode === 'cards'" class="cards-grid">
         <div
           v-for="p in profissionaisFiltrados"
@@ -122,7 +122,7 @@
         </div>
       </div>
 
-      <!-- Visualização em Tabela -->
+      
       <div v-if="viewMode === 'table'" class="table-container">
         <table class="result-table">
           <thead>
@@ -183,7 +183,7 @@
       </div>
     </div>
 
-    <!-- Estado Vazio -->
+   
     <div v-else class="form-section empty-state">
       <div class="empty-icon">
         <i class="icon-users"></i>

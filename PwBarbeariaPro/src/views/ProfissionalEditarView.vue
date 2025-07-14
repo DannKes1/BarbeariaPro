@@ -10,7 +10,7 @@
       @submit.prevent="submitForm"
       class="professional-form"
     >
-      <!-- Dados Pessoais -->
+   
       <div class="form-section">
         <h2 class="section-title">Dados Pessoais</h2>
 
@@ -102,7 +102,7 @@
         </div>
       </div>
 
-      <!-- Dados Profissionais -->
+      
       <div class="form-section">
         <h2 class="section-title">Dados Profissionais</h2>
 
@@ -141,7 +141,7 @@
         </div>
       </div>
 
-      <!-- Botões de Ação -->
+      
       <div class="form-actions">
         <div class="actions-group">
           <button
@@ -179,7 +179,7 @@
       </div>
     </form>
 
-    <!-- Estado de Loading -->
+    
     <div v-else-if="isLoadingProfissional" class="loading-state">
       <div class="loading-spinner-large"></div>
       <h3 class="loading-title">Carregando dados do profissional...</h3>
@@ -188,7 +188,7 @@
       </p>
     </div>
 
-    <!-- Estado de Erro -->
+    
     <div v-else class="error-state">
       <div class="error-icon">
         <i class="icon-alert-circle"></i>
@@ -203,7 +203,7 @@
       </button>
     </div>
 
-    <!-- Toast de Sucesso -->
+    
     <div v-if="showSuccessToast" class="success-toast">
       <div class="toast-content">
         <i class="icon-check-circle"></i>
@@ -259,7 +259,7 @@ export default defineComponent({
     const originalProfissional = ref<Profissional | null>(null);
     const erros = ref({ cpf: "", dataNascimento: "" });
 
-    // Computed para validar se o formulário está válido
+    
     const isFormValid = computed(() => {
       if (!profissional.value) return false;
 
@@ -276,7 +276,7 @@ export default defineComponent({
       );
     });
 
-    // Computed para verificar se houve mudanças
+    
     const hasChanges = computed(() => {
       if (!profissional.value || !originalProfissional.value) return false;
 
@@ -293,7 +293,7 @@ export default defineComponent({
       );
     });
 
-    // Formatação automática do telefone
+    
     function formatarTelefone() {
       if (!profissional.value) return;
 
@@ -351,7 +351,7 @@ export default defineComponent({
     async function submitForm() {
       if (!profissional.value) return;
 
-      // Validações finais
+      
       if (!isFormValid.value) {
         showError(
           "Formulário incompleto",
@@ -365,7 +365,7 @@ export default defineComponent({
         return;
       }
 
-      // Confirmar alterações
+      
       const confirmed = await confirmAction(
         "Confirmar alterações",
         `Deseja salvar as alterações feitas no profissional ${profissional.value.nome} ${profissional.value.sobrenome}?`,
@@ -385,7 +385,7 @@ export default defineComponent({
 
         hideLoading();
 
-        // Atualizar dados originais
+        
         originalProfissional.value = { ...profissional.value };
 
         showSuccess(
@@ -393,7 +393,7 @@ export default defineComponent({
           `Os dados de ${profissional.value.nome} ${profissional.value.sobrenome} foram atualizados com sucesso.`
         );
 
-        // Mostrar toast de sucesso
+       
         showSuccessToast.value = true;
         setTimeout(() => {
           showSuccessToast.value = false;
@@ -460,7 +460,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Container Principal */
+
 .form-container {
   max-width: 800px;
   margin: 0 auto;
@@ -472,7 +472,7 @@ export default defineComponent({
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Cabeçalho do Formulário */
+
 .form-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -493,14 +493,14 @@ export default defineComponent({
   margin: 0;
 }
 
-/* Formulário */
+
 .professional-form {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
-/* Seções do Formulário */
+
 .form-section {
   background: #f9fafb;
   padding: 1.5rem;
@@ -517,7 +517,7 @@ export default defineComponent({
   border-bottom: 1px solid #d1d5db;
 }
 
-/* Layout dos Campos */
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -534,7 +534,7 @@ export default defineComponent({
   flex-direction: column;
 }
 
-/* Labels */
+
 .form-label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -542,7 +542,7 @@ export default defineComponent({
   margin-bottom: 0.5rem;
 }
 
-/* Inputs */
+
 .form-input,
 .form-select {
   padding: 0.75rem;
@@ -571,7 +571,7 @@ export default defineComponent({
   color: #9ca3af;
 }
 
-/* Estados de Erro */
+
 .input-error {
   border-color: #ef4444 !important;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
@@ -591,7 +591,7 @@ export default defineComponent({
   font-style: italic;
 }
 
-/* Área de Ações */
+
 .form-actions {
   margin-top: 2rem;
   padding-top: 2rem;
@@ -610,7 +610,7 @@ export default defineComponent({
   gap: 1rem;
 }
 
-/* Botões */
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -671,7 +671,7 @@ export default defineComponent({
   transform: none !important;
 }
 
-/* Estados de Loading e Erro */
+
 .loading-state,
 .error-state {
   text-align: center;
@@ -711,7 +711,7 @@ export default defineComponent({
   margin-bottom: 1rem;
 }
 
-/* Spinner de Loading */
+
 .loading-spinner {
   width: 1rem;
   height: 1rem;
@@ -727,7 +727,7 @@ export default defineComponent({
   }
 }
 
-/* Toast de Sucesso */
+
 .success-toast {
   position: fixed;
   top: 2rem;
