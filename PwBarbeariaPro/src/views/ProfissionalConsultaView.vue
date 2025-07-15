@@ -2,9 +2,6 @@
   <div class="form-container">
     <div class="form-header">
       <h1 class="form-title">Consultar Profissionais</h1>
-      <p class="form-subtitle">
-        Gerencie e visualize todos os profissionais cadastrados no sistema
-      </p>
       <div class="header-actions">
         <button
           class="btn btn-primary"
@@ -349,7 +346,6 @@ export default defineComponent({
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Cabeçalho do Formulário */
 .form-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -358,11 +354,18 @@ export default defineComponent({
   position: relative;
 }
 
-.form-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.header-actions {
+  margin-top: 0;
+  justify-content: flex-end;
 }
 
 .form-subtitle {
@@ -371,11 +374,6 @@ export default defineComponent({
   margin: 0 0 1.5rem 0;
 }
 
-.header-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-}
 
 /* Seções do Formulário */
 .form-section {

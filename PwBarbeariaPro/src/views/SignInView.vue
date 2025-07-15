@@ -18,7 +18,6 @@
         </p>
       </div>
 
-      <!-- Formulário de Login -->
       <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
@@ -64,7 +63,6 @@
           </div>
         </div>
 
-        <!-- Opções de login -->
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <input
@@ -113,7 +111,6 @@
           </button>
         </div>
 
-        <!-- Link para cadastro -->
         <div class="text-center">
           <span class="text-sm text-gray-600">
             Não tem uma conta?
@@ -127,7 +124,6 @@
         </div>
       </form>
 
-      <!-- Informações de usuário lembrado -->
       <div v-if="rememberedUser" class="mt-4 p-3 bg-blue-50 rounded-md">
         <div class="flex items-center">
           <i class="feather-icon text-blue-400 mr-2" data-feather="user"></i>
@@ -147,7 +143,6 @@
         </div>
       </div>
 
-      <!-- Configurações de privacidade -->
       <div class="mt-4 text-center">
         <button
           @click="showPrivacySettings = !showPrivacySettings"
@@ -158,7 +153,6 @@
         </button>
       </div>
 
-      <!-- Modal de configurações de privacidade -->
       <div v-if="showPrivacySettings" class="mt-4 p-4 bg-gray-50 rounded-md">
         <h4 class="text-sm font-medium text-gray-900 mb-3">
           Configurações de Privacidade
@@ -226,7 +220,6 @@
         </div>
       </div>
 
-      <!-- Debug info (apenas em desenvolvimento) -->
       <div v-if="isDevelopment" class="mt-4 p-3 bg-yellow-50 rounded text-xs">
         <strong>Debug:</strong><br />
         Cookies habilitados: {{ cookiesEnabled ? "Sim" : "Não" }}<br />
@@ -239,74 +232,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
+import { ref, reactive, computed, onMounted, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useCookies } from "@/composables/useCookies";
 import { useSweetAlert } from "@/composables/useSweetAlert";
-import feather from "feather-icons";
 
-// Interfaces
 interface LoginForm {
   email: string;
   password: string;
   rememberMe: boolean;
 }
 
-interface RememberedUser {
-  name: string;
-  email: string;
-  lastLogin: string;
-}
-
 interface PrivacySettings {
   rememberLogin: boolean;
   autoRedirect: boolean;
-  keepSession: boolean;
 }
 
-// Composables
 const router = useRouter();
 const route = useRoute();
 const {
   useCookieState,
   COOKIE_CONFIGS,
   hasConsentForCategory,
-  areCookiesEnabled,
 } = useCookies();
-const { showToast, showError, showSuccess, confirmAction } = useSweetAlert();
+const { showToast, showError, showSuccess } = useSweetAlert();
 
-// Estados
 const isLoading = ref(false);
-const showPassword = ref(false);
-const showPrivacySettings = ref(false);
-const isDevelopment = import.meta.env.DEV;
-
-// Cookies states
-const rememberUserState = useCookieState(COOKIE_CONFIGS.REMEMBER_USER);
-const lastRouteState = useCookieState(COOKIE_CONFIGS.LAST_ROUTE);
-const authTokenState = useCookieState(COOKIE_CONFIGS.AUTH_TOKEN);
-const userDataState = useCookieState(COOKIE_CONFIGS.USER_DATA);
-
-// Estados computados
-const cookiesEnabled = computed(() => areCookiesEnabled());
-const rememberedUser = computed(() => rememberUserState.value.value);
-const lastRoute = computed(() => lastRouteState.value.value);
-
-// Formulário de login
-const loginForm = reactive<LoginForm>({
-  email: "",
-  password: "",
-  rememberMe: false,
-});
-
-// Configurações de privacidade
-const privacySettings = reactive<PrivacySettings>({
-  rememberLogin: true,
-  autoRedirect: true,
-  keepSession: false,
-});
-
-// Validação do formulário
 const isFormValid = computed(() => {
   return (
     loginForm.email.trim() &&
@@ -315,61 +266,33 @@ const isFormValid = computed(() => {
   );
 });
 
-// Carregar dados lembrados
-const loadRememberedData = () => {
-  if (rememberedUser.value && privacySettings.rememberLogin) {
-    loginForm.email = rememberedUser.value.email;
-    loginForm.rememberMe = true;
-  }
-};
+const loginForm = reactive<LoginForm>({
+  email: "",
+  password: "",
+  rememberMe: false,
+});
 
-// Salvar usuário lembrado
+const privacySettings = reactive<PrivacySettings>({
+  rememberLogin: true,
+  autoRedirect: true,
+});
+
 const saveRememberedUser = (userData: any) => {
   if (loginForm.rememberMe && hasConsentForCategory("preferences")) {
-    const rememberedData: RememberedUser = {
-      name: userData.name,
+    const rememberedData = {
       email: userData.email,
       lastLogin: new Date().toISOString(),
     };
-    rememberUserState.setValue(rememberedData);
+    useCookieState(COOKIE_CONFIGS.REMEMBER_USER).setValue(rememberedData);
   }
 };
 
-// Limpar usuário lembrado
-const clearRememberedUser = () => {
-  rememberUserState.deleteValue();
-  loginForm.email = "";
-  loginForm.rememberMe = false;
-  showToast.info("Dados de login removidos");
-};
-
-// Salvar última rota
-const saveLastRoute = () => {
-  if (privacySettings.autoRedirect && hasConsentForCategory("functionality")) {
-    const currentRoute = (route.query.redirect as string) || route.fullPath;
-    if (currentRoute !== "/login" && currentRoute !== "/signup") {
-      lastRouteState.setValue(currentRoute);
-    }
-  }
-};
-
-// Salvar configurações de privacidade
-const savePrivacySettings = () => {
-  // Aqui você pode salvar as configurações em cookies se necessário
-  showToast.success("Configurações de privacidade salvas!");
-  showPrivacySettings.value = false;
-};
-
-// Handle esqueceu a senha
-const handleForgotPassword = () => {
-  showToast.info("Funcionalidade em desenvolvimento");
-  // Aqui você implementaria a lógica de recuperação de senha
-};
-
-// Verificar se já está logado
 const checkExistingLogin = async () => {
-  if (authTokenState.value.value && userDataState.value.value) {
-    const shouldRedirect = await confirmAction(
+  const token = useCookieState(COOKIE_CONFIGS.AUTH_TOKEN).value;
+  const userData = useCookieState(COOKIE_CONFIGS.USER_DATA).value;
+
+  if (token && userData) {
+    const shouldRedirect = await showToast.confirm(
       "Já logado",
       "Você já está logado. Deseja ir para o dashboard?",
       "Sim, ir para dashboard"
@@ -381,98 +304,51 @@ const checkExistingLogin = async () => {
   }
 };
 
-// Handle do login
 const handleLogin = async () => {
   if (!isFormValid.value) {
-    showError(
-      "Formulário inválido",
-      "Por favor, preencha todos os campos corretamente."
-    );
+    showError("Formulário inválido", "Por favor, preencha todos os campos corretamente.");
     return;
   }
 
   try {
     isLoading.value = true;
+    await new Promise((resolve) => setTimeout(resolve, 1000)); 
 
-    // Simular chamada de API
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // Simular validação de credenciais
-    if (
-      loginForm.email === "admin@barbearia.com" &&
-      loginForm.password === "123456"
-    ) {
-      // Dados simulados do usuário
+    if (loginForm.email === "admin@barbearia.com" && loginForm.password === "123456") {
       const userData = {
         id: 1,
         name: "João Silva",
         email: loginForm.email,
         role: "admin",
-        permissions: ["read", "write", "delete"],
       };
 
-      // Salvar token de autenticação
-      if (hasConsentForCategory("essential")) {
-        const token = "jwt_token_" + Date.now();
-        authTokenState.setValue(token);
-        userDataState.setValue(userData);
-      }
+      const token = "jwt_token_" + Date.now();
+      useCookieState(COOKIE_CONFIGS.AUTH_TOKEN).setValue(token);
+      useCookieState(COOKIE_CONFIGS.USER_DATA).setValue(userData);
 
-      // Salvar dados lembrados se solicitado
-      if (loginForm.rememberMe) {
-        saveRememberedUser(userData);
-      }
+      saveRememberedUser(userData);
 
-      // Definir para onde redirecionar
-      const redirectTo =
-        (route.query.redirect as string) ||
-        (privacySettings.autoRedirect ? lastRoute.value : null) ||
-        "/dashboard"; // Redirecionando para o dashboard
+      const redirectTo = route.query.redirect as string || "/dashboard";
+      showSuccess("Login realizado!", `Bem-vindo, ${userData.name}!`);
 
-      // Mostrar modal de sucesso e aguardar o usuário fechar
-      await showSuccess("Login realizado!", `Bem-vindo, ${userData.name}!`);
-
-      // Redirecionar após o modal ser fechado
-      await router.push(redirectTo);
+      await nextTick(() => {
+        router.push(redirectTo);
+      });
     } else {
       throw new Error("Credenciais inválidas");
     }
   } catch (error) {
-    console.error("Erro no login:", error);
     showError("Erro no login", "E-mail ou senha incorretos. Tente novamente.");
   } finally {
     isLoading.value = false;
   }
 };
 
-// Watch para salvar rota quando mudar
-watch(() => route.fullPath, saveLastRoute);
-
-// Watch para carregar dados quando cookies mudarem
-watch(rememberedUser, loadRememberedData);
-
-// Lifecycle
 onMounted(async () => {
-  // Carregar dados lembrados
-  loadRememberedData();
-
-  // Salvar rota atual como última rota
-  saveLastRoute();
-
-  // Verificar se já está logado
   await checkExistingLogin();
-
-  // Inicializar ícones
-  await nextTick();
-  feather.replace();
-});
-
-// Watch para atualizar ícones
-watch([showPassword, isLoading, showPrivacySettings], async () => {
-  await nextTick();
-  feather.replace();
 });
 </script>
+
 
 <style scoped>
 .feather-icon {

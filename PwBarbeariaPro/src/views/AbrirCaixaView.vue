@@ -42,11 +42,6 @@
               formatarDataHora(caixaAtual.dataAbertura)
             }}</span>
           </div>
-
-          <div class="info-item" v-if="caixaAtual.observacoes">
-            <label class="info-label">Observações:</label>
-            <span class="info-value">{{ caixaAtual.observacoes }}</span>
-          </div>
         </div>
       </div>
 
@@ -55,17 +50,10 @@
           <i class="icon-lock"></i>
           Fechar Caixa
         </button>
-
-        <button class="btn btn-secondary" @click="irParaExtrato">
-          <i class="icon-file-text"></i>
-          Ver Extrato
-        </button>
       </div>
     </div>
 
-    <!-- Formulário de Abertura -->
     <form v-else @submit.prevent="abrirCaixa" class="caixa-form">
-      <!-- Saldo Inicial -->
       <div class="form-section">
         <h3 class="section-title">Configuração Inicial</h3>
 
@@ -94,92 +82,67 @@
         </div>
       </div>
 
-      <!-- Responsável -->
       <div class="form-section">
         <h3 class="section-title">Responsabilidade</h3>
 
         <div class="form-group">
           <label class="form-label" for="responsavel"
-            >Profissional Responsável *</label
+            >Usuário Responsável *</label
           >
 
-          <!-- Estado de carregamento dos profissionais -->
-          <div v-if="isLoadingProfissionais" class="loading-select">
+          <div v-if="isLoadingUsuarios" class="loading-select">
             <div class="loading-spinner"></div>
-            <span>Carregando profissionais...</span>
+            <span>Carregando usuários...</span>
           </div>
 
-          <!-- Erro ao carregar profissionais -->
-          <div v-else-if="erroProfissionais" class="error-select">
+          <div v-else-if="erroUsuarios" class="error-select">
             <div class="error-icon">⚠️</div>
-            <span>{{ erroProfissionais }}</span>
+            <span>{{ erroUsuarios }}</span>
             <button
               type="button"
               class="btn btn-sm btn-primary"
-              @click="carregarProfissionais"
+              @click="carregarUsuarios"
             >
               Tentar Novamente
             </button>
           </div>
 
-          <!-- Select de profissionais -->
           <select
             v-else
             id="responsavel"
-            v-model="caixa.profissionalId"
+            v-model="caixa.usuarioId"
             class="form-select"
-            :class="{ 'select-error': erros.profissional }"
+            :class="{ 'select-error': erros.usuario }"
             required
-            :disabled="isLoading || profissionais.length === 0"
+            :disabled="isLoading || usuarios.length === 0"
           >
             <option disabled value="">
               {{
-                profissionais.length === 0
-                  ? "Nenhum profissional encontrado"
-                  : "Selecione um profissional"
+                usuarios.length === 0
+                  ? "Nenhum usuário encontrado"
+                  : "Selecione um usuário"
               }}
             </option>
             <option
-              v-for="profissional in profissionais"
-              :key="getProfissionalId(profissional)"
-              :value="getProfissionalId(profissional)"
+              v-for="usuario in usuarios"
+              :key="getUsuarioId(usuario)"
+              :value="getUsuarioId(usuario)"
             >
-              {{ profissional.nome }} {{ profissional.sobrenome }} -
-              {{ profissional.especialidade || "Geral" }}
+              {{ usuario.perfil }} {{ usuario.sobrenome }} -
+              {{ usuario.especialidade || "Geral" }}
             </option>
           </select>
 
-          <p v-if="erros.profissional" class="error-message">
-            {{ erros.profissional }}
+          <p v-if="erros.usuario" class="error-message">
+            {{ erros.usuario }}
           </p>
 
           <p class="field-note">
-            O profissional será responsável pelo caixa durante o expediente
+            O usuário será responsável pelo caixa durante o expediente
           </p>
         </div>
       </div>
 
-      <!-- Observações -->
-      <div class="form-section">
-        <h3 class="section-title">Informações Adicionais</h3>
-
-        <div class="form-group">
-          <label class="form-label">Observações</label>
-          <textarea
-            v-model="caixa.observacoes"
-            class="form-textarea"
-            rows="3"
-            placeholder="Observações sobre a abertura do caixa (opcional)"
-            :disabled="isLoading"
-            maxlength="500"
-          ></textarea>
-          <p class="field-note">
-            {{ caixa.observacoes.length }}/500 caracteres
-          </p>
-        </div>
-      </div>
-
-      <!-- Informações Importantes -->
       <div class="info-box">
         <div class="info-header">
           <i class="info-icon">ℹ️</i>
@@ -188,14 +151,13 @@
         <ul class="info-list">
           <li>O caixa deve ser aberto no início de cada expediente</li>
           <li>Apenas um caixa pode estar aberto por vez</li>
-          <li>O profissional responsável será registrado para auditoria</li>
+          <li>O usuário responsável será registrado para auditoria</li>
           <li>Confira o saldo inicial antes de confirmar</li>
           <li>Todas as movimentações serão vinculadas a este caixa</li>
         </ul>
       </div>
 
-      <!-- Resumo da Abertura -->
-      <div v-if="caixa.saldoInicial && caixa.profissionalId" class="resumo-box">
+      <div v-if="caixa.saldoInicial && caixa.usuarioId" class="resumo-box">
         <h3 class="resumo-title">📋 Resumo da Abertura</h3>
         <div class="resumo-content">
           <div class="resumo-item">
@@ -203,15 +165,11 @@
             {{ formatarValor(caixa.saldoInicial) }}
           </div>
           <div class="resumo-item">
-            <strong>Responsável:</strong> {{ getNomeProfissionalSelecionado() }}
-          </div>
-          <div class="resumo-item" v-if="caixa.observacoes">
-            <strong>Observações:</strong> {{ caixa.observacoes }}
+            <strong>Responsável:</strong> {{ getNomeUsuarioSelecionado() }}
           </div>
         </div>
       </div>
 
-      <!-- Botões de Ação -->
       <div class="form-actions">
         <button
           type="button"
@@ -237,6 +195,7 @@
   </div>
 </template>
 
+
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
@@ -244,12 +203,11 @@ import { useSweetAlert } from "@/composables/useSweetAlert";
 import { api } from "@/common/http";
 import feather from "feather-icons";
 
-// Interface para o profissional
-interface Profissional {
+interface Usuario {
   id?: number;
   Id?: number;
-  profissionalId?: number;
-  nome: string;
+  usuarioId?: number;
+  perfil: string;
   sobrenome: string;
   especialidade?: string;
   telefone?: string;
@@ -257,7 +215,6 @@ interface Profissional {
   ativo?: boolean;
 }
 
-// Interface para o caixa da API
 interface CaixaApi {
   id?: number;
   status: string;
@@ -265,181 +222,136 @@ interface CaixaApi {
   saldoFinal?: number;
   dataAbertura: string;
   dataFechamento?: string;
-  profissionalId: number;
-  observacoes?: string;
+  usuarioId: number;
 }
 
-// Interface para exibição do caixa atual
 interface CaixaAtual {
   nomeResponsavel: string;
   saldoInicial: string;
   dataAbertura: string;
-  observacoes: string;
 }
 
 export default defineComponent({
   name: "AbrirCaixaView",
   setup() {
     const router = useRouter();
-    const {
-      showToast,
-      showError,
-      showSuccess,
-      showLoading,
-      hideLoading,
-      confirmAction,
-    } = useSweetAlert();
+    const { showToast, showError, showSuccess, showLoading, hideLoading, confirmAction } = useSweetAlert();
 
-    // Debug mode (remover em produção)
     const debugMode = ref(true);
-
-    // Estado
     const isLoading = ref(false);
-    const isLoadingProfissionais = ref(false);
+    const isLoadingUsuarios = ref(false);
     const caixaAberto = ref(false);
-    const profissionais = ref<Profissional[]>([]);
-    const erroProfissionais = ref("");
+    const usuarios = ref<Usuario[]>([]);
+    const erroUsuarios = ref("");
 
-    // Dados do formulário
     const caixa = ref({
       saldoInicial: "",
-      profissionalId: "",
-      observacoes: "",
+      usuarioId: "",
     });
 
-    // Dados do caixa atual (se aberto)
     const caixaAtual = ref<CaixaAtual>({
       nomeResponsavel: "",
       saldoInicial: "",
       dataAbertura: "",
-      observacoes: "",
     });
 
-    // Erros de validação
     const erros = ref({
-      profissional: "",
+      usuario: "",
       saldo: "",
     });
 
-    // Computed
     const isFormValid = computed(() => {
       const saldo = parseFloat(caixa.value.saldoInicial);
       return (
         !isNaN(saldo) &&
         saldo >= 0 &&
-        caixa.value.profissionalId &&
-        profissionais.value.length > 0
+        caixa.value.usuarioId &&
+        usuarios.value.length > 0
       );
     });
 
-    // Função para obter ID do profissional de forma robusta
-    const getProfissionalId = (profissional: Profissional) => {
-      return profissional.id || profissional.Id || profissional.profissionalId;
+    const getUsuarioId = (usuario: Usuario) => {
+      return usuario.id || usuario.Id || usuario.usuarioId;
     };
 
-    // Função para obter nome do profissional selecionado
-    const getNomeProfissionalSelecionado = () => {
-      const id = parseInt(caixa.value.profissionalId);
-      const profissional = profissionais.value.find(
-        (p) => getProfissionalId(p) === id
-      );
-      if (profissional) {
-        return `${profissional.nome} ${profissional.sobrenome}`;
+    const getNomeUsuarioSelecionado = () => {
+      const id = parseInt(caixa.value.usuarioId);
+      const usuario = usuarios.value.find((p) => getUsuarioId(p) === id);
+      if (usuario) {
+        return `${usuario.perfil} ${usuario.sobrenome}`;
       }
       return "";
     };
 
-    // Carregar profissionais da API
-    const carregarProfissionais = async () => {
-      isLoadingProfissionais.value = true;
-      erroProfissionais.value = "";
+    const carregarUsuarios = async () => {
+      isLoadingUsuarios.value = true;
+      erroUsuarios.value = "";
 
       try {
-        console.log("🔄 Carregando profissionais...");
-        const response = await api.get("/api/Profissional");
+        const response = await api.get("/api/Usuario");
 
-        profissionais.value = response.data || [];
+        usuarios.value = response.data || [];
 
         if (debugMode.value) {
-          console.log("✅ Profissionais carregados:", profissionais.value);
-          console.log("🔍 Total de profissionais:", profissionais.value.length);
-          if (profissionais.value.length > 0) {
-            console.log(
-              "🔍 Estrutura do primeiro profissional:",
-              profissionais.value[0]
-            );
-          }
+          console.log("✅ Usuários carregados:", usuarios.value);
         }
 
-        if (profissionais.value.length === 0) {
-          erroProfissionais.value =
-            "Nenhum profissional cadastrado encontrado.";
+        if (usuarios.value.length === 0) {
+          erroUsuarios.value =
+            "Nenhum usuário cadastrado encontrado.";
           showToast.warning(
-            "Nenhum profissional encontrado. Cadastre profissionais primeiro."
+            "Nenhum usuário encontrado. Cadastre usuários primeiro."
           );
         } else {
           showToast.success(
-            `${profissionais.value.length} profissionais carregados`
+            `${usuarios.value.length} usuários carregados`
           );
         }
       } catch (error: any) {
-        console.error("❌ Erro ao carregar profissionais:", error);
+        console.error("❌ Erro ao carregar usuários:", error);
 
         if (error.response?.status === 404) {
-          erroProfissionais.value = "Nenhum profissional encontrado.";
+          erroUsuarios.value = "Nenhum usuário encontrado.";
         } else if (error.response?.status === 500) {
-          erroProfissionais.value = "Erro interno do servidor.";
+          erroUsuarios.value = "Erro interno do servidor.";
         } else {
-          erroProfissionais.value =
-            "Não foi possível carregar os profissionais.";
+          erroUsuarios.value =
+            "Não foi possível carregar os usuários.";
         }
 
-        showError("Erro", erroProfissionais.value);
+        showError("Erro", erroUsuarios.value);
       } finally {
-        isLoadingProfissionais.value = false;
+        isLoadingUsuarios.value = false;
       }
     };
 
-    // Verificar status do caixa
     const verificarStatusCaixa = async () => {
       try {
-        console.log("🔄 Verificando status do caixa...");
         const response = await api.get<CaixaApi>("/api/Caixa/ultimo");
         const ultimoCaixa = response.data;
 
-        if (debugMode.value) {
-          console.log("📦 Último caixa:", ultimoCaixa);
-        }
-
         if (ultimoCaixa.status === "Aberto") {
-          // Buscar dados do profissional responsável
           try {
-            const profissionalResponse = await api.get<Profissional>(
-              `/api/Profissional/${ultimoCaixa.profissionalId}`
+            const usuarioResponse = await api.get<Usuario>(
+              `/api/Usuario/${ultimoCaixa.usuarioId}`
             );
-            const profissional = profissionalResponse.data;
+            const usuario = usuarioResponse.data;
 
             caixaAberto.value = true;
             caixaAtual.value = {
-              nomeResponsavel: `${profissional.nome} ${profissional.sobrenome}`,
+              nomeResponsavel: `${usuario.perfil} ${usuario.sobrenome}`,
               saldoInicial: ultimoCaixa.saldoInicial.toFixed(2),
               dataAbertura: ultimoCaixa.dataAbertura,
-              observacoes: ultimoCaixa.observacoes || "",
             };
-
-            console.log("✅ Caixa aberto encontrado:", caixaAtual.value);
           } catch (error) {
-            console.error("❌ Erro ao buscar profissional responsável:", error);
             caixaAberto.value = true;
             caixaAtual.value = {
-              nomeResponsavel: "Profissional não encontrado",
+              nomeResponsavel: "Usuário não encontrado",
               saldoInicial: ultimoCaixa.saldoInicial.toFixed(2),
               dataAbertura: ultimoCaixa.dataAbertura,
-              observacoes: ultimoCaixa.observacoes || "",
             };
           }
         } else {
-          // Caixa fechado - sugerir saldo inicial baseado no saldo final
           if (ultimoCaixa.saldoFinal != null) {
             caixa.value.saldoInicial = ultimoCaixa.saldoFinal.toFixed(2);
             showToast.info(
@@ -459,24 +371,17 @@ export default defineComponent({
       }
     };
 
-    // Formatação de moeda
     const formatarMoeda = () => {
-      // Remove caracteres não numéricos exceto ponto e vírgula
       let valor = caixa.value.saldoInicial.replace(/[^\d.,]/g, "");
-
-      // Substitui vírgula por ponto para cálculos
       valor = valor.replace(",", ".");
-
       caixa.value.saldoInicial = valor;
     };
 
-    // Formatação para exibição
     const formatarValor = (valor: string | number) => {
       const num = typeof valor === "string" ? parseFloat(valor) : valor;
       return isNaN(num) ? "0,00" : num.toFixed(2).replace(".", ",");
     };
 
-    // Formatação de data e hora
     const formatarDataHora = (dataISO: string) => {
       if (!dataISO) return "";
       try {
@@ -492,12 +397,10 @@ export default defineComponent({
       }
     };
 
-    // Validar formulário
     const validarFormulario = () => {
-      erros.value = { profissional: "", saldo: "" };
+      erros.value = { usuario: "", saldo: "" };
       let valido = true;
 
-      // Validar saldo
       const saldo = parseFloat(caixa.value.saldoInicial);
       if (isNaN(saldo) || saldo < 0) {
         erros.value.saldo =
@@ -505,22 +408,20 @@ export default defineComponent({
         valido = false;
       }
 
-      // Validar profissional
-      const profissionalId = parseInt(caixa.value.profissionalId);
+      const usuarioId = parseInt(caixa.value.usuarioId);
       if (
-        isNaN(profissionalId) ||
-        !profissionais.value.find(
-          (p) => getProfissionalId(p) === profissionalId
+        isNaN(usuarioId) ||
+        !usuarios.value.find(
+          (p) => getUsuarioId(p) === usuarioId
         )
       ) {
-        erros.value.profissional = "Selecione um profissional responsável.";
+        erros.value.usuario = "Selecione um usuário responsável.";
         valido = false;
       }
 
       return valido;
     };
 
-    // Abrir caixa
     const abrirCaixa = async () => {
       if (!validarFormulario()) {
         showError(
@@ -531,13 +432,12 @@ export default defineComponent({
       }
 
       const saldo = parseFloat(caixa.value.saldoInicial);
-      const profissionalId = parseInt(caixa.value.profissionalId);
-      const profissional = profissionais.value.find(
-        (p) => getProfissionalId(p) === profissionalId
+      const usuarioId = parseInt(caixa.value.usuarioId);
+      const usuario = usuarios.value.find(
+        (p) => getUsuarioId(p) === usuarioId
       )!;
-      const nomeResponsavel = `${profissional.nome} ${profissional.sobrenome}`;
+      const nomeResponsavel = `${usuario.perfil} ${usuario.sobrenome}`;
 
-      // Confirmar abertura
       const confirmed = await confirmAction(
         "Confirmar abertura do caixa",
         `Deseja abrir o caixa com as seguintes informações?\n\n` +
@@ -555,23 +455,21 @@ export default defineComponent({
       try {
         const agora = new Date();
         const payload = {
+          id: 0,
           saldoInicial: saldo,
           saldoFinal: saldo,
           dataAbertura: agora.toISOString(),
+          dataFechamento: agora.toISOString(),
           status: "Aberto",
-          profissionalId: profissionalId,
-          observacoes: caixa.value.observacoes.trim() || null,
+          usuarioFk: usuarioId,
         };
 
-        console.log("💾 Abrindo caixa:", payload);
         await api.post("/api/Caixa", payload);
 
-        // Atualizar estado local
         caixaAtual.value = {
           nomeResponsavel,
           saldoInicial: saldo.toFixed(2),
           dataAbertura: agora.toISOString(),
-          observacoes: caixa.value.observacoes,
         };
 
         caixaAberto.value = true;
@@ -598,7 +496,6 @@ export default defineComponent({
             "Caixa já aberto",
             "Já existe um caixa aberto. Feche o caixa atual antes de abrir um novo."
           );
-          // Recarregar status do caixa
           verificarStatusCaixa();
         } else {
           showError(
@@ -611,18 +508,15 @@ export default defineComponent({
       }
     };
 
-    // Limpar formulário
     const limparFormulario = () => {
       caixa.value = {
         saldoInicial: "",
-        profissionalId: "",
-        observacoes: "",
+        usuarioId: "",
       };
-      erros.value = { profissional: "", saldo: "" };
+      erros.value = { usuario: "", saldo: "" };
       showToast.info("Formulário limpo");
     };
 
-    // Navegação
     const irParaFecharCaixa = () => {
       router.push("/caixa/fechar");
     };
@@ -631,34 +525,28 @@ export default defineComponent({
       router.push("/caixa/extrato");
     };
 
-    // Inicialização
     onMounted(async () => {
-      console.log("🚀 AbrirCaixaView montado");
       feather.replace();
 
-      // Carregar dados em paralelo
-      await Promise.all([carregarProfissionais(), verificarStatusCaixa()]);
+      await Promise.all([carregarUsuarios(), verificarStatusCaixa()]);
     });
 
     return {
-      // Estado
       isLoading,
-      isLoadingProfissionais,
+      isLoadingUsuarios,
       caixaAberto,
-      profissionais,
-      erroProfissionais,
+      usuarios,
+      erroUsuarios,
       caixa,
       caixaAtual,
       erros,
       debugMode,
 
-      // Computed
       isFormValid,
 
-      // Funções
-      getProfissionalId,
-      getNomeProfissionalSelecionado,
-      carregarProfissionais,
+      getUsuarioId,
+      getNomeUsuarioSelecionado,
+      carregarUsuarios,
       formatarMoeda,
       formatarValor,
       formatarDataHora,

@@ -99,116 +99,6 @@
         </div>
       </div>
 
-   
-      <div class="form-section">
-        <h2 class="section-title">Dados Adicionais</h2>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Endereço</label>
-            <input
-              v-model="cliente.endereco"
-              class="form-input"
-              :disabled="isLoading"
-              placeholder="Rua, número, bairro"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">CEP</label>
-            <input
-              v-model="cliente.cep"
-              class="form-input"
-              :disabled="isLoading"
-              placeholder="00000-000"
-              @input="formatarCEP"
-              @blur="buscarCEP"
-              maxlength="9"
-            />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Cidade</label>
-            <input
-              v-model="cliente.cidade"
-              class="form-input"
-              :disabled="isLoading"
-              placeholder="Nome da cidade"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Estado</label>
-            <select
-              v-model="cliente.estado"
-              class="form-select"
-              :disabled="isLoading"
-            >
-              <option value="">Selecione o estado</option>
-              <option value="AC">Acre</option>
-              <option value="AL">Alagoas</option>
-              <option value="AP">Amapá</option>
-              <option value="AM">Amazonas</option>
-              <option value="BA">Bahia</option>
-              <option value="CE">Ceará</option>
-              <option value="DF">Distrito Federal</option>
-              <option value="ES">Espírito Santo</option>
-              <option value="GO">Goiás</option>
-              <option value="MA">Maranhão</option>
-              <option value="MT">Mato Grosso</option>
-              <option value="MS">Mato Grosso do Sul</option>
-              <option value="MG">Minas Gerais</option>
-              <option value="PA">Pará</option>
-              <option value="PB">Paraíba</option>
-              <option value="PR">Paraná</option>
-              <option value="PE">Pernambuco</option>
-              <option value="PI">Piauí</option>
-              <option value="RJ">Rio de Janeiro</option>
-              <option value="RN">Rio Grande do Norte</option>
-              <option value="RS">Rio Grande do Sul</option>
-              <option value="RO">Rondônia</option>
-              <option value="RR">Roraima</option>
-              <option value="SC">Santa Catarina</option>
-              <option value="SP">São Paulo</option>
-              <option value="SE">Sergipe</option>
-              <option value="TO">Tocantins</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Observações</label>
-            <textarea
-              v-model="cliente.observacoes"
-              class="form-textarea"
-              :disabled="isLoading"
-              placeholder="Informações adicionais sobre o cliente"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Como conheceu o salão?</label>
-            <select
-              v-model="cliente.comoConheceu"
-              class="form-select"
-              :disabled="isLoading"
-            >
-              <option value="">Selecione uma opção</option>
-              <option value="Indicação de amigo">Indicação de amigo</option>
-              <option value="Redes sociais">Redes sociais</option>
-              <option value="Google/Internet">Google/Internet</option>
-              <option value="Passou na frente">Passou na frente</option>
-              <option value="Panfleto/Propaganda">Panfleto/Propaganda</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
 
       <div class="form-actions">
         <div class="actions-group">
@@ -266,12 +156,6 @@ export default defineComponent({
       cpf: "",
       email: "",
       dataNascimento: "",
-      endereco: "",
-      cep: "",
-      cidade: "",
-      estado: "",
-      observacoes: "",
-      comoConheceu: "",
     });
 
     const erros = ref({
@@ -459,18 +343,13 @@ export default defineComponent({
       try {
         
         const payload = {
+          id: 0,
           nome: cliente.value.nome.trim(),
           sobrenome: cliente.value.sobrenome.trim(),
           telefone: cliente.value.telefone,
           cpf: cliente.value.cpf.replace(/[\.\-]/g, ""),
           email: cliente.value.email.trim() || null,
           dataNascimento: cliente.value.dataNascimento,
-          endereco: cliente.value.endereco.trim() || null,
-          cep: cliente.value.cep.replace(/\D/g, "") || null,
-          cidade: cliente.value.cidade.trim() || null,
-          estado: cliente.value.estado || null,
-          observacoes: cliente.value.observacoes.trim() || null,
-          comoConheceu: cliente.value.comoConheceu || null,
         };
 
         

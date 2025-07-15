@@ -80,7 +80,7 @@ const router = createRouter({
           component: () => import("@/views/ServicoConsultaView.vue"),
         },
         {
-          path: "/servico/editar/:nome",
+          path: "/servico/editar/:id",
           name: "servico-editar",
           component: () => import("@/views/ServicoEditarView.vue"),
         },

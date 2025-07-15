@@ -8,7 +8,6 @@
     </div>
 
     <form @submit.prevent="submitForm" class="professional-form">
-     
       <div class="form-section">
         <h2 class="section-title">Dados Pessoais</h2>
 
@@ -19,8 +18,6 @@
               v-model="profissional.nome"
               class="form-input"
               required
-              pattern="[A-Za-zÀ-ü ]+"
-              :disabled="isLoading"
               placeholder="Digite o nome"
             />
           </div>
@@ -31,8 +28,6 @@
               v-model="profissional.sobrenome"
               class="form-input"
               required
-              pattern="[A-Za-zÀ-ü ]+"
-              :disabled="isLoading"
               placeholder="Digite o sobrenome"
             />
           </div>
@@ -45,7 +40,6 @@
               v-model="profissional.telefone"
               class="form-input"
               required
-              :disabled="isLoading"
               placeholder="(11) 98765-4321"
               @input="formatarTelefone"
               maxlength="15"
@@ -57,15 +51,11 @@
             <input
               v-model="profissional.cpf"
               class="form-input"
-              :class="{ 'input-error': erros.cpf }"
               required
-              :disabled="isLoading"
               placeholder="000.000.000-00"
               @input="formatarCPF"
-              @blur="validarCPF"
               maxlength="14"
             />
-            <p v-if="erros.cpf" class="error-message">{{ erros.cpf }}</p>
           </div>
         </div>
 
@@ -77,7 +67,6 @@
               class="form-input"
               type="email"
               required
-              :disabled="isLoading"
               placeholder="exemplo@email.com"
             />
           </div>
@@ -85,22 +74,15 @@
           <div class="form-group">
             <label class="form-label">Data de Nascimento *</label>
             <input
-              v-model="profissional.dataNascimento"
+              v-model="profissional.dataNasc"
               class="form-input"
-              :class="{ 'input-error': erros.dataNascimento }"
               required
               type="date"
-              @change="validarIdade"
-              :disabled="isLoading"
             />
-            <p v-if="erros.dataNascimento" class="error-message">
-              {{ erros.dataNascimento }}
-            </p>
           </div>
         </div>
       </div>
 
-      
       <div class="form-section">
         <h2 class="section-title">Dados Profissionais</h2>
 
@@ -111,7 +93,6 @@
               v-model="profissional.especialidade"
               class="form-select"
               required
-              :disabled="isLoading"
             >
               <option value="">Selecione uma especialidade</option>
               <option value="Cabeleireiro">Cabeleireiro</option>
@@ -123,32 +104,16 @@
               <option value="Depilador">Depilador</option>
             </select>
           </div>
-
-          <div class="form-group">
-            <label class="form-label">Salário (R$)</label>
-            <input
-              v-model="profissional.salario"
-              class="form-input"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0,00"
-              :disabled="isLoading"
-            />
-          </div>
         </div>
       </div>
 
-      
       <div class="form-actions">
         <div class="actions-group">
           <button
             type="button"
             class="btn btn-secondary"
             @click="limparFormulario"
-            :disabled="isLoading"
           >
-            <i class="icon-refresh"></i>
             Limpar Formulário
           </button>
 
@@ -157,8 +122,6 @@
             type="submit"
             :disabled="isLoading || !isFormValid"
           >
-            <span v-if="isLoading" class="loading-spinner"></span>
-            <i v-else class="icon-check"></i>
             {{ isLoading ? "Cadastrando..." : "Cadastrar Profissional" }}
           </button>
         </div>
@@ -170,24 +133,11 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useSweetAlert } from "@/composables/useSweetAlert";
 import { api } from "@/common/http";
-import feather from "feather-icons";
 
 export default defineComponent({
-  name: "ProfissionalCadastroView",
   setup() {
     const router = useRouter();
-    const {
-      showToast,
-      showError,
-      showSuccess,
-      showLoading,
-      hideLoading,
-      confirmAction,
-    } = useSweetAlert();
-
-    const isLoading = ref(false);
 
     const profissional = ref({
       nome: "",
@@ -195,194 +145,46 @@ export default defineComponent({
       telefone: "",
       cpf: "",
       email: "",
-      dataNascimento: "",
+      dataNasc: "",
       especialidade: "",
-      salario: "",
     });
 
-    const erros = ref({ cpf: "", dataNascimento: "" });
+    const isLoading = ref(false);
 
-    // Computed para validar se o formulário está válido
     const isFormValid = computed(() => {
-      return (
-        profissional.value.nome.trim() &&
-        profissional.value.sobrenome.trim() &&
-        profissional.value.telefone.trim() &&
-        profissional.value.cpf.trim() &&
-        profissional.value.email.trim() &&
-        profissional.value.dataNascimento &&
-        profissional.value.especialidade &&
-        !erros.value.cpf &&
-        !erros.value.dataNascimento
-      );
+      return Object.values(profissional.value).every((campo) => campo);
     });
 
-    // Formatação automática do telefone
-    function formatarTelefone() {
-      let valor = profissional.value.telefone.replace(/\D/g, "");
+    const formatarTelefone = () => {
+      profissional.value.telefone = profissional.value.telefone.replace(/\D/g, "").replace(/(\d{2})(\d{4,5})(\d{4})/, "($1) $2-$3");
+    };
 
-      if (valor.length <= 11) {
-        valor = valor.replace(/(\d{2})(\d)/, "($1) $2");
-        valor = valor.replace(/(\d{4,5})(\d{4})$/, "$1-$2");
-        profissional.value.telefone = valor;
-      }
-    }
+    const formatarCPF = () => {
+      profissional.value.cpf = profissional.value.cpf.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    };
 
-    // Formatação automática do CPF
-    function formatarCPF() {
-      let valor = profissional.value.cpf.replace(/\D/g, "");
-
-      if (valor.length <= 11) {
-        valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-        valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-        valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-        profissional.value.cpf = valor;
-      }
-
-      // Limpar erro se o usuário está digitando
-      if (erros.value.cpf && valor.length < 14) {
-        erros.value.cpf = "";
-      }
-    }
-
-    function validarCPF() {
-      const cpf = profissional.value.cpf.replace(/[\.\-]/g, "");
-
-      if (cpf.length !== 11) {
-        erros.value.cpf = "CPF deve conter 11 dígitos.";
-        return false;
-      }
-
-      if (/^(\d)\1{10}$/.test(cpf)) {
-        erros.value.cpf = "CPF inválido.";
-        return false;
-      }
-
-      let soma = 0;
-      let resto;
-
-      for (let i = 1; i <= 9; i++) {
-        soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-      }
-
-      resto = (soma * 10) % 11;
-      if (resto === 10 || resto === 11) resto = 0;
-      if (resto !== parseInt(cpf[9])) {
-        erros.value.cpf = "CPF inválido.";
-        return false;
-      }
-
-      soma = 0;
-      for (let i = 1; i <= 10; i++) {
-        soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
-      }
-
-      resto = (soma * 10) % 11;
-      if (resto === 10 || resto === 11) resto = 0;
-      if (resto !== parseInt(cpf[10])) {
-        erros.value.cpf = "CPF inválido.";
-        return false;
-      }
-
-      erros.value.cpf = "";
-      return true;
-    }
-
-    function validarIdade() {
-      const hoje = new Date();
-      const nascimento = new Date(profissional.value.dataNascimento);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const ajuste =
-        hoje.getMonth() < nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() &&
-          hoje.getDate() < nascimento.getDate());
-
-      if (idade - (ajuste ? 1 : 0) < 18) {
-        erros.value.dataNascimento =
-          "Profissional deve ter pelo menos 18 anos.";
-        return false;
-      }
-
-      erros.value.dataNascimento = "";
-      return true;
-    }
-
-    async function submitForm() {
-      // Validações finais
-      if (!isFormValid.value) {
-        showError(
-          "Formulário incompleto",
-          "Por favor, preencha todos os campos obrigatórios corretamente."
-        );
-        return;
-      }
-
-      // Confirmar cadastro
-      const confirmed = await confirmAction(
-        "Confirmar cadastro",
-        `Deseja cadastrar o profissional ${profissional.value.nome} ${profissional.value.sobrenome} como ${profissional.value.especialidade}?`,
-        "Sim, cadastrar"
-      );
-
-      if (!confirmed) return;
-
+    const submitForm = async () => {
       isLoading.value = true;
-      showLoading("Cadastrando profissional...");
-
       try {
-        // Chamada real à API
         await api.post("/api/Profissional", profissional.value);
-
-        hideLoading();
-
-        showSuccess(
-          "Profissional cadastrado!",
-          `${profissional.value.nome} ${profissional.value.sobrenome} foi cadastrado com sucesso.`
-        );
-
-        limparFormulario();
-        showToast.success("Profissional cadastrado com sucesso!");
         router.push("/profissional/consulta");
       } catch (error) {
-        hideLoading();
-        showError(
-          "Erro no servidor",
-          "Ocorreu um erro ao cadastrar o profissional. Tente novamente."
-        );
+        console.error("Erro ao cadastrar profissional", error);
       } finally {
         isLoading.value = false;
       }
-    }
+    };
 
-    function limparFormulario() {
-      Object.assign(profissional.value, {
-        nome: "",
-        sobrenome: "",
-        telefone: "",
-        cpf: "",
-        email: "",
-        dataNascimento: "",
-        especialidade: "",
-        salario: "",
-      });
-
-      erros.value = { cpf: "", dataNascimento: "" };
-      showToast.info("Formulário limpo");
-    }
-
-    onMounted(() => {
-      feather.replace();
-    });
+    const limparFormulario = () => {
+      Object.keys(profissional.value).forEach((key) => profissional.value[key] = "");
+    };
 
     return {
       profissional,
-      erros,
       isLoading,
       isFormValid,
       formatarTelefone,
       formatarCPF,
-      validarCPF,
-      validarIdade,
       submitForm,
       limparFormulario,
     };
@@ -390,8 +192,8 @@ export default defineComponent({
 });
 </script>
 
+
 <style scoped>
-/* Container Principal */
 .form-container {
   max-width: 800px;
   margin: 0 auto;

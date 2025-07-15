@@ -2,9 +2,7 @@
   <div class="form-container">
     <div class="form-header">
       <h1 class="form-title">Consultar Clientes</h1>
-      <p class="form-subtitle">
-        Gerencie e visualize todos os clientes cadastrados no sistema
-      </p>
+
       <div class="header-actions">
         <button
           class="btn btn-primary"
@@ -488,7 +486,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Container Principal */
 .form-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -500,14 +497,20 @@ export default defineComponent({
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Cabeçalho do Formulário */
 .form-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid #f3f4f6;
-  position: relative;
 }
+
+.header-actions {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
 
 .form-title {
   font-size: 2rem;
@@ -522,13 +525,6 @@ export default defineComponent({
   margin: 0 0 1.5rem 0;
 }
 
-.header-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-/* Seções do Formulário */
 .form-section {
   background: #f9fafb;
   padding: 1.5rem;
@@ -564,7 +560,6 @@ export default defineComponent({
   color: #6b7280;
 }
 
-/* Layout dos Campos */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -572,7 +567,6 @@ export default defineComponent({
   margin-bottom: 1.5rem;
 }
 
-/* Labels */
 .form-label {
   font-size: 0.875rem;
   font-weight: 600;
@@ -581,7 +575,6 @@ export default defineComponent({
   display: block;
 }
 
-/* Inputs */
 .form-input,
 .form-select {
   padding: 0.75rem;
@@ -604,7 +597,6 @@ export default defineComponent({
   color: #9ca3af;
 }
 
-/* Botões */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -662,7 +654,6 @@ export default defineComponent({
   font-size: 0.875rem;
 }
 
-/* Toggle de Visualização */
 .view-toggle {
   display: flex;
   gap: 0.25rem;
@@ -691,14 +682,11 @@ export default defineComponent({
   background: #f3f4f6;
 }
 
-/* Grid de Cartões */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 }
-
-/* Cartão do Cliente */
 .professional-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -765,7 +753,6 @@ export default defineComponent({
   flex: 1;
 }
 
-/* Tabela */
 .table-container {
   background: #ffffff;
   border-radius: 8px;
@@ -874,7 +861,6 @@ export default defineComponent({
   margin-top: 1.5rem;
 }
 
-/* Estado Vazio */
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;
@@ -936,7 +922,6 @@ export default defineComponent({
   content: "ℹ️";
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
   .form-container {
     padding: 1rem;

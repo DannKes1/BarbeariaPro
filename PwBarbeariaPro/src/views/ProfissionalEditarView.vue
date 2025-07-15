@@ -5,68 +5,31 @@
       <p class="form-subtitle">Atualize os dados do profissional no sistema</p>
     </div>
 
-    <form
-      v-if="profissional"
-      @submit.prevent="submitForm"
-      class="professional-form"
-    >
-   
+    <form v-if="profissional" @submit.prevent="submitForm" class="professional-form">
       <div class="form-section">
         <h2 class="section-title">Dados Pessoais</h2>
 
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Nome *</label>
-            <input
-              v-model="profissional.nome"
-              class="form-input"
-              required
-              pattern="[A-Za-zÀ-ü ]+"
-              :disabled="isLoading"
-              placeholder="Digite o nome"
-            />
+            <input v-model="profissional.nome" class="form-input" required placeholder="Digite o nome" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Sobrenome *</label>
-            <input
-              v-model="profissional.sobrenome"
-              class="form-input"
-              required
-              pattern="[A-Za-zÀ-ü ]+"
-              :disabled="isLoading"
-              placeholder="Digite o sobrenome"
-            />
+            <input v-model="profissional.sobrenome" class="form-input" required placeholder="Digite o sobrenome" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Telefone *</label>
-            <input
-              v-model="profissional.telefone"
-              class="form-input"
-              required
-              :disabled="isLoading"
-              placeholder="(11) 98765-4321"
-              @input="formatarTelefone"
-              maxlength="15"
-            />
+            <input v-model="profissional.telefone" class="form-input" required placeholder="(11) 98765-4321" @input="formatarTelefone" maxlength="15" />
           </div>
 
           <div class="form-group">
             <label class="form-label">CPF *</label>
-            <input
-              v-model="profissional.cpf"
-              class="form-input"
-              :class="{ 'input-error': erros.cpf }"
-              required
-              :disabled="true"
-              placeholder="000.000.000-00"
-              maxlength="14"
-              readonly
-            />
-            <p v-if="erros.cpf" class="error-message">{{ erros.cpf }}</p>
+            <input v-model="profissional.cpf" class="form-input" required disabled placeholder="000.000.000-00" maxlength="14" readonly />
             <p class="info-message">CPF não pode ser alterado</p>
           </div>
         </div>
@@ -74,47 +37,23 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">E-mail *</label>
-            <input
-              v-model="profissional.email"
-              class="form-input"
-              type="email"
-              required
-              :disabled="isLoading"
-              placeholder="exemplo@email.com"
-            />
+            <input v-model="profissional.email" class="form-input" type="email" required placeholder="exemplo@email.com" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Data de Nascimento *</label>
-            <input
-              v-model="profissional.dataNascimento"
-              class="form-input"
-              :class="{ 'input-error': erros.dataNascimento }"
-              required
-              type="date"
-              @change="validarIdade"
-              :disabled="isLoading"
-            />
-            <p v-if="erros.dataNascimento" class="error-message">
-              {{ erros.dataNascimento }}
-            </p>
+            <input v-model="profissional.dataNasc" class="form-input" required type="date" />
           </div>
         </div>
       </div>
 
-      
       <div class="form-section">
         <h2 class="section-title">Dados Profissionais</h2>
 
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Especialidade *</label>
-            <select
-              v-model="profissional.especialidade"
-              class="form-select"
-              required
-              :disabled="isLoading"
-            >
+            <select v-model="profissional.especialidade" class="form-select" required>
               <option value="">Selecione uma especialidade</option>
               <option value="Cabeleireiro">Cabeleireiro</option>
               <option value="Barbeiro">Barbeiro</option>
@@ -125,332 +64,86 @@
               <option value="Depilador">Depilador</option>
             </select>
           </div>
-
-          <div class="form-group">
-            <label class="form-label">Salário (R$)</label>
-            <input
-              v-model="profissional.salario"
-              class="form-input"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0,00"
-              :disabled="isLoading"
-            />
-          </div>
         </div>
       </div>
 
-      
       <div class="form-actions">
         <div class="actions-group">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            @click="voltarParaConsulta"
-            :disabled="isLoading"
-          >
-            <i class="icon-arrow-left"></i>
-            Voltar
-          </button>
-
+          <button type="button" class="btn btn-secondary" @click="voltarParaConsulta">Voltar</button>
           <div class="primary-actions">
-            <button
-              type="button"
-              class="btn btn-outline"
-              @click="resetarFormulario"
-              :disabled="isLoading || !hasChanges"
-            >
-              <i class="icon-refresh"></i>
-              Desfazer Alterações
-            </button>
-
-            <button
-              class="btn btn-primary"
-              type="submit"
-              :disabled="isLoading || !isFormValid || !hasChanges"
-            >
-              <span v-if="isLoading" class="loading-spinner"></span>
-              <i v-else class="icon-check"></i>
+            <button type="button" class="btn btn-outline" @click="resetarFormulario" :disabled="isLoading || !hasChanges">Desfazer Alterações</button>
+            <button class="btn btn-primary" type="submit" :disabled="isLoading || !isFormValid || !hasChanges">
               {{ isLoading ? "Salvando..." : "Salvar Alterações" }}
             </button>
           </div>
         </div>
       </div>
     </form>
-
-    
-    <div v-else-if="isLoadingProfissional" class="loading-state">
-      <div class="loading-spinner-large"></div>
-      <h3 class="loading-title">Carregando dados do profissional...</h3>
-      <p class="loading-text">
-        Por favor, aguarde enquanto buscamos as informações.
-      </p>
-    </div>
-
-    
-    <div v-else class="error-state">
-      <div class="error-icon">
-        <i class="icon-alert-circle"></i>
-      </div>
-      <h3 class="error-title">Profissional não encontrado</h3>
-      <p class="error-text">
-        O profissional solicitado não existe ou foi removido do sistema.
-      </p>
-      <button class="btn btn-primary" @click="voltarParaConsulta">
-        <i class="icon-arrow-left"></i>
-        Voltar à Lista de Profissionais
-      </button>
-    </div>
-
-    
-    <div v-if="showSuccessToast" class="success-toast">
-      <div class="toast-content">
-        <i class="icon-check-circle"></i>
-        <span>Alterações salvas com sucesso!</span>
-      </div>
-    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
-import { useSweetAlert } from "@/composables/useSweetAlert";
+import { defineComponent, ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { api } from "@/common/http";
-import feather from "feather-icons";
-
-interface Profissional {
-  id: number;
-  nome: string;
-  sobrenome: string;
-  telefone: string;
-  cpf: string;
-  email: string;
-  dataNascimento: string;
-  especialidade: string;
-  salario: string;
-}
 
 export default defineComponent({
-  name: "ProfissionalEditarView",
-  props: {
-    id: {
-      type: Number,
-      required: true,
-    },
-  },
-  setup(props) {
+  setup() {
     const router = useRouter();
-    const {
-      showToast,
-      showError,
-      showSuccess,
-      showLoading,
-      hideLoading,
-      confirmAction,
-    } = useSweetAlert();
-
+    const route = useRoute();
+    const profissional = ref<any>(null);
+    const originalProfissional = ref<any>(null);
     const isLoading = ref(false);
-    const isLoadingProfissional = ref(true);
-    const showSuccessToast = ref(false);
 
-    const profissional = ref<Profissional | null>(null);
-    const originalProfissional = ref<Profissional | null>(null);
-    const erros = ref({ cpf: "", dataNascimento: "" });
-
-    
     const isFormValid = computed(() => {
-      if (!profissional.value) return false;
-
-      return (
-        profissional.value.nome.trim() &&
-        profissional.value.sobrenome.trim() &&
-        profissional.value.telefone.trim() &&
-        profissional.value.cpf.trim() &&
-        profissional.value.email.trim() &&
-        profissional.value.dataNascimento &&
-        profissional.value.especialidade &&
-        !erros.value.cpf &&
-        !erros.value.dataNascimento
-      );
+      return profissional.value && Object.values(profissional.value).every((campo) => campo);
     });
 
-    
     const hasChanges = computed(() => {
-      if (!profissional.value || !originalProfissional.value) return false;
-
-      return (
-        profissional.value.nome !== originalProfissional.value.nome ||
-        profissional.value.sobrenome !== originalProfissional.value.sobrenome ||
-        profissional.value.telefone !== originalProfissional.value.telefone ||
-        profissional.value.email !== originalProfissional.value.email ||
-        profissional.value.dataNascimento !==
-          originalProfissional.value.dataNascimento ||
-        profissional.value.especialidade !==
-          originalProfissional.value.especialidade ||
-        profissional.value.salario !== originalProfissional.value.salario
-      );
+      return JSON.stringify(profissional.value) !== JSON.stringify(originalProfissional.value);
     });
 
-    
-    function formatarTelefone() {
-      if (!profissional.value) return;
+    const formatarTelefone = () => {
+      profissional.value.telefone = profissional.value.telefone.replace(/\D/g, "").replace(/(\d{2})(\d{4,5})(\d{4})/, "($1) $2-$3");
+    };
 
-      let valor = profissional.value.telefone.replace(/\D/g, "");
+    const loadProfissional = async () => {
+      const res = await api.get(`/api/Profissional/${route.params.id}`);
+       profissional.value = {
+        ...res.data,
+         dataNasc: res.data.dataNasc.slice(0, 10)
+        };
+      originalProfissional.value = JSON.parse(JSON.stringify(res.data));
+    };
 
-      if (valor.length <= 11) {
-        valor = valor.replace(/(\d{2})(\d)/, "($1) $2");
-        valor = valor.replace(/(\d{4,5})(\d{4})$/, "$1-$2");
-        profissional.value.telefone = valor;
-      }
-    }
-
-    function validarIdade() {
-      if (!profissional.value) return false;
-
-      const hoje = new Date();
-      const nascimento = new Date(profissional.value.dataNascimento);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const ajuste =
-        hoje.getMonth() < nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() &&
-          hoje.getDate() < nascimento.getDate());
-
-      if (idade - (ajuste ? 1 : 0) < 18) {
-        erros.value.dataNascimento =
-          "Profissional deve ter pelo menos 18 anos.";
-        return false;
-      }
-
-      erros.value.dataNascimento = "";
-      return true;
-    }
-
-    async function loadProfissional() {
-      isLoadingProfissional.value = true;
-
-      try {
-        const res = await api.get<Profissional>(
-          `/api/Profissional/${props.id}`
-        );
-        profissional.value = { ...res.data };
-        originalProfissional.value = { ...res.data };
-      } catch (error) {
-        console.error("Erro ao carregar profissional:", error);
-        profissional.value = null;
-        showError(
-          "Erro ao carregar",
-          "Não foi possível carregar os dados do profissional."
-        );
-      } finally {
-        isLoadingProfissional.value = false;
-      }
-    }
-
-    async function submitForm() {
-      if (!profissional.value) return;
-
-      
-      if (!isFormValid.value) {
-        showError(
-          "Formulário incompleto",
-          "Por favor, preencha todos os campos obrigatórios corretamente."
-        );
-        return;
-      }
-
-      if (!hasChanges.value) {
-        showToast.info("Nenhuma alteração foi feita.");
-        return;
-      }
-
-      
-      const confirmed = await confirmAction(
-        "Confirmar alterações",
-        `Deseja salvar as alterações feitas no profissional ${profissional.value.nome} ${profissional.value.sobrenome}?`,
-        "Sim, salvar"
-      );
-
-      if (!confirmed) return;
-
+    const submitForm = async () => {
       isLoading.value = true;
-      showLoading("Salvando alterações...");
-
       try {
-        await api.put(
-          `/api/Profissional/${profissional.value.id}`,
-          profissional.value
-        );
-
-        hideLoading();
-
-        
-        originalProfissional.value = { ...profissional.value };
-
-        showSuccess(
-          "Alterações salvas!",
-          `Os dados de ${profissional.value.nome} ${profissional.value.sobrenome} foram atualizados com sucesso.`
-        );
-
-       
-        showSuccessToast.value = true;
-        setTimeout(() => {
-          showSuccessToast.value = false;
-        }, 3000);
-
-        showToast.success("Profissional atualizado com sucesso!");
+        await api.put(`/api/Profissional/${profissional.value.id}`, profissional.value);
+        router.push("/profissional/consulta");
       } catch (error) {
-        hideLoading();
-        console.error("Erro ao salvar:", error);
-        showError(
-          "Erro ao salvar",
-          "Ocorreu um erro ao salvar as alterações. Tente novamente."
-        );
+        console.error(error);
       } finally {
         isLoading.value = false;
       }
-    }
+    };
 
-    function resetarFormulario() {
-      if (!originalProfissional.value) return;
+    const resetarFormulario = () => {
+      profissional.value = JSON.parse(JSON.stringify(originalProfissional.value));
+    };
 
-      profissional.value = { ...originalProfissional.value };
-      erros.value = { cpf: "", dataNascimento: "" };
-      showToast.info("Alterações desfeitas");
-    }
+    const voltarParaConsulta = () => {
+      router.push("/profissional/consulta");
+    };
 
-    function voltarParaConsulta() {
-      if (hasChanges.value) {
-        confirmAction(
-          "Descartar alterações?",
-          "Você tem alterações não salvas. Deseja realmente sair sem salvar?",
-          "Sim, descartar"
-        ).then((confirmed) => {
-          if (confirmed) {
-            router.push("/profissional/consulta");
-          }
-        });
-      } else {
-        router.push("/profissional/consulta");
-      }
-    }
-
-    onMounted(() => {
-      loadProfissional();
-      feather.replace();
-    });
+    onMounted(loadProfissional);
 
     return {
       profissional,
-      erros,
       isLoading,
-      isLoadingProfissional,
       isFormValid,
       hasChanges,
-      showSuccessToast,
       formatarTelefone,
-      validarIdade,
       submitForm,
       resetarFormulario,
       voltarParaConsulta,
