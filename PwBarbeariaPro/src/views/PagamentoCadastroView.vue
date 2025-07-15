@@ -1,431 +1,513 @@
 <template>
-  <div class="p-6 max-w-3xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Cadastrar Pagamento</h1>
+  <div class="form-container">
+    <div class="form-header">
+      <h1 class="form-title">Cadastrar Pagamento</h1>
+      <p class="form-subtitle">Preencha os dados do pagamento</p>
+    </div>
 
-    <form @submit.prevent="registrarPagamento" class="space-y-4">
-      <div>
-        <label class="block mb-1 font-semibold">Selecione o Agendamento</label>
-        <select
-          v-model="pagamento.agendamentoId"
-          class="input"
-          required
-          @change="carregarDadosAgendamento"
-          :disabled="isLoading"
-        >
-          <option disabled value="">Selecione um agendamento</option>
-          <option
-            v-for="ag in agendamentosPendentes"
-            :key="ag.id"
-            :value="ag.id.toString()"
-          >
-            {{ ag.cliente }} - {{ ag.servico }} ({{ formatarData(ag.data) }} {{ ag.horario }})
-          </option>
-        </select>
-        <small class="text-gray-600">Apenas agendamentos concluídos e sem pagamento</small>
-      </div>
+    <form @submit.prevent="registrarPagamento" class="client-form">
+      <div class="form-section">
+        <h2 class="section-title">Dados do Agendamento</h2>
 
-      <div v-if="agendamentoSelecionado" class="bg-blue-50 p-4 rounded">
-        <h3 class="font-semibold text-blue-800 mb-2">📋 Detalhes do Agendamento</h3>
-        <div class="text-blue-700 space-y-1">
-          <p><strong>Cliente:</strong> {{ agendamentoSelecionado.cliente }}</p>
-          <p><strong>Serviço:</strong> {{ agendamentoSelecionado.servico }}</p>
-          <p><strong>Profissional:</strong> {{ agendamentoSelecionado.profissional }}</p>
-          <p><strong>Data/Hora:</strong> {{ formatarData(agendamentoSelecionado.data) }} {{ agendamentoSelecionado.horario }}</p>
-          <p><strong>Valor do Serviço:</strong> R$ {{ agendamentoSelecionado.valor.toFixed(2) }}</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Selecione o Agendamento</label>
+            <select v-model="pagamento.agendamentoId" class="form-select" required @change="carregarDadosAgendamento" :disabled="isLoading">
+              <option disabled value="">Selecione um agendamento</option>
+              <option v-for="ag in agendamentosPendentes" :key="ag.id" :value="ag.id.toString()">
+                {{ ag.clienteNome }} - {{ ag.servico }} ({{ formatarData(ag.dataHorario) }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Usuário Responsável</label>
+            <select v-model="pagamento.usuarioId" class="form-select" required :disabled="isLoading">
+              <option disabled value="">Selecione um usuário</option>
+              <option v-for="user in usuarios" :key="user.id" :value="user.id">{{ user.perfil }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Forma de Pagamento</label>
+            <select v-model="pagamento.forma" class="form-select" required :disabled="isLoading">
+              <option disabled value="">Selecione</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao_debito">Cartão de Débito</option>
+              <option value="cartao_credito">Cartão de Crédito</option>
+              <option value="pix">PIX</option>
+              <option value="transferencia">Transferência</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select v-model="pagamento.status" class="form-select" required :disabled="isLoading">
+              <option value="efetuado">Efetuado</option>
+              <option value="pendente">Pendente</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Valor Pago (R$)</label>
+            <input v-model.number="pagamento.valor" class="form-input" type="number" min="0" step="0.01" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Troco (R$)</label>
+            <input :value="calcularTroco()" class="form-input" readonly />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="grid-column: 1 / -1">
+            <label class="form-label">Observações</label>
+            <textarea v-model="pagamento.observacoes" class="form-textarea"></textarea>
+          </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 font-semibold">Forma de Pagamento</label>
-          <select
-            v-model="pagamento.forma"
-            class="input"
-            required
-            :disabled="isLoading"
-          >
-            <option disabled value="">Selecione</option>
-            <option value="dinheiro">💵 Dinheiro</option>
-            <option value="cartao_debito">💳 Cartão de Débito</option>
-            <option value="cartao_credito">💳 Cartão de Crédito</option>
-            <option value="pix">📱 PIX</option>
-            <option value="transferencia">🏦 Transferência</option>
-          </select>
+      <div class="form-actions">
+        <div class="actions-group">
+          <button type="submit" class="btn btn-primary" :disabled="!formularioValido || isLoading">
+            <span v-if="isLoading" class="loading-spinner"></span>
+            {{ isLoading ? "Registrando..." : "Registrar Pagamento" }}
+          </button>
+
+          <button type="button" class="btn btn-secondary" @click="limparFormulario" :disabled="isLoading">
+            Limpar
+          </button>
         </div>
-
-        <div>
-          <label class="block mb-1 font-semibold">Status do Pagamento</label>
-          <select
-            v-model="pagamento.status"
-            class="input"
-            required
-            :disabled="isLoading"
-          >
-            <option disabled value="">Selecione</option>
-            <option value="efetuado">✅ Efetuado</option>
-            <option value="pendente">⏳ Pendente</option>
-            <option value="cancelado">❌ Cancelado</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block mb-1 font-semibold">Valor Pago (R$)</label>
-          <input
-            v-model.number="pagamento.valor"
-            class="input"
-            required
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0,00"
-            :disabled="isLoading"
-          />
-        </div>
-
-        <div v-if="pagamento.valor > 0 && agendamentoSelecionado">
-          <label class="block mb-1 font-semibold">Troco (R$)</label>
-          <input
-            :value="calcularTroco()"
-            class="input bg-gray-100"
-            readonly
-            placeholder="0,00"
-          />
-        </div>
-      </div>
-
-      <div v-if="pagamento.forma === 'cartao_credito'">
-        <label class="block mb-1 font-semibold">Número de Parcelas</label>
-        <select
-          v-model="pagamento.parcelas"
-          class="input"
-          :disabled="isLoading"
-        >
-          <option value="1">1x sem juros</option>
-          <option value="2">2x sem juros</option>
-          <option value="3">3x sem juros</option>
-          <option value="4">4x sem juros</option>
-          <option value="5">5x sem juros</option>
-          <option value="6">6x sem juros</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block mb-1 font-semibold">Observações</label>
-        <textarea
-          v-model="pagamento.observacoes"
-          class="input"
-          rows="3"
-          placeholder="Observações sobre o pagamento (opcional)"
-          :disabled="isLoading"
-        ></textarea>
-      </div>
-
-      <div
-        v-if="pagamento.valor > 0 && agendamentoSelecionado"
-        class="bg-green-50 p-4 rounded"
-      >
-        <h3 class="font-semibold text-green-800 mb-2">💰 Resumo do Pagamento</h3>
-        <div class="text-green-700 space-y-1">
-          <p><strong>Valor do Serviço:</strong> R$ {{ agendamentoSelecionado.valor.toFixed(2) }}</p>
-          <p><strong>Valor Pago:</strong> R$ {{ pagamento.valor.toFixed(2) }}</p>
-          <p><strong>Forma:</strong> {{ obterNomeFormaPagamento() }}</p>
-          <p v-if="pagamento.forma === 'cartao_credito'"><strong>Parcelas:</strong> {{ pagamento.parcelas }}x</p>
-          <p><strong>Troco:</strong> R$ {{ calcularTroco() }}</p>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <button
-          class="btn"
-          type="submit"
-          :disabled="isLoading || !formularioValido"
-        >
-          <span
-            v-if="isLoading"
-            class="spinner-border spinner-border-sm me-2"
-            role="status"
-          ></span>
-          {{ isLoading ? "Registrando..." : "Registrar Pagamento" }}
-        </button>
-
-        <button
-          type="button"
-          class="btn-secondary"
-          @click="limparFormulario"
-          :disabled="isLoading"
-        >
-          Limpar
-        </button>
       </div>
     </form>
   </div>
 </template>
 
+
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useSweetAlert } from "@/composables/useSweetAlert";
-import feather from "feather-icons";
-
-interface Agendamento {
-  id: number;
-  cliente: string;
-  servico: string;
-  profissional: string;
-  data: string; // ISO date
-  horario: string; // HH:mm
-  valor: number; // em reais, sem formatação
-}
-
-interface Pagamento {
-  agendamentoId: string;
-  forma: string;
-  valor: number;
-  status: string;
-  parcelas: string; // mantido como string para v-model do select
-  observacoes: string;
-}
+import { api } from "@/common/http";
 
 export default defineComponent({
   name: "PagamentoCadastroView",
   setup() {
-    const {
-      showToast,
-      showError,
-      showSuccess,
-      showLoading,
-      hideLoading,
-      confirmAction,
-    } = useSweetAlert();
+    const router = useRouter();
+    const { showError, showToast, showLoading, hideLoading, confirmAction } = useSweetAlert();
 
     const isLoading = ref(false);
+    const caixaAberto = ref(false);
+    const caixaId = ref<number | null>(null);
+    const agendamentosPendentes = ref<any[]>([]);
+    const usuarios = ref<any[]>([]);
+    const agendamentoSelecionado = ref<any>(null);
+    const servicoValor = ref(0);
 
-    // MOCK ----------------------------------
-    const agendamentosPendentes = ref<Agendamento[]>([
-      {
-        id: 1,
-        cliente: "João Silva",
-        servico: "Corte Masculino",
-        profissional: "Carlos",
-        data: "2024-01-15",
-        horario: "14:00",
-        valor: 25.0,
-      },
-      {
-        id: 2,
-        cliente: "Maria Santos",
-        servico: "Corte Feminino",
-        profissional: "Ana",
-        data: "2024-01-15",
-        horario: "15:30",
-        valor: 45.0,
-      },
-      {
-        id: 3,
-        cliente: "Pedro Oliveira",
-        servico: "Barba",
-        profissional: "Carlos",
-        data: "2024-01-15",
-        horario: "16:00",
-        valor: 15.0,
-      },
-    ]);
-    // ---------------------------------------
-
-    const pagamento = ref<Pagamento>({
+    const pagamento = ref({
       agendamentoId: "",
+      usuarioId: "",
       forma: "",
       valor: 0,
       status: "efetuado",
-      parcelas: "1",
       observacoes: "",
     });
 
-    const agendamentoSelecionado = ref<Agendamento | null>(null);
-
     const formularioValido = computed(() => {
       return (
-        pagamento.value.agendamentoId !== "" &&
-        pagamento.value.forma !== "" &&
+        pagamento.value.agendamentoId &&
+        pagamento.value.usuarioId &&
+        pagamento.value.forma &&
         pagamento.value.valor > 0 &&
-        pagamento.value.status !== ""
+        pagamento.value.status
       );
     });
 
-    function formatarData(dataISO: string) {
-      return new Date(dataISO).toLocaleDateString("pt-BR");
-    }
+    const formatarData = (data: string) => {
+      return new Date(data).toLocaleString("pt-BR");
+    };
 
-    function carregarDadosAgendamento() {
+    const calcularTroco = () => {
+      return (pagamento.value.valor - servicoValor.value).toFixed(2);
+    };
+
+    const carregarDadosAgendamento = async () => {
       const agendamento = agendamentosPendentes.value.find(
         (ag) => ag.id.toString() === pagamento.value.agendamentoId
       );
-
       if (agendamento) {
         agendamentoSelecionado.value = agendamento;
-        pagamento.value.valor = agendamento.valor;
+        pagamento.value.valor = 0;
+        const { data: servico } = await api.get(`/api/Servico/${agendamento.servicoFk}`);
+        servicoValor.value = servico.valor;
       }
-    }
+    };
 
-    function calcularTroco(): string {
-      if (!agendamentoSelecionado.value) return "0,00";
-
-      const valorPago = pagamento.value.valor;
-      const valorServico = agendamentoSelecionado.value.valor;
-      const troco = valorPago - valorServico;
-
-      return Math.max(0, troco).toFixed(2);
-    }
-
-    function obterNomeFormaPagamento() {
-      const formas: Record<string, string> = {
-        dinheiro: "Dinheiro",
-        cartao_debito: "Cartão de Débito",
-        cartao_credito: "Cartão de Crédito",
-        pix: "PIX",
-        transferencia: "Transferência",
-      };
-      return formas[pagamento.value.forma] || pagamento.value.forma;
-    }
-
-    async function registrarPagamento() {
-      // Validações
-      if (!formularioValido.value) {
-        showError(
-          "Formulário incompleto",
-          "Por favor, preencha todos os campos obrigatórios."
-        );
-        return;
+    const verificarCaixaAberto = async () => {
+      try {
+        const { data } = await api.get("/api/Caixa/ultimo");
+        if (data && data.status === "Aberto") {
+          caixaAberto.value = true;
+          caixaId.value = data.id;
+        } else {
+          router.push("/abrir-caixa");
+        }
+      } catch (e) {
+        showError("Erro ao verificar caixa", "Não foi possível verificar o caixa aberto.");
       }
+    };
 
-      if (!agendamentoSelecionado.value) return;
+    const registrarPagamento = async () => {
+      if (!formularioValido.value || !caixaId.value) return;
 
-      const valorPago = pagamento.value.valor;
-      const valorServico = agendamentoSelecionado.value.valor;
-
-      if (valorPago < valorServico) {
-        showError(
-          "Valor insuficiente",
-          `O valor pago (R$ ${valorPago.toFixed(2)}) é menor que o valor do serviço (R$ ${valorServico.toFixed(2)}).`
-        );
-        return;
-      }
-
-      // Confirmar pagamento
-      const troco = calcularTroco();
       const confirmed = await confirmAction(
         "Confirmar pagamento",
-        `Registrar pagamento de R$ ${valorPago.toFixed(2)} para ${agendamentoSelecionado.value.cliente}?\n\nForma: ${obterNomeFormaPagamento()}\nTroco: R$ ${troco}`,
-        "Sim, registrar"
+        `Confirma o pagamento de R$ ${pagamento.value.valor.toFixed(2)}?`,
+        "Sim"
       );
-
       if (!confirmed) return;
 
       isLoading.value = true;
       showLoading("Registrando pagamento...");
 
       try {
-        // Simular chamada de API
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const { data: caixa } = await api.get(`/api/Caixa/${caixaId.value}`);
+        const novoSaldo = caixa.saldoFinal + servicoValor.value;
+        await api.put(`/api/Caixa/${caixaId.value}`, {
+          ...caixa,
+          saldoFinal: novoSaldo,
+        });
 
-        hideLoading();
+        await api.post("/api/Pagamento", {
+          formaPagamento: pagamento.value.forma,
+          valor: pagamento.value.valor,
+          status: pagamento.value.status === "efetuado",
+          agendamentoFk: parseInt(pagamento.value.agendamentoId),
+          comprovantePath: "",
+        });
 
-        // Mostrar sucesso
-        showSuccess(
-          "Pagamento registrado!",
-          `Pagamento de R$ ${valorPago.toFixed(2)} foi registrado com sucesso.\n\nCliente: ${agendamentoSelecionado.value.cliente}\nTroco: R$ ${troco}`,
-          "Continuar"
-        );
+        await api.put(`/api/Agendamento/${agendamentoSelecionado.value.id}`, {
+          ...agendamentoSelecionado.value,
+          status: "concluido",
+        });
 
-        // Remover agendamento da lista
-        agendamentosPendentes.value = agendamentosPendentes.value.filter(
-          (ag) => ag.id.toString() !== pagamento.value.agendamentoId
-        );
-
-        // Limpar formulário
+        showToast.success("Pagamento registrado com sucesso");
         limparFormulario();
-
-        showToast.success("Pagamento registrado com sucesso!");
-      } catch (error) {
-        hideLoading();
-        showError(
-          "Erro no servidor",
-          "Ocorreu um erro ao registrar o pagamento. Tente novamente."
-        );
+      } catch (e) {
+        showError("Erro", "Falha ao registrar o pagamento");
       } finally {
+        hideLoading();
         isLoading.value = false;
       }
-    }
+    };
 
-    function limparFormulario() {
-      Object.assign(pagamento.value, {
+    const limparFormulario = () => {
+      pagamento.value = {
         agendamentoId: "",
+        usuarioId: "",
         forma: "",
         valor: 0,
         status: "efetuado",
-        parcelas: "1",
         observacoes: "",
-      });
-
+      };
       agendamentoSelecionado.value = null;
-      showToast.info("Formulário limpo");
-    }
+      servicoValor.value = 0;
+    };
 
-    onMounted(() => {
-      feather.replace();
+    onMounted(async () => {
+      await verificarCaixaAberto();
+      const { data: users } = await api.get("/api/Usuario");
+      usuarios.value = users;
+      const { data: ags } = await api.get("/api/Agendamento");
+      const agendamentosComClientes = await Promise.all(
+        ags.map(async (ag: any) => {
+          const { data: cliente } = await api.get(`/api/Cliente/${ag.clienteFk}`);
+          return {
+            ...ag,
+            clienteNome: `${cliente.nome} ${cliente.sobrenome}`,
+          };
+        })
+      );
+      agendamentosPendentes.value = agendamentosComClientes.filter((ag: any) => ag.status === "Agendado" && !ag.pagamento);
     });
 
     return {
-      agendamentosPendentes,
       pagamento,
+      agendamentosPendentes,
+      usuarios,
       agendamentoSelecionado,
-      formularioValido,
       isLoading,
-      formatarData,
+      formularioValido,
       carregarDadosAgendamento,
       calcularTroco,
-      obterNomeFormaPagamento,
       registrarPagamento,
       limparFormulario,
+      formatarData,
     };
   },
 });
 </script>
 
 <style scoped>
-.input {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.5rem;
-  width: 100%;
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
+
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+
+.client-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+
+.form-section {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #d1d5db;
+}
+
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #9ca3af;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+
+.form-actions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f3f4f6;
+}
+
+.actions-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+
 .btn {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  min-width: 160px;
+  justify-content: center;
 }
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+  transform: translateY(-1px);
+}
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
 }
-.btn-secondary {
-  background-color: #6b7280;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-}
-.spinner-border-sm {
+
+
+.loading-spinner {
   width: 1rem;
   height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-textarea.input {
-  resize: vertical;
-  min-height: 80px;
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.icon-check::before {
+  content: "✓";
+}
+
+.icon-refresh::before {
+  content: "↻";
+}
+
+
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .actions-group {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
 }
 </style>

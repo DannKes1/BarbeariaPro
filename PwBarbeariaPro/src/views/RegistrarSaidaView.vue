@@ -114,6 +114,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, reactive, onMounted, computed } from "vue";
+import { useRouter } from "vue-router";
 import { api } from "@/common/http";
 import { useSweetAlert } from "@/composables/useSweetAlert";
 
@@ -121,6 +122,7 @@ export default defineComponent({
   name: "RegistrarSaidaView",
   setup() {
     const { showSuccess, showError, showLoading, hideLoading } = useSweetAlert();
+    const router = useRouter();
 
     const isLoading = ref(false);
     const caixaAberto = ref<any>(null);
@@ -172,6 +174,9 @@ export default defineComponent({
           caixaAberto.value = res.data;
         } else {
           showError("Caixa Fechado", "Abra o caixa antes de registrar uma saída.");
+          setTimeout(() => {
+            router.push({ path: "/caixa/abrir" });
+          }, 2000);
         }
       } catch {
         showError("Erro", "Não foi possível carregar o caixa.");

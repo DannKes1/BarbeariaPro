@@ -225,6 +225,8 @@
 import { defineComponent, ref, computed, reactive, onMounted } from "vue";
 import { useSweetAlert } from "@/composables/useSweetAlert";
 import { api } from "@/common/http";
+import { useRouter } from "vue-router";
+
 
 interface FormData {
   descricao: string;
@@ -244,7 +246,7 @@ export default defineComponent({
   name: "RegistrarEntradaView",
   setup() {
     const { showSuccess, showError, showLoading, hideLoading } = useSweetAlert();
-
+    const router = useRouter();
     const isLoading = ref(false);
     const form = reactive<FormData>({
       descricao: "",
@@ -399,7 +401,10 @@ export default defineComponent({
           caixaAberto.value = res.data;
 
         } else {
-          showError("Caixa fechado", "Abra o caixa antes de registrar uma entrada.");
+          showError("Caixa Fechado", "Abra o caixa antes de registrar uma saída.");
+          setTimeout(() => {
+            router.push({ path: "/caixa/abrir" });
+          }, 2000);
         }
       } catch {
         showError("Erro ao carregar caixa", "Não foi possível buscar o caixa atual.");
