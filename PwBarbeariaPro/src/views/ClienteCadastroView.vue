@@ -1,381 +1,825 @@
 <template>
-  <div class="p-6 max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Cadastrar Cliente</h1>
-
-    <div
-      v-if="cookieInfo.hasLastValues"
-      class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md"
-    >
-      <div class="flex items-center">
-        <svg
-          class="w-4 h-4 text-blue-500 mr-2"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span class="text-sm text-blue-700">
-          Alguns campos foram preenchidos com valores anteriores.
-          <button
-            @click="clearRememberedValues"
-            class="text-blue-600 underline ml-1"
-          >
-            Limpar valores salvos
-          </button>
-        </span>
-      </div>
+  <div class="form-container">
+    <div class="form-header">
+      <h1 class="form-title">Cadastrar Cliente</h1>
+      <p class="form-subtitle">
+        Preencha os dados do cliente para cadastro no sistema
+      </p>
     </div>
 
-    <form @submit.prevent="submitForm" class="space-y-4">
-      <div>
-        <label>Nome</label>
-        <input
-          v-model="cliente.nome"
-          class="input"
-          required
-          pattern="[A-Za-zÀ-ü ]+"
-          :disabled="isLoading"
-          @blur="rememberFieldValue('nome')"
-        />
-        <small v-if="hasRememberedValue('nome')" class="text-gray-500">
-          💾 Valor lembrado dos últimos dados inseridos
-        </small>
+    <form @submit.prevent="submitForm" class="client-form">
+      
+      <div class="form-section">
+        <h2 class="section-title">Dados Pessoais</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nome *</label>
+            <input
+              v-model="cliente.nome"
+              class="form-input"
+              required
+              pattern="[A-Za-zÀ-ü ]+"
+              :disabled="isLoading"
+              placeholder="Digite o nome"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sobrenome *</label>
+            <input
+              v-model="cliente.sobrenome"
+              class="form-input"
+              required
+              pattern="[A-Za-zÀ-ü ]+"
+              :disabled="isLoading"
+              placeholder="Digite o sobrenome"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Telefone *</label>
+            <input
+              v-model="cliente.telefone"
+              class="form-input"
+              required
+              :disabled="isLoading"
+              placeholder="(11) 98765-4321"
+              @input="formatarTelefone"
+              maxlength="15"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">CPF *</label>
+            <input
+              v-model="cliente.cpf"
+              class="form-input"
+              :class="{ 'input-error': erros.cpf }"
+              required
+              :disabled="isLoading"
+              placeholder="000.000.000-00"
+              @input="formatarCPF"
+              @blur="validarCPF"
+              maxlength="14"
+            />
+            <p v-if="erros.cpf" class="error-message">{{ erros.cpf }}</p>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">E-mail</label>
+            <input
+              v-model="cliente.email"
+              class="form-input"
+              type="email"
+              :disabled="isLoading"
+              placeholder="exemplo@email.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Data de Nascimento *</label>
+            <input
+              v-model="cliente.dataNascimento"
+              class="form-input"
+              :class="{ 'input-error': erros.dataNascimento }"
+              required
+              type="date"
+              @change="validarIdade"
+              :disabled="isLoading"
+            />
+            <p v-if="erros.dataNascimento" class="error-message">
+              {{ erros.dataNascimento }}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label>Sobrenome</label>
-        <input
-          v-model="cliente.sobrenome"
-          class="input"
-          required
-          pattern="[A-Za-zÀ-ü ]+"
-          :disabled="isLoading"
-          @blur="rememberFieldValue('sobrenome')"
-        />
-        <small v-if="hasRememberedValue('sobrenome')" class="text-gray-500">
-          💾 Valor lembrado dos últimos dados inseridos
-        </small>
+   
+      <div class="form-section">
+        <h2 class="section-title">Dados Adicionais</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Endereço</label>
+            <input
+              v-model="cliente.endereco"
+              class="form-input"
+              :disabled="isLoading"
+              placeholder="Rua, número, bairro"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">CEP</label>
+            <input
+              v-model="cliente.cep"
+              class="form-input"
+              :disabled="isLoading"
+              placeholder="00000-000"
+              @input="formatarCEP"
+              @blur="buscarCEP"
+              maxlength="9"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Cidade</label>
+            <input
+              v-model="cliente.cidade"
+              class="form-input"
+              :disabled="isLoading"
+              placeholder="Nome da cidade"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <select
+              v-model="cliente.estado"
+              class="form-select"
+              :disabled="isLoading"
+            >
+              <option value="">Selecione o estado</option>
+              <option value="AC">Acre</option>
+              <option value="AL">Alagoas</option>
+              <option value="AP">Amapá</option>
+              <option value="AM">Amazonas</option>
+              <option value="BA">Bahia</option>
+              <option value="CE">Ceará</option>
+              <option value="DF">Distrito Federal</option>
+              <option value="ES">Espírito Santo</option>
+              <option value="GO">Goiás</option>
+              <option value="MA">Maranhão</option>
+              <option value="MT">Mato Grosso</option>
+              <option value="MS">Mato Grosso do Sul</option>
+              <option value="MG">Minas Gerais</option>
+              <option value="PA">Pará</option>
+              <option value="PB">Paraíba</option>
+              <option value="PR">Paraná</option>
+              <option value="PE">Pernambuco</option>
+              <option value="PI">Piauí</option>
+              <option value="RJ">Rio de Janeiro</option>
+              <option value="RN">Rio Grande do Norte</option>
+              <option value="RS">Rio Grande do Sul</option>
+              <option value="RO">Rondônia</option>
+              <option value="RR">Roraima</option>
+              <option value="SC">Santa Catarina</option>
+              <option value="SP">São Paulo</option>
+              <option value="SE">Sergipe</option>
+              <option value="TO">Tocantins</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Observações</label>
+            <textarea
+              v-model="cliente.observacoes"
+              class="form-textarea"
+              :disabled="isLoading"
+              placeholder="Informações adicionais sobre o cliente"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Como conheceu o salão?</label>
+            <select
+              v-model="cliente.comoConheceu"
+              class="form-select"
+              :disabled="isLoading"
+            >
+              <option value="">Selecione uma opção</option>
+              <option value="Indicação de amigo">Indicação de amigo</option>
+              <option value="Redes sociais">Redes sociais</option>
+              <option value="Google/Internet">Google/Internet</option>
+              <option value="Passou na frente">Passou na frente</option>
+              <option value="Panfleto/Propaganda">Panfleto/Propaganda</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label>Telefone</label>
-        <input
-          v-model="cliente.telefone"
-          class="input"
-          required
-          placeholder="(11) 98765-4321"
-          :disabled="isLoading"
-          @input="formatarTelefone"
-          @blur="rememberFieldValue('telefone')"
-        />
-        <small v-if="hasRememberedValue('telefone')" class="text-gray-500">
-          💾 Valor lembrado dos últimos dados inseridos
-        </small>
-      </div>
 
-      <div>
-        <label>CPF</label>
-        <input
-          v-model="cliente.cpf"
-          class="input"
-          required
-          :disabled="isLoading"
-          @input="formatarCPF"
-        />
-        <p v-if="erros.cpf" class="text-red-500 text-sm">{{ erros.cpf }}</p>
-      </div>
+      <div class="form-actions">
+        <div class="actions-group">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="limparFormulario"
+            :disabled="isLoading"
+          >
+            <i class="icon-refresh"></i>
+            Limpar Formulário
+          </button>
 
-      <div>
-        <label>E-mail</label>
-        <input
-          v-model="cliente.email"
-          class="input"
-          type="email"
-          :disabled="isLoading"
-          @blur="rememberFieldValue('email')"
-        />
-        <small v-if="hasRememberedValue('email')" class="text-gray-500">
-          💾 Valor lembrado dos últimos dados inseridos
-        </small>
-      </div>
-
-      <div>
-        <label>Data de Nascimento</label>
-        <input
-          v-model="cliente.dataNascimento"
-          class="input"
-          required
-          type="date"
-          @change="validarIdade"
-          :disabled="isLoading"
-        />
-        <p v-if="erros.dataNascimento" class="text-red-500 text-sm">
-          {{ erros.dataNascimento }}
-        </p>
-      </div>
-
-      <div class="flex gap-2">
-        <button class="btn" type="submit" :disabled="isLoading">
-          <span
-            v-if="isLoading"
-            class="spinner-border spinner-border-sm me-2"
-            role="status"
-          ></span>
-          {{ isLoading ? "Cadastrando..." : "Cadastrar" }}
-        </button>
-
-        <button
-          type="button"
-          class="btn-secondary"
-          @click="limparFormulario"
-          :disabled="isLoading"
-        >
-          Limpar
-        </button>
+          <button
+            class="btn btn-primary"
+            type="submit"
+            :disabled="isLoading || !isFormValid"
+          >
+            <span v-if="isLoading" class="loading-spinner"></span>
+            <i v-else class="icon-check"></i>
+            {{ isLoading ? "Cadastrando..." : "Cadastrar Cliente" }}
+          </button>
+        </div>
       </div>
     </form>
-
-    <!-- Debug info (apenas para demonstração) -->
-    <div v-if="showDebugInfo" class="mt-6 p-4 bg-gray-50 border rounded-md">
-      <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
-      <pre class="text-xs">{{ JSON.stringify(cookieInfo, null, 2) }}</pre>
-      <button @click="showDebugInfo = false" class="text-sm text-gray-600 mt-2">
-        Ocultar debug
-      </button>
-    </div>
-
-    <button
-      v-else
-      @click="showDebugInfo = true"
-      class="mt-4 text-sm text-gray-500 underline"
-    >
-      Mostrar informações dos cookies (debug)
-    </button>
   </div>
 </template>
-]
+
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from 'vue';
-import { useSweetAlert } from '@/composables/useSweetAlert';
-import { useFormCookies } from '@/composables/useFormCookies';
-import { api } from '@/common/http';
+import { defineComponent, ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useSweetAlert } from "@/composables/useSweetAlert";
+import { api } from "@/common/http";
+import feather from "feather-icons";
 
 export default defineComponent({
-  name: 'ClienteCadastroView',
+  name: "ClienteCadastroView",
   setup() {
-    const { showToast, showError, showSuccess, showLoading, hideLoading, confirmAction } = useSweetAlert();
+    const router = useRouter();
+    const {
+      showToast,
+      showError,
+      showSuccess,
+      showLoading,
+      hideLoading,
+      confirmAction,
+    } = useSweetAlert();
 
     const isLoading = ref(false);
-    const showDebugInfo = ref(false);
 
     const cliente = ref({
-      nome: '',
-      sobrenome: '',
-      telefone: '',
-      cpf: '',
-      email: '',
-      dataNascimento: '',
+      nome: "",
+      sobrenome: "",
+      telefone: "",
+      cpf: "",
+      email: "",
+      dataNascimento: "",
+      endereco: "",
+      cep: "",
+      cidade: "",
+      estado: "",
+      observacoes: "",
+      comoConheceu: "",
     });
 
     const erros = ref({
-      cpf: '',
-      dataNascimento: '',
+      cpf: "",
+      dataNascimento: "",
+      cep: "",
     });
-
-    const {
-      canUseCookies,
-      lastValues,
-      saveLastValues,
-      loadLastValues,
-      clearFormCookies,
-      getCookieInfo,
-      rememberValue,
-      getRememberedValue,
-      hasRememberedValue,
-    } = useFormCookies(cliente.value, {
-      formKey: 'cliente_cadastro',
-      rememberFields: ['nome', 'sobrenome', 'telefone', 'email'],
-      expirationDays: 30,
-    });
-
-    const cookieInfo = computed(() => getCookieInfo());
 
     
-    function validarIdade(): boolean {
-      const hoje = new Date();
-      const nascimento = new Date(cliente.value.dataNascimento);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const mesPassou = hoje.getMonth() > nascimento.getMonth() ||
-        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() >= nascimento.getDate());
-      if (!mesPassou) idade--;
+    const isFormValid = computed(() => {
+      return (
+        cliente.value.nome.trim() &&
+        cliente.value.sobrenome.trim() &&
+        cliente.value.telefone.trim() &&
+        cliente.value.cpf.trim() &&
+        cliente.value.dataNascimento &&
+        !erros.value.cpf &&
+        !erros.value.dataNascimento
+      );
+    });
 
-      if (idade < 16) {
-        erros.value.dataNascimento = 'Cliente deve ter pelo menos 16 anos.';
+   
+    function formatarTelefone() {
+      let valor = cliente.value.telefone.replace(/\D/g, "");
+
+      if (valor.length <= 11) {
+        valor = valor.replace(/(\d{2})(\d)/, "($1) $2");
+        valor = valor.replace(/(\d{4,5})(\d{4})$/, "$1-$2");
+        cliente.value.telefone = valor;
+      }
+    }
+
+    
+    function formatarCPF() {
+      let valor = cliente.value.cpf.replace(/\D/g, "");
+
+      if (valor.length <= 11) {
+        valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+        valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+        valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        cliente.value.cpf = valor;
+      }
+
+      
+      if (erros.value.cpf && valor.length < 14) {
+        erros.value.cpf = "";
+      }
+    }
+
+    
+    function formatarCEP() {
+      let valor = cliente.value.cep.replace(/\D/g, "");
+
+      if (valor.length <= 8) {
+        valor = valor.replace(/(\d{5})(\d)/, "$1-$2");
+        cliente.value.cep = valor;
+      }
+
+      
+      if (erros.value.cep && valor.length < 9) {
+        erros.value.cep = "";
+      }
+    }
+
+    
+    function validarCPF() {
+      const cpf = cliente.value.cpf.replace(/[\.\-]/g, "");
+
+      if (cpf.length !== 11) {
+        erros.value.cpf = "CPF deve conter 11 dígitos.";
         return false;
       }
 
-      erros.value.dataNascimento = '';
+      if (/^(\d)\1{10}$/.test(cpf)) {
+        erros.value.cpf = "CPF inválido.";
+        return false;
+      }
+
+      let soma = 0;
+      let resto;
+
+      for (let i = 1; i <= 9; i++) {
+        soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+      }
+
+      resto = (soma * 10) % 11;
+      if (resto === 10 || resto === 11) resto = 0;
+      if (resto !== parseInt(cpf[9])) {
+        erros.value.cpf = "CPF inválido.";
+        return false;
+      }
+
+      soma = 0;
+      for (let i = 1; i <= 10; i++) {
+        soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+      }
+
+      resto = (soma * 10) % 11;
+      if (resto === 10 || resto === 11) resto = 0;
+      if (resto !== parseInt(cpf[10])) {
+        erros.value.cpf = "CPF inválido.";
+        return false;
+      }
+
+      erros.value.cpf = "";
       return true;
     }
 
-    async function submitForm() {
-      if (!cliente.value.nome || !cliente.value.sobrenome || !cliente.value.telefone || !cliente.value.cpf || !cliente.value.dataNascimento) {
-        showError('Campos obrigatórios', 'Preencha todos os campos obrigatórios.');
+    
+    function validarIdade() {
+      const hoje = new Date();
+      const nascimento = new Date(cliente.value.dataNascimento);
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+      const ajuste =
+        hoje.getMonth() < nascimento.getMonth() ||
+        (hoje.getMonth() === nascimento.getMonth() &&
+          hoje.getDate() < nascimento.getDate());
+
+      if (idade - (ajuste ? 1 : 0) < 16) {
+        erros.value.dataNascimento = "Cliente deve ter pelo menos 16 anos.";
+        return false;
+      }
+
+      erros.value.dataNascimento = "";
+      return true;
+    }
+
+    
+    async function buscarCEP() {
+      const cep = cliente.value.cep.replace(/\D/g, "");
+
+      if (cep.length !== 8) {
+        if (cep.length > 0) {
+          erros.value.cep = "CEP deve conter 8 dígitos.";
+        }
         return;
       }
 
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
 
-      const confirmado = await confirmAction(
-        'Confirmar cadastro',
-        `Deseja cadastrar ${cliente.value.nome} ${cliente.value.sobrenome}?`,
-        'Sim, cadastrar'
+        if (data.erro) {
+          erros.value.cep = "CEP não encontrado.";
+          return;
+        }
+
+       
+        cliente.value.endereco = `${data.logradouro}, ${data.bairro}`;
+        cliente.value.cidade = data.localidade;
+        cliente.value.estado = data.uf;
+        erros.value.cep = "";
+
+        showToast.success(
+          "CEP encontrado! Endereço preenchido automaticamente."
+        );
+      } catch (error) {
+        erros.value.cep = "Erro ao buscar CEP.";
+      }
+    }
+
+    
+    async function submitForm() {
+    
+      if (!isFormValid.value) {
+        showError(
+          "Formulário incompleto",
+          "Por favor, preencha todos os campos obrigatórios corretamente."
+        );
+        return;
+      }
+
+     
+      const confirmed = await confirmAction(
+        "Confirmar cadastro",
+        `Deseja cadastrar o cliente ${cliente.value.nome} ${cliente.value.sobrenome}?`,
+        "Sim, cadastrar"
       );
-      if (!confirmado) return;
+
+      if (!confirmed) return;
 
       isLoading.value = true;
-      showLoading('Cadastrando cliente...');
+      showLoading("Cadastrando cliente...");
 
       try {
-        const dataFormatada = cliente.value.dataNascimento
-          ? new Date(cliente.value.dataNascimento).toISOString().split('T')[0]
-          : null;
-
+        
         const payload = {
-          id: Math.floor(Math.random() * 1000000),
-          nome: cliente.value.nome,
-          sobrenome: cliente.value.sobrenome,
+          nome: cliente.value.nome.trim(),
+          sobrenome: cliente.value.sobrenome.trim(),
           telefone: cliente.value.telefone,
-          email: cliente.value.email,
-          cpf: cliente.value.cpf.replace(/[^\d]/g, ''),
-          dataNascimento: dataFormatada,
+          cpf: cliente.value.cpf.replace(/[\.\-]/g, ""),
+          email: cliente.value.email.trim() || null,
+          dataNascimento: cliente.value.dataNascimento,
+          endereco: cliente.value.endereco.trim() || null,
+          cep: cliente.value.cep.replace(/\D/g, "") || null,
+          cidade: cliente.value.cidade.trim() || null,
+          estado: cliente.value.estado || null,
+          observacoes: cliente.value.observacoes.trim() || null,
+          comoConheceu: cliente.value.comoConheceu || null,
         };
 
-        await api.post('/api/Cliente', payload);
+        
+        await api.post("/api/Cliente", payload);
 
-        saveLastValues();
+        hideLoading();
 
-        showSuccess('Cliente cadastrado!', 'Cadastro realizado com sucesso.');
-        showToast.success('Cliente cadastrado com sucesso!');
+        showSuccess(
+          "Cliente cadastrado!",
+          `${cliente.value.nome} ${cliente.value.sobrenome} foi cadastrado com sucesso.`
+        );
+
         limparFormulario();
+        showToast.success("Cliente cadastrado com sucesso!");
+
+        
+        router.push("/cliente/consulta");
       } catch (error: any) {
+        hideLoading();
+
         if (error.response?.status === 409) {
-          showError('CPF duplicado', 'Já existe um cliente com esse CPF.');
-        } else if (error.response?.data?.errors) {
-          const errosAPI = error.response.data.errors;
-          showError('Erro de validação', JSON.stringify(errosAPI, null, 2));
+          showError(
+            "CPF duplicado",
+            "Já existe um cliente cadastrado com esse CPF."
+          );
+        } else if (error.response?.status === 400) {
+          const errosAPI =
+            error.response.data?.errors || error.response.data?.message;
+          showError(
+            "Erro de validação",
+            typeof errosAPI === "string"
+              ? errosAPI
+              : JSON.stringify(errosAPI, null, 2)
+          );
         } else {
-          showError('Erro ao cadastrar', 'Não foi possível concluir o cadastro.');
+          showError(
+            "Erro no servidor",
+            "Ocorreu um erro ao cadastrar o cliente. Tente novamente."
+          );
         }
       } finally {
-        hideLoading();
         isLoading.value = false;
       }
     }
 
+    
     function limparFormulario() {
       Object.assign(cliente.value, {
-        nome: '',
-        sobrenome: '',
-        telefone: '',
-        cpf: '',
-        email: '',
-        dataNascimento: '',
+        nome: "",
+        sobrenome: "",
+        telefone: "",
+        cpf: "",
+        email: "",
+        dataNascimento: "",
+        endereco: "",
+        cep: "",
+        cidade: "",
+        estado: "",
+        observacoes: "",
+        comoConheceu: "",
       });
 
-      erros.value = { cpf: '', dataNascimento: '' };
-      showToast.info('Formulário limpo');
-    }
+      erros.value = {
+        cpf: "",
+        dataNascimento: "",
+        cep: "",
+      };
 
-    function rememberFieldValue(field: string) {
-      if (cliente.value[field as keyof typeof cliente.value]) {
-        rememberValue(field, cliente.value[field as keyof typeof cliente.value]);
-      }
-    }
-
-    function clearRememberedValues() {
-      clearFormCookies();
-      showToast.info('Valores salvos foram limpos');
+      showToast.info("Formulário limpo");
     }
 
     onMounted(() => {
-      loadLastValues();
+      feather.replace();
     });
-
-    function formatarTelefone(e: Event) {
-      let valor = (e.target as HTMLInputElement).value.replace(/\D/g, '');
-      if (valor.length > 11) valor = valor.slice(0, 11);
-
-      if (valor.length <= 10) {
-        cliente.value.telefone = valor.replace(
-          /(\d{2})(\d{4})(\d{0,4})/,
-          '($1) $2-$3'
-        );
-      } else {
-        cliente.value.telefone = valor.replace(
-          /(\d{2})(\d{5})(\d{0,4})/,
-          '($1) $2-$3'
-        );
-      }
-    }
-
-    function formatarCPF(e: Event) {
-      let valor = (e.target as HTMLInputElement).value.replace(/\D/g, '');
-      if (valor.length > 11) valor = valor.slice(0, 11);
-      cliente.value.cpf = valor.replace(
-        /(\d{3})(\d{3})(\d{3})(\d{0,2})/,
-        '$1.$2.$3-$4'
-      );
-    }
 
     return {
       cliente,
       erros,
       isLoading,
-      showDebugInfo,
-      cookieInfo,
+      isFormValid,
+      formatarTelefone,
+      formatarCPF,
+      formatarCEP,
+      validarCPF,
       validarIdade,
+      buscarCEP,
       submitForm,
       limparFormulario,
-      rememberFieldValue,
-      clearRememberedValues,
-      hasRememberedValue,
-      canUseCookies,
-      formatarCPF,
-      formatarTelefone
     };
   },
 });
 </script>
 
 <style scoped>
-.input {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.5rem;
-  width: 100%;
+
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
+
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+
+.client-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+
+.form-section {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #d1d5db;
+}
+
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #9ca3af;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+
+.form-actions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f3f4f6;
+}
+
+.actions-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+
 .btn {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  min-width: 160px;
+  justify-content: center;
 }
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+  transform: translateY(-1px);
+}
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
 }
-.btn-secondary {
-  background-color: #6b7280;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-}
-.spinner-border-sm {
+
+
+.loading-spinner {
   width: 1rem;
   height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.icon-check::before {
+  content: "✓";
+}
+
+.icon-refresh::before {
+  content: "↻";
+}
+
+
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .actions-group {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
 }
 </style>

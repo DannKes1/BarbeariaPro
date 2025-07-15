@@ -1,30 +1,40 @@
 <template>
-  <div class="p-6 max-w-5xl mx-auto">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Consultar Clientes</h1>
-      <button class="btn" @click="$router.push('/cliente/cadastro')">
-        + Novo Cliente
-      </button>
+  <div class="form-container">
+    <div class="form-header">
+      <h1 class="form-title">Consultar Clientes</h1>
+      <p class="form-subtitle">
+        Gerencie e visualize todos os clientes cadastrados no sistema
+      </p>
+      <div class="header-actions">
+        <button
+          class="btn btn-primary"
+          @click="$router.push('/cliente/cadastro')"
+        >
+          <i class="icon-plus"></i>
+          Novo Cliente
+        </button>
+      </div>
     </div>
 
-    <div class="mb-4 p-4 bg-gray-50 border rounded-md">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Buscar</label>
+    <div class="form-section">
+      <h2 class="section-title">Filtros de Busca</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Buscar Cliente</label>
           <input
             v-model="filtros.busca"
             type="text"
-            placeholder="CPF, Nome ou E-mail"
-            class="input w-full"
+            placeholder="Buscar por nome, CPF ou email"
+            class="form-input"
             @input="aplicarFiltros"
           />
         </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-1">Ordenar por</label>
+        <div class="form-group">
+          <label class="form-label">Ordenar por</label>
           <select
             v-model="filtros.ordenarPor"
-            class="input w-full"
+            class="form-select"
             @change="aplicarFiltros"
           >
             <option value="nome">Nome</option>
@@ -34,11 +44,11 @@
           </select>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-1">Itens por página</label>
+        <div class="form-group">
+          <label class="form-label">Itens por página</label>
           <select
             v-model="paginacao.itensPorPagina"
-            class="input w-full"
+            class="form-select"
             @change="aplicarPaginacao"
           >
             <option :value="5">5</option>
@@ -54,9 +64,7 @@
         class="mt-3 flex items-center justify-between"
       >
         <div class="flex items-center text-sm text-blue-600">
-          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <i class="icon-info"></i>
           Filtros e configurações foram restaurados dos cookies
         </div>
         <button
@@ -68,77 +76,159 @@
       </div>
     </div>
 
-    <div v-if="clientesPaginados.length">
-      <div class="overflow-x-auto">
-        <table class="min-w-full border text-sm">
-          <thead class="bg-gray-100">
+    <div v-if="clientesPaginados.length" class="form-section">
+      <div class="section-header">
+        <h2 class="section-title">Resultados da Busca</h2>
+        <div class="results-info">
+          <span class="results-count">
+            Mostrando
+            {{ (paginacao.paginaAtual - 1) * paginacao.itensPorPagina + 1 }} a
+            {{
+              Math.min(
+                paginacao.paginaAtual * paginacao.itensPorPagina,
+                clientesFiltrados.length
+              )
+            }}
+            de {{ clientesFiltrados.length }} clientes
+          </span>
+          <div class="view-toggle">
+            <button
+              @click="viewMode = 'cards'"
+              :class="{ active: viewMode === 'cards' }"
+              class="toggle-btn"
+            >
+              <i class="icon-grid"></i>
+            </button>
+            <button
+              @click="viewMode = 'table'"
+              :class="{ active: viewMode === 'table' }"
+              class="toggle-btn"
+            >
+              <i class="icon-list"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="viewMode === 'cards'" class="cards-grid">
+        <div
+          v-for="cliente in clientesPaginados"
+          :key="cliente.id"
+          class="professional-card"
+        >
+          <div class="card-header">
+            <div class="avatar">
+              {{ cliente.nome.charAt(0) }}{{ cliente.sobrenome.charAt(0) }}
+            </div>
+            <div class="card-info">
+              <h3 class="card-name">
+                {{ cliente.nome }} {{ cliente.sobrenome }}
+              </h3>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="info-item">
+              <i class="icon-phone"></i>
+              <span>{{ formatarTelefone(cliente.telefone) }}</span>
+            </div>
+            <div class="info-item">
+              <i class="icon-user"></i>
+              <span>{{ formatarCpf(cliente.cpf) }}</span>
+            </div>
+            <div class="info-item">
+              <i class="icon-mail"></i>
+              <span>{{ cliente.email || "-" }}</span>
+            </div>
+            <div class="info-item">
+              <i class="icon-calendar"></i>
+              <span>{{ formatarData(cliente.dataNascimento) }}</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn btn-secondary btn-sm" @click="editar(cliente)">
+              <i class="icon-edit"></i>
+              Editar
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              @click="excluirCliente(cliente.id)"
+            >
+              <i class="icon-trash"></i>
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="viewMode === 'table'" class="table-container">
+        <table class="result-table">
+          <thead>
             <tr>
-              <th
-                class="border px-4 py-2 cursor-pointer"
-                @click="alternarOrdem('nome')"
-              >
+              <th @click="alternarOrdem('nome')">
                 Nome
                 <span v-if="filtros.ordenarPor === 'nome'">
                   {{ filtros.ordemCrescente ? "↑" : "↓" }}
                 </span>
               </th>
-              <th class="border px-4 py-2">Telefone</th>
-              <th
-                class="border px-4 py-2 cursor-pointer"
-                @click="alternarOrdem('cpf')"
-              >
+              <th>Telefone</th>
+              <th @click="alternarOrdem('cpf')">
                 CPF
                 <span v-if="filtros.ordenarPor === 'cpf'">
                   {{ filtros.ordemCrescente ? "↑" : "↓" }}
                 </span>
               </th>
-              <th
-                class="border px-4 py-2 cursor-pointer"
-                @click="alternarOrdem('email')"
-              >
+              <th @click="alternarOrdem('email')">
                 E-mail
                 <span v-if="filtros.ordenarPor === 'email'">
                   {{ filtros.ordemCrescente ? "↑" : "↓" }}
                 </span>
               </th>
-              <th
-                class="border px-4 py-2 cursor-pointer"
-                @click="alternarOrdem('dataNascimento')"
-              >
+              <th @click="alternarOrdem('dataNascimento')">
                 Data de Nascimento
                 <span v-if="filtros.ordenarPor === 'dataNascimento'">
                   {{ filtros.ordemCrescente ? "↑" : "↓" }}
                 </span>
               </th>
-              <th class="border px-4 py-2">Ações</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="cliente in clientesPaginados" :key="cliente.id">
-              <td class="border px-4 py-2">
-                {{ cliente.nome }} {{ cliente.sobrenome }}
+              <td>
+                <div class="table-user">
+                  <div class="avatar-sm">
+                    {{ cliente.nome.charAt(0)
+                    }}{{ cliente.sobrenome.charAt(0) }}
+                  </div>
+                  <div class="user-info">
+                    <span class="user-name"
+                      >{{ cliente.nome }} {{ cliente.sobrenome }}</span
+                    >
+                    <span class="user-cpf">{{ formatarCpf(cliente.cpf) }}</span>
+                  </div>
+                </div>
               </td>
-            <td class="border px-4 py-2">{{ formatarTelefone(cliente.telefone) }}</td>
-            <td class="border px-4 py-2">{{ formatarCpf(cliente.cpf) }}</td>
-              <td class="border px-4 py-2">{{ cliente.email || "-" }}</td>
-              <td class="border px-4 py-2">
-                {{ formatarData(cliente.dataNascimento) }}
-              </td>
-              <td class="border px-4 py-2">
-                <div class="flex gap-2">
+              <td>{{ formatarTelefone(cliente.telefone) }}</td>
+              <td>{{ formatarCpf(cliente.cpf) }}</td>
+              <td>{{ cliente.email || "-" }}</td>
+              <td>{{ formatarData(cliente.dataNascimento) }}</td>
+              <td>
+                <div class="table-actions">
                   <button
-                    class="btn-sm"
+                    class="action-btn edit-btn"
                     @click="editar(cliente)"
                     title="Editar"
                   >
-                    ✏️
+                    <i class="icon-edit"></i>
                   </button>
                   <button
-                    class="btn-danger-sm"
+                    class="action-btn delete-btn"
                     @click="excluirCliente(cliente.id)"
                     title="Excluir"
                   >
-                    🗑️
+                    <i class="icon-trash"></i>
                   </button>
                 </div>
               </td>
@@ -147,60 +237,60 @@
         </table>
       </div>
 
-      <div class="mt-4 flex items-center justify-between">
-        <div class="text-sm text-gray-600">
-          Mostrando
-          {{ (paginacao.paginaAtual - 1) * paginacao.itensPorPagina + 1 }} a
-          {{
-            Math.min(
-              paginacao.paginaAtual * paginacao.itensPorPagina,
-              clientesFiltrados.length
-            )
-          }}
-          de {{ clientesFiltrados.length }} clientes
-        </div>
-
-        <div class="flex gap-2">
-          <button
-            class="btn-sm"
-            @click="irParaPagina(paginacao.paginaAtual - 1)"
-            :disabled="paginacao.paginaAtual === 1"
-          >
-            ← Anterior
-          </button>
-
-          <span class="px-3 py-1 text-sm">
-            Página {{ paginacao.paginaAtual }} de {{ totalPaginas }}
-          </span>
-
-          <button
-            class="btn-sm"
-            @click="irParaPagina(paginacao.paginaAtual + 1)"
-            :disabled="paginacao.paginaAtual === totalPaginas"
-          >
-            Próxima →
-          </button>
-        </div>
+      <div class="pagination">
+        <button
+          class="btn btn-secondary btn-sm"
+          @click="irParaPagina(paginacao.paginaAtual - 1)"
+          :disabled="paginacao.paginaAtual === 1"
+        >
+          Anterior
+        </button>
+        <span>Página {{ paginacao.paginaAtual }} de {{ totalPaginas }}</span>
+        <button
+          class="btn btn-secondary btn-sm"
+          @click="irParaPagina(paginacao.paginaAtual + 1)"
+          :disabled="paginacao.paginaAtual === totalPaginas"
+        >
+          Próxima
+        </button>
       </div>
     </div>
 
-    <div v-else class="text-center py-8">
-      <p class="text-gray-600 mb-4">
+    <div v-else class="form-section empty-state">
+      <div class="empty-icon">
+        <i class="icon-users"></i>
+      </div>
+      <h3 class="empty-title">
         {{
           filtros.busca
-            ? "Nenhum cliente encontrado para a busca."
-            : "Nenhum cliente cadastrado."
+            ? "Nenhum cliente encontrado"
+            : "Nenhum cliente cadastrado"
+        }}
+      </h3>
+      <p class="empty-text">
+        {{
+          filtros.busca
+            ? "Tente ajustar os filtros de busca para encontrar clientes."
+            : "Comece cadastrando seu primeiro cliente para gerenciar sua base."
         }}
       </p>
-      <button class="btn" @click="$router.push('/cliente/cadastro')">
-        Cadastrar Primeiro Cliente
+      <button
+        class="btn btn-primary"
+        @click="$router.push('/cliente/cadastro')"
+      >
+        <i class="icon-plus"></i>
+        {{
+          filtros.busca
+            ? "Cadastrar Novo Cliente"
+            : "Cadastrar Primeiro Cliente"
+        }}
       </button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from "vue";
+import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSweetAlert } from "@/composables/useSweetAlert";
 import { useFormCookies } from "@/composables/useFormCookies";
@@ -212,8 +302,7 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const { showToast, showError, confirmAction } = useSweetAlert();
-    const showDebugInfo = ref(false);
-
+    const viewMode = ref<"cards" | "table">("cards");
     const clientes = ref<any[]>([]);
 
     const filtros = ref({
@@ -228,7 +317,6 @@ export default defineComponent({
     });
 
     const {
-      canUseCookies,
       saveFilters,
       loadFilters,
       savePagination,
@@ -279,11 +367,14 @@ export default defineComponent({
     });
 
     const totalPaginas = computed(() => {
-      return Math.ceil(clientesFiltrados.value.length / paginacao.value.itensPorPagina);
+      return Math.ceil(
+        clientesFiltrados.value.length / paginacao.value.itensPorPagina
+      );
     });
 
     const clientesPaginados = computed(() => {
-      const inicio = (paginacao.value.paginaAtual - 1) * paginacao.value.itensPorPagina;
+      const inicio =
+        (paginacao.value.paginaAtual - 1) * paginacao.value.itensPorPagina;
       const fim = inicio + paginacao.value.itensPorPagina;
       return clientesFiltrados.value.slice(inicio, fim);
     });
@@ -306,8 +397,8 @@ export default defineComponent({
 
       if (confirmado) {
         try {
-          await api.delete(`api/Cliente/${id}`);7
-          buscarClientes(); 
+          await api.delete(`api/Cliente/${id}`);
+          buscarClientes();
           showToast.success("Cliente excluído com sucesso!");
         } catch (error) {
           showError("Erro ao excluir o cliente.");
@@ -315,34 +406,31 @@ export default defineComponent({
       }
     };
 
-    const visualizar = (cliente: any) => {
-      showToast.info(`Visualizando ${cliente.nome} ${cliente.sobrenome}`);
-    };
-
     const editar = (cliente: any) => {
       router.push(`/cliente/editar/${cliente.id}`);
     };
 
     const formatarCpf = (cpf: string) => {
-      return cpf.replace(
-        /(\d{3})(\d{3})(\d{3})(\d{2})/,
-        "$1.$2.$3-$4"
-      );
+      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     };
 
     const formatarTelefone = (telefone: string) => {
-      return telefone.replace(
-        /(\d{2})(\d{4})(\d{4})/,
-        "($1) $2-$3"
-      );
+      return telefone.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    };
+
+    const formatarData = (data: string) => {
+      return new Date(data).toLocaleDateString("pt-BR");
     };
 
     onMounted(() => {
       buscarClientes();
+      feather.replace();
+      loadFilters();
+      loadPagination();
     });
 
     function aplicarFiltros() {
-      paginacao.value.paginaAtual = 1; 
+      paginacao.value.paginaAtual = 1;
       saveFilters(filtros.value);
     }
 
@@ -374,184 +462,537 @@ export default defineComponent({
       showToast.info("Configurações de filtros e paginação foram limpas");
     }
 
-    function formatarData(data: string) {
-      return new Date(data).toLocaleDateString("pt-BR");
-    }
-
     return {
-      clientes,
+      router,
       filtros,
       paginacao,
+      clientes,
       clientesFiltrados,
       clientesPaginados,
       totalPaginas,
-      showDebugInfo,
+      viewMode,
       cookieInfo,
       formatarCpf,
       formatarTelefone,
+      formatarData,
       excluirCliente,
+      editar,
       aplicarFiltros,
       aplicarPaginacao,
       alternarOrdem,
       irParaPagina,
       limparFiltrosSalvos,
-      formatarData,
-      visualizar,
-      editar,
     };
   },
 });
 </script>
 
-
 <style scoped>
-.input {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.75rem;
-  width: 100%;
-  box-sizing: border-box;
+/* Container Principal */
+.form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Cabeçalho do Formulário */
+.form-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+  position: relative;
+}
+
+.form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
   font-size: 1rem;
+  color: #6b7280;
+  margin: 0 0 1.5rem 0;
 }
 
-.btn {
-  background-color: #4f46e5;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s ease;
-  display: inline-block;
+.header-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
 }
 
-.btn:hover {
-  background-color: #3b3be6;
-}
-
-.btn-sm {
-  background-color: #6b7280;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.3s ease;
-}
-
-.btn-sm:hover {
-  background-color: #4c4f52;
-}
-
-.btn-danger-sm {
-  background-color: #dc2626;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.3s ease;
-}
-
-.btn-danger-sm:hover {
-  background-color: #b91c1c;
-}
-
-.p-6 {
+/* Seções do Formulário */
+.form-section {
+  background: #f9fafb;
   padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
 }
 
-.mb-4 {
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.bg-gray-50 {
-  background-color: #f9fafb;
-}
-
-.border {
-  border: 1px solid #e5e7eb;
-}
-
-.rounded-md {
-  border-radius: 8px;
-}
-
-.min-w-full {
-  width: 100%;
-  margin-top: 1rem;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-}
-
-.text-gray-600 {
-  color: #4b5563;
-}
-
-.text-gray-900 {
-  color: #111827;
-}
-
-.bg-gray-100 {
-  background-color: #f3f4f6;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.cursor-pointer:hover {
-  background-color: #f3f4f6;
-}
-
-th {
-  padding: 0.75rem;
-  text-align: left;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.flex {
+.results-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.gap-2 {
-  gap: 0.5rem;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.btn-group {
-  display: flex;
   gap: 1rem;
 }
 
-.cursor-pointer:hover {
-  background-color: #f3f4f6;
+.results-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Layout dos Campos */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Labels */
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Inputs */
+.form-input,
+.form-select {
+  padding: 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  background: #ffffff;
+  width: 100%;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: #ffffff;
+  color: #ef4444;
+  border: 2px solid #fecaca;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Toggle de Visualização */
+.view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 0.25rem;
+  border: 1px solid #d1d5db;
+}
+
+.toggle-btn {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: #6b7280;
+}
+
+.toggle-btn.active {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.toggle-btn:hover:not(.active) {
+  background: #f3f4f6;
+}
+
+/* Grid de Cartões */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Cartão do Cliente */
+.professional-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.professional-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.card-info {
+  flex: 1;
+}
+
+.card-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.card-body {
+  margin-bottom: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.card-actions .btn {
+  flex: 1;
+}
+
+/* Tabela */
+.table-container {
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.result-table th {
+  background: #f9fafb;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.result-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.result-table tr:hover {
+  background: #f9fafb;
+}
+
+.table-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar-sm {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-cpf {
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
 .table-actions {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
-.text-sm {
-  font-size: 0.875rem;
+.action-btn {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
 }
 
-.text-gray-600 {
-  color: #4b5563;
+.edit-btn {
+  background: #e0f2fe;
+  color: #0284c7;
 }
 
+.edit-btn:hover {
+  background: #bae6fd;
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+}
+
+/* Paginação */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+/* Estado Vazio */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.empty-text {
+  color: #6b7280;
+  margin-bottom: 2rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Ícones */
+.icon-plus::before {
+  content: "+";
+}
+.icon-grid::before {
+  content: "⊞";
+}
+.icon-list::before {
+  content: "☰";
+}
+.icon-phone::before {
+  content: "📞";
+}
+.icon-mail::before {
+  content: "✉️";
+}
+.icon-user::before {
+  content: "👤";
+}
+.icon-calendar::before {
+  content: "📅";
+}
+.icon-edit::before {
+  content: "✏️";
+}
+.icon-trash::before {
+  content: "🗑️";
+}
+.icon-users::before {
+  content: "👥";
+}
+.icon-info::before {
+  content: "ℹ️";
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .results-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .result-table {
+    min-width: 600px;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
+
+  .professional-card {
+    padding: 1rem;
+  }
+}
 </style>

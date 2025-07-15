@@ -1,90 +1,236 @@
 <template>
-  <div>
-    <h1 class="form-title">Abrir Caixa</h1>
+  <div class="form-container">
+    <div class="form-header">
+      <div class="header-content">
+        <h1 class="form-title">Abrir Caixa</h1>
+        <p class="form-subtitle">
+          Inicie o expediente registrando a abertura do caixa
+        </p>
+      </div>
+      <router-link to="/caixa/consulta" class="btn btn-secondary">
+        <i class="icon-list"></i>
+        Consultar Caixas
+      </router-link>
+    </div>
 
-    <div v-if="caixaAberto" class="card-caixa-aberto">
-      <h2 class="mb-3 text-success">🟢 Caixa já está aberto!</h2>
-      <p><strong>Responsável:</strong> {{ caixaAtual.nomeUsuario }}</p>
-      <p><strong>Aberto em:</strong> {{ formatarDataHora(caixaAtual.dataAbertura) }}</p>
-      <p><strong>Saldo inicial:</strong> R$ {{ parseFloat(caixaAtual.saldoInicial).toFixed(2) }}</p>
+    <!-- Caixa Já Aberto -->
+    <div v-if="caixaAberto" class="caixa-aberto-card">
+      <div class="status-header">
+        <div class="status-icon">🟢</div>
+        <h2 class="status-title">Caixa já está aberto!</h2>
+      </div>
 
-      <div class="mt-4">
+      <div class="caixa-info">
+        <div class="info-row">
+          <div class="info-item">
+            <label class="info-label">Responsável:</label>
+            <span class="info-value">{{ caixaAtual.nomeResponsavel }}</span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">Saldo inicial:</label>
+            <span class="info-value money"
+              >R$ {{ caixaAtual.saldoInicial }}</span
+            >
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-item">
+            <label class="info-label">Aberto em:</label>
+            <span class="info-value">{{
+              formatarDataHora(caixaAtual.dataAbertura)
+            }}</span>
+          </div>
+
+          <div class="info-item" v-if="caixaAtual.observacoes">
+            <label class="info-label">Observações:</label>
+            <span class="info-value">{{ caixaAtual.observacoes }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="caixa-actions">
         <button class="btn btn-primary" @click="irParaFecharCaixa">
+          <i class="icon-lock"></i>
           Fechar Caixa
+        </button>
+
+        <button class="btn btn-secondary" @click="irParaExtrato">
+          <i class="icon-file-text"></i>
+          Ver Extrato
         </button>
       </div>
     </div>
 
-    <form v-else @submit.prevent="abrirCaixa" class="form-body">
-      <div class="form-group">
-        <label for="saldoInicial">Saldo Inicial (R$)</label>
-        <input
-          id="saldoInicial"
-          v-model="caixa.saldoInicial"
-          type="number"
-          step="0.01"
-          class="input"
-          required
-          placeholder="0,00"
-          :disabled="isLoading"
-        />
-        <small class="helper-text">Valor em dinheiro disponível no início do expediente</small>
+    <!-- Formulário de Abertura -->
+    <form v-else @submit.prevent="abrirCaixa" class="caixa-form">
+      <!-- Saldo Inicial -->
+      <div class="form-section">
+        <h3 class="section-title">Configuração Inicial</h3>
+
+        <div class="form-group">
+          <label class="form-label" for="saldoInicial"
+            >Saldo Inicial (R$) *</label
+          >
+          <div class="input-wrapper">
+            <span class="input-prefix">R$</span>
+            <input
+              id="saldoInicial"
+              v-model="caixa.saldoInicial"
+              type="number"
+              step="0.01"
+              min="0"
+              class="form-input input-money"
+              required
+              placeholder="0,00"
+              :disabled="isLoading"
+              @input="formatarMoeda"
+            />
+          </div>
+          <p class="field-note">
+            Valor em dinheiro disponível no início do expediente
+          </p>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label for="responsavel">Responsável</label>
-        <select
-          id="responsavel"
-          v-model="caixa.usuarioFk"
-          class="input"
-          required
-          :disabled="isLoading"
-        >
-          <option disabled value="">Selecione um usuário</option>
-          <option v-for="u in usuarios" :key="u.id" :value="u.id">
-            {{ u.nome || u.perfil || 'Usuário' }} | {{ u.email }}
-          </option>
-        </select>
+      <!-- Responsável -->
+      <div class="form-section">
+        <h3 class="section-title">Responsabilidade</h3>
+
+        <div class="form-group">
+          <label class="form-label" for="responsavel"
+            >Profissional Responsável *</label
+          >
+
+          <!-- Estado de carregamento dos profissionais -->
+          <div v-if="isLoadingProfissionais" class="loading-select">
+            <div class="loading-spinner"></div>
+            <span>Carregando profissionais...</span>
+          </div>
+
+          <!-- Erro ao carregar profissionais -->
+          <div v-else-if="erroProfissionais" class="error-select">
+            <div class="error-icon">⚠️</div>
+            <span>{{ erroProfissionais }}</span>
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              @click="carregarProfissionais"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+
+          <!-- Select de profissionais -->
+          <select
+            v-else
+            id="responsavel"
+            v-model="caixa.profissionalId"
+            class="form-select"
+            :class="{ 'select-error': erros.profissional }"
+            required
+            :disabled="isLoading || profissionais.length === 0"
+          >
+            <option disabled value="">
+              {{
+                profissionais.length === 0
+                  ? "Nenhum profissional encontrado"
+                  : "Selecione um profissional"
+              }}
+            </option>
+            <option
+              v-for="profissional in profissionais"
+              :key="getProfissionalId(profissional)"
+              :value="getProfissionalId(profissional)"
+            >
+              {{ profissional.nome }} {{ profissional.sobrenome }} -
+              {{ profissional.especialidade || "Geral" }}
+            </option>
+          </select>
+
+          <p v-if="erros.profissional" class="error-message">
+            {{ erros.profissional }}
+          </p>
+
+          <p class="field-note">
+            O profissional será responsável pelo caixa durante o expediente
+          </p>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label>Observações</label>
-        <textarea
-          v-model="caixa.observacoes"
-          class="input"
-          rows="3"
-          placeholder="Observações sobre a abertura do caixa (opcional)"
-          :disabled="isLoading"
-        ></textarea>
+      <!-- Observações -->
+      <div class="form-section">
+        <h3 class="section-title">Informações Adicionais</h3>
+
+        <div class="form-group">
+          <label class="form-label">Observações</label>
+          <textarea
+            v-model="caixa.observacoes"
+            class="form-textarea"
+            rows="3"
+            placeholder="Observações sobre a abertura do caixa (opcional)"
+            :disabled="isLoading"
+            maxlength="500"
+          ></textarea>
+          <p class="field-note">
+            {{ caixa.observacoes.length }}/500 caracteres
+          </p>
+        </div>
       </div>
 
+      <!-- Informações Importantes -->
       <div class="info-box">
-        <h3>ℹ️ Informações Importantes</h3>
-        <ul>
-          <li>• O caixa deve ser aberto no início de cada expediente</li>
-          <li>• Apenas um caixa pode estar aberto por vez</li>
-          <li>• O responsável será registrado para auditoria</li>
-          <li>• Confira o saldo inicial antes de confirmar</li>
+        <div class="info-header">
+          <i class="info-icon">ℹ️</i>
+          <h3 class="info-title">Informações Importantes</h3>
+        </div>
+        <ul class="info-list">
+          <li>O caixa deve ser aberto no início de cada expediente</li>
+          <li>Apenas um caixa pode estar aberto por vez</li>
+          <li>O profissional responsável será registrado para auditoria</li>
+          <li>Confira o saldo inicial antes de confirmar</li>
+          <li>Todas as movimentações serão vinculadas a este caixa</li>
         </ul>
       </div>
 
-      <div class="form-actions">
-        <button
-          type="submit"
-          class="btn btn-primary"
-          :disabled="isLoading"
-        >
-          <span v-if="isLoading" class="spinner"></span>
-          {{ isLoading ? 'Abrindo...' : 'Abrir Caixa' }}
-        </button>
+      <!-- Resumo da Abertura -->
+      <div v-if="caixa.saldoInicial && caixa.profissionalId" class="resumo-box">
+        <h3 class="resumo-title">📋 Resumo da Abertura</h3>
+        <div class="resumo-content">
+          <div class="resumo-item">
+            <strong>Saldo inicial:</strong> R$
+            {{ formatarValor(caixa.saldoInicial) }}
+          </div>
+          <div class="resumo-item">
+            <strong>Responsável:</strong> {{ getNomeProfissionalSelecionado() }}
+          </div>
+          <div class="resumo-item" v-if="caixa.observacoes">
+            <strong>Observações:</strong> {{ caixa.observacoes }}
+          </div>
+        </div>
+      </div>
 
+      <!-- Botões de Ação -->
+      <div class="form-actions">
         <button
           type="button"
           class="btn btn-secondary"
           @click="limparFormulario"
           :disabled="isLoading"
         >
-          Limpar
+          <i class="icon-refresh"></i>
+          Limpar Formulário
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-large"
+          :disabled="isLoading || !isFormValid"
+        >
+          <span v-if="isLoading" class="loading-spinner"></span>
+          <i v-else class="icon-unlock"></i>
+          {{ isLoading ? "Abrindo caixa..." : "Abrir Caixa" }}
         </button>
       </div>
     </form>
@@ -92,306 +238,842 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue";
+import { defineComponent, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useSweetAlert } from '@/composables/useSweetAlert';
-import { api } from '@/common/http';
+import { useSweetAlert } from "@/composables/useSweetAlert";
+import { api } from "@/common/http";
 import feather from "feather-icons";
+
+// Interface para o profissional
+interface Profissional {
+  id?: number;
+  Id?: number;
+  profissionalId?: number;
+  nome: string;
+  sobrenome: string;
+  especialidade?: string;
+  telefone?: string;
+  email?: string;
+  ativo?: boolean;
+}
+
+// Interface para o caixa da API
+interface CaixaApi {
+  id?: number;
+  status: string;
+  saldoInicial: number;
+  saldoFinal?: number;
+  dataAbertura: string;
+  dataFechamento?: string;
+  profissionalId: number;
+  observacoes?: string;
+}
+
+// Interface para exibição do caixa atual
+interface CaixaAtual {
+  nomeResponsavel: string;
+  saldoInicial: string;
+  dataAbertura: string;
+  observacoes: string;
+}
 
 export default defineComponent({
   name: "AbrirCaixaView",
   setup() {
-    const { showToast, showError, showSuccess, showLoading, hideLoading, confirmAction } = useSweetAlert();
     const router = useRouter();
+    const {
+      showToast,
+      showError,
+      showSuccess,
+      showLoading,
+      hideLoading,
+      confirmAction,
+    } = useSweetAlert();
 
+    // Debug mode (remover em produção)
+    const debugMode = ref(true);
+
+    // Estado
     const isLoading = ref(false);
+    const isLoadingProfissionais = ref(false);
     const caixaAberto = ref(false);
-    const usuarios = ref([]);
+    const profissionais = ref<Profissional[]>([]);
+    const erroProfissionais = ref("");
 
+    // Dados do formulário
     const caixa = ref({
       saldoInicial: "",
-      usuarioFk: "",
-      observacoes: ""
+      profissionalId: "",
+      observacoes: "",
     });
 
-    const caixaAtual = ref({
-      nomeUsuario: "",
+    // Dados do caixa atual (se aberto)
+    const caixaAtual = ref<CaixaAtual>({
+      nomeResponsavel: "",
       saldoInicial: "",
       dataAbertura: "",
-      observacoes: ""
+      observacoes: "",
     });
 
-    function formatarDataHora(dataISO: string) {
-      if (!dataISO) return "";
-      return new Date(dataISO).toLocaleString('pt-BR');
-    }
+    // Erros de validação
+    const erros = ref({
+      profissional: "",
+      saldo: "",
+    });
 
-    function irParaFecharCaixa() {
-      router.push("/caixa/fechar");
-    }
-
-    async function abrirCaixa() {
+    // Computed
+    const isFormValid = computed(() => {
       const saldo = parseFloat(caixa.value.saldoInicial);
-      const usuarioId = parseInt(caixa.value.usuarioFk);
-
-      if (isNaN(saldo) || saldo < 0) {
-        showError('Saldo inválido', 'Informe um saldo inicial válido.');
-        return;
-      }
-
-      if (isNaN(usuarioId)) {
-        showError('Responsável obrigatório', 'Selecione um usuário responsável.');
-        return;
-      }
-
-      const user = usuarios.value.find(u => u.id === usuarioId);
-      const nomeUsuario = user?.nome || user?.perfil || 'Desconhecido';
-
-      const confirmed = await confirmAction(
-        'Confirmar abertura do caixa',
-        `Abrir caixa com saldo inicial de R$ ${saldo.toFixed(2)}?\n\nResponsável: ${nomeUsuario}`,
-        'Sim, abrir caixa'
+      return (
+        !isNaN(saldo) &&
+        saldo >= 0 &&
+        caixa.value.profissionalId &&
+        profissionais.value.length > 0
       );
+    });
+
+    // Função para obter ID do profissional de forma robusta
+    const getProfissionalId = (profissional: Profissional) => {
+      return profissional.id || profissional.Id || profissional.profissionalId;
+    };
+
+    // Função para obter nome do profissional selecionado
+    const getNomeProfissionalSelecionado = () => {
+      const id = parseInt(caixa.value.profissionalId);
+      const profissional = profissionais.value.find(
+        (p) => getProfissionalId(p) === id
+      );
+      if (profissional) {
+        return `${profissional.nome} ${profissional.sobrenome}`;
+      }
+      return "";
+    };
+
+    // Carregar profissionais da API
+    const carregarProfissionais = async () => {
+      isLoadingProfissionais.value = true;
+      erroProfissionais.value = "";
+
+      try {
+        console.log("🔄 Carregando profissionais...");
+        const response = await api.get("/api/Profissional");
+
+        profissionais.value = response.data || [];
+
+        if (debugMode.value) {
+          console.log("✅ Profissionais carregados:", profissionais.value);
+          console.log("🔍 Total de profissionais:", profissionais.value.length);
+          if (profissionais.value.length > 0) {
+            console.log(
+              "🔍 Estrutura do primeiro profissional:",
+              profissionais.value[0]
+            );
+          }
+        }
+
+        if (profissionais.value.length === 0) {
+          erroProfissionais.value =
+            "Nenhum profissional cadastrado encontrado.";
+          showToast.warning(
+            "Nenhum profissional encontrado. Cadastre profissionais primeiro."
+          );
+        } else {
+          showToast.success(
+            `${profissionais.value.length} profissionais carregados`
+          );
+        }
+      } catch (error: any) {
+        console.error("❌ Erro ao carregar profissionais:", error);
+
+        if (error.response?.status === 404) {
+          erroProfissionais.value = "Nenhum profissional encontrado.";
+        } else if (error.response?.status === 500) {
+          erroProfissionais.value = "Erro interno do servidor.";
+        } else {
+          erroProfissionais.value =
+            "Não foi possível carregar os profissionais.";
+        }
+
+        showError("Erro", erroProfissionais.value);
+      } finally {
+        isLoadingProfissionais.value = false;
+      }
+    };
+
+    // Verificar status do caixa
+    const verificarStatusCaixa = async () => {
+      try {
+        console.log("🔄 Verificando status do caixa...");
+        const response = await api.get<CaixaApi>("/api/Caixa/ultimo");
+        const ultimoCaixa = response.data;
+
+        if (debugMode.value) {
+          console.log("📦 Último caixa:", ultimoCaixa);
+        }
+
+        if (ultimoCaixa.status === "Aberto") {
+          // Buscar dados do profissional responsável
+          try {
+            const profissionalResponse = await api.get<Profissional>(
+              `/api/Profissional/${ultimoCaixa.profissionalId}`
+            );
+            const profissional = profissionalResponse.data;
+
+            caixaAberto.value = true;
+            caixaAtual.value = {
+              nomeResponsavel: `${profissional.nome} ${profissional.sobrenome}`,
+              saldoInicial: ultimoCaixa.saldoInicial.toFixed(2),
+              dataAbertura: ultimoCaixa.dataAbertura,
+              observacoes: ultimoCaixa.observacoes || "",
+            };
+
+            console.log("✅ Caixa aberto encontrado:", caixaAtual.value);
+          } catch (error) {
+            console.error("❌ Erro ao buscar profissional responsável:", error);
+            caixaAberto.value = true;
+            caixaAtual.value = {
+              nomeResponsavel: "Profissional não encontrado",
+              saldoInicial: ultimoCaixa.saldoInicial.toFixed(2),
+              dataAbertura: ultimoCaixa.dataAbertura,
+              observacoes: ultimoCaixa.observacoes || "",
+            };
+          }
+        } else {
+          // Caixa fechado - sugerir saldo inicial baseado no saldo final
+          if (ultimoCaixa.saldoFinal != null) {
+            caixa.value.saldoInicial = ultimoCaixa.saldoFinal.toFixed(2);
+            showToast.info(
+              `Saldo inicial sugerido baseado no último fechamento: R$ ${ultimoCaixa.saldoFinal.toFixed(2)}`
+            );
+          }
+        }
+      } catch (error: any) {
+        console.error("❌ Erro ao verificar status do caixa:", error);
+
+        if (error.response?.status !== 404) {
+          showError(
+            "Erro ao verificar caixa",
+            "Não foi possível obter o status do último caixa."
+          );
+        }
+      }
+    };
+
+    // Formatação de moeda
+    const formatarMoeda = () => {
+      // Remove caracteres não numéricos exceto ponto e vírgula
+      let valor = caixa.value.saldoInicial.replace(/[^\d.,]/g, "");
+
+      // Substitui vírgula por ponto para cálculos
+      valor = valor.replace(",", ".");
+
+      caixa.value.saldoInicial = valor;
+    };
+
+    // Formatação para exibição
+    const formatarValor = (valor: string | number) => {
+      const num = typeof valor === "string" ? parseFloat(valor) : valor;
+      return isNaN(num) ? "0,00" : num.toFixed(2).replace(".", ",");
+    };
+
+    // Formatação de data e hora
+    const formatarDataHora = (dataISO: string) => {
+      if (!dataISO) return "";
+      try {
+        return new Date(dataISO).toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch {
+        return dataISO;
+      }
+    };
+
+    // Validar formulário
+    const validarFormulario = () => {
+      erros.value = { profissional: "", saldo: "" };
+      let valido = true;
+
+      // Validar saldo
+      const saldo = parseFloat(caixa.value.saldoInicial);
+      if (isNaN(saldo) || saldo < 0) {
+        erros.value.saldo =
+          "Informe um saldo inicial válido (maior ou igual a zero).";
+        valido = false;
+      }
+
+      // Validar profissional
+      const profissionalId = parseInt(caixa.value.profissionalId);
+      if (
+        isNaN(profissionalId) ||
+        !profissionais.value.find(
+          (p) => getProfissionalId(p) === profissionalId
+        )
+      ) {
+        erros.value.profissional = "Selecione um profissional responsável.";
+        valido = false;
+      }
+
+      return valido;
+    };
+
+    // Abrir caixa
+    const abrirCaixa = async () => {
+      if (!validarFormulario()) {
+        showError(
+          "Formulário inválido",
+          "Corrija os erros antes de continuar."
+        );
+        return;
+      }
+
+      const saldo = parseFloat(caixa.value.saldoInicial);
+      const profissionalId = parseInt(caixa.value.profissionalId);
+      const profissional = profissionais.value.find(
+        (p) => getProfissionalId(p) === profissionalId
+      )!;
+      const nomeResponsavel = `${profissional.nome} ${profissional.sobrenome}`;
+
+      // Confirmar abertura
+      const confirmed = await confirmAction(
+        "Confirmar abertura do caixa",
+        `Deseja abrir o caixa com as seguintes informações?\n\n` +
+          `💰 Saldo inicial: R$ ${formatarValor(saldo)}\n` +
+          `👤 Responsável: ${nomeResponsavel}\n` +
+          `📝 Observações: ${caixa.value.observacoes || "Nenhuma"}`,
+        "Sim, abrir caixa"
+      );
+
       if (!confirmed) return;
 
       isLoading.value = true;
-      showLoading('Abrindo caixa...');
+      showLoading("Abrindo caixa...");
 
       try {
-        const now = new Date();
-
+        const agora = new Date();
         const payload = {
-          id: Math.floor(Math.random() * 1000000),
           saldoInicial: saldo,
           saldoFinal: saldo,
-          dataAbertura: now.toISOString(),
-          dataFechamento: now.toISOString(),
+          dataAbertura: agora.toISOString(),
           status: "Aberto",
-          usuarioFk: usuarioId,
-          nomeUsuario: nomeUsuario
+          profissionalId: profissionalId,
+          observacoes: caixa.value.observacoes.trim() || null,
         };
 
-        await api.post('/api/Caixa', payload);
+        console.log("💾 Abrindo caixa:", payload);
+        await api.post("/api/Caixa", payload);
 
+        // Atualizar estado local
         caixaAtual.value = {
-          nomeUsuario,
+          nomeResponsavel,
           saldoInicial: saldo.toFixed(2),
-          dataAbertura: now.toISOString(),
-          observacoes: caixa.value.observacoes
+          dataAbertura: agora.toISOString(),
+          observacoes: caixa.value.observacoes,
         };
 
         caixaAberto.value = true;
+        hideLoading();
 
-        hideLoading();
-        showSuccess('Caixa aberto!', `Caixa aberto com sucesso por ${nomeUsuario}.`, 'Continuar');
-        showToast.success('Caixa aberto com sucesso!');
+        showSuccess(
+          "Caixa aberto com sucesso!",
+          `Caixa aberto por ${nomeResponsavel} com saldo inicial de R$ ${formatarValor(saldo)}.`
+        );
+
+        showToast.success("Caixa aberto! Bom trabalho!");
         limparFormulario();
-      } catch (error) {
+      } catch (error: any) {
         hideLoading();
-        showError('Erro no servidor', 'Erro ao abrir o caixa.');
+        console.error("❌ Erro ao abrir caixa:", error);
+
+        if (error.response?.status === 400) {
+          const mensagem =
+            error.response.data?.message ||
+            "Dados inválidos para abertura do caixa.";
+          showError("Erro de validação", mensagem);
+        } else if (error.response?.status === 409) {
+          showError(
+            "Caixa já aberto",
+            "Já existe um caixa aberto. Feche o caixa atual antes de abrir um novo."
+          );
+          // Recarregar status do caixa
+          verificarStatusCaixa();
+        } else {
+          showError(
+            "Erro no servidor",
+            "Não foi possível abrir o caixa. Tente novamente."
+          );
+        }
       } finally {
         isLoading.value = false;
       }
-    }
+    };
 
-    function limparFormulario() {
-      Object.assign(caixa.value, {
+    // Limpar formulário
+    const limparFormulario = () => {
+      caixa.value = {
         saldoInicial: "",
-        usuarioFk: "",
-        observacoes: ""
-      });
-      showToast.info('Formulário limpo');
-    }
+        profissionalId: "",
+        observacoes: "",
+      };
+      erros.value = { profissional: "", saldo: "" };
+      showToast.info("Formulário limpo");
+    };
 
+    // Navegação
+    const irParaFecharCaixa = () => {
+      router.push("/caixa/fechar");
+    };
+
+    const irParaExtrato = () => {
+      router.push("/caixa/extrato");
+    };
+
+    // Inicialização
     onMounted(async () => {
+      console.log("🚀 AbrirCaixaView montado");
       feather.replace();
 
-      try {
-        const responseUsuarios = await api.get('/api/Usuario');
-        usuarios.value = responseUsuarios.data;
-      } catch {
-        showError('Erro ao carregar usuários', 'Não foi possível buscar os usuários.');
-      }
-
-      try {
-        const responseCaixa = await api.get('/api/Caixa/ultimo');
-        const ultimo = responseCaixa.data;
-
-        if (ultimo && ultimo.status === "Aberto") {
-          const responsavel = await api.get(`/api/Usuario/${ultimo.usuarioFk}`);
-
-          caixaAberto.value = true;
-          caixaAtual.value = {
-            nomeUsuario: responsavel.data.nome || responsavel.data.perfil || "Desconhecido",
-            saldoInicial: ultimo.saldoInicial.toFixed(2),
-            dataAbertura: ultimo.dataAbertura,
-            observacoes: ultimo.observacoes || ""
-          };
-        } else {
-          if (ultimo?.saldoFinal != null) {
-            caixa.value.saldoInicial = ultimo.saldoFinal.toFixed(2);
-          }
-        }
-      } catch {
-        showError('Erro ao verificar caixa', 'Não foi possível obter o status do último caixa.');
-      }
+      // Carregar dados em paralelo
+      await Promise.all([carregarProfissionais(), verificarStatusCaixa()]);
     });
 
     return {
-      usuarios,
+      // Estado
+      isLoading,
+      isLoadingProfissionais,
+      caixaAberto,
+      profissionais,
+      erroProfissionais,
       caixa,
       caixaAtual,
-      caixaAberto,
-      isLoading,
+      erros,
+      debugMode,
+
+      // Computed
+      isFormValid,
+
+      // Funções
+      getProfissionalId,
+      getNomeProfissionalSelecionado,
+      carregarProfissionais,
+      formatarMoeda,
+      formatarValor,
       formatarDataHora,
       abrirCaixa,
       limparFormulario,
-      irParaFecharCaixa
+      irParaFecharCaixa,
+      irParaExtrato,
     };
-  }
+  },
 });
 </script>
 
 <style scoped>
-.form-wrapper {
-  padding: 2rem;
-  max-width: 700px;
+/* Debug Info */
+.debug-info {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.debug-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #92400e;
+}
+
+.debug-info pre {
+  background: #f3f4f6;
+  padding: 0.5rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  max-height: 200px;
+}
+
+/* Container Principal */
+.form-container {
+  max-width: 800px;
   margin: 0 auto;
-  background: #f9fafb;
+  padding: 2rem;
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Cabeçalho */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.header-content {
+  flex: 1;
 }
 
 .form-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
   color: #1f2937;
+  margin-bottom: 0.5rem;
 }
 
-.form-group {
+.form-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Card Caixa Aberto */
+.caixa-aberto-card {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 2px solid #10b981;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.status-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.input {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 0.625rem 0.75rem;
-  width: 100%;
+.status-icon {
+  font-size: 2rem;
+}
+
+.status-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #065f46;
+  margin: 0;
+}
+
+.caixa-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #047857;
+}
+
+.info-value {
   font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  color: #065f46;
 }
 
-.input:focus {
+.info-value.money {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.caixa-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Formulário */
+.caixa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Seções do Formulário */
+.form-section {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #d1d5db;
+}
+
+/* Grupos de Formulário */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Inputs */
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+  background: #ffffff;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-textarea.input {
+.form-input:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.form-textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.helper-text {
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
+/* Input com prefixo */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
+.input-prefix {
+  position: absolute;
+  left: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  z-index: 1;
+}
+
+.input-money {
+  padding-left: 2.5rem;
+}
+
+/* Estados de erro */
+.select-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.field-note {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Estados de carregamento e erro para select */
+.loading-select,
+.error-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.loading-select {
+  color: #6b7280;
+}
+
+.error-select {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.error-icon {
+  font-size: 1.25rem;
+}
+
+/* Box de informações */
+.info-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.info-icon {
+  font-size: 1.5rem;
+}
+
+.info-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0;
+}
+
+.info-list {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #1e40af;
+}
+
+.info-list li {
+  margin-bottom: 0.5rem;
+}
+
+/* Box de resumo */
+.resumo-box {
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.resumo-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0c4a6e;
+  margin-bottom: 1rem;
+}
+
+.resumo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resumo-item {
+  color: #0c4a6e;
+  font-size: 0.875rem;
+}
+
+/* Botões de Ação */
 .form-actions {
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  justify-content: flex-end;
+  padding-top: 2rem;
+  border-top: 2px solid #f3f4f6;
 }
 
+/* Botões */
 .btn {
-  padding: 0.625rem 1.25rem;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
   border-radius: 8px;
-  font-weight: 500;
+  border: none;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+  transform: translateY(-1px);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
 }
 
-.btn-primary {
-  background-color: #4f46e5;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #4338ca;
-}
-
-.btn-secondary {
-  background-color: #6b7280;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #4b5563;
-}
-
-.btn-danger {
-  background-color: #dc2626;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #b91c1c;
-}
-
-.alert-success {
-  background-color: #d1fae5;
-  border: 1px solid #10b981;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  color: #065f46;
-}
-
-.info-box {
-  background-color: #eff6ff;
-  border-left: 4px solid #3b82f6;
-  padding: 1rem;
-  border-radius: 6px;
-  margin-top: 1.5rem;
-  color: #1e3a8a;
-}
-
-.spinner {
+/* Spinner de Loading */
+.loading-spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid white;
-  border-top: 2px solid transparent;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
   border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-  display: inline-block;
-  margin-right: 0.5rem;
-}
-.card-caixa-aberto {
-  background-color: #f1f5f9;
-  border-left: 6px solid #10b981;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  max-width: 600px;
-  margin: 2rem auto;
-  color: #1e293b;
-}
-
-.card-caixa-aberto p {
-  margin: 0.5rem 0;
-  font-size: 1rem;
-}
-
-.card-caixa-aberto .btn {
-  margin-top: 1rem;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -400,5 +1082,61 @@ textarea.input {
   }
 }
 
+/* Ícones */
+.icon-list::before {
+  content: "📋";
+}
+.icon-lock::before {
+  content: "🔒";
+}
+.icon-unlock::before {
+  content: "🔓";
+}
+.icon-file-text::before {
+  content: "📄";
+}
+.icon-refresh::before {
+  content: "↻";
+}
 
+/* Responsividade */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1rem;
+    margin: 1rem;
+  }
+
+  .form-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .caixa-actions {
+    flex-direction: column;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
+}
 </style>

@@ -3,12 +3,7 @@
     <div class="container-fluid p-0">
       <div class="flex justify-between items-center mb-4">
         <h1 class="h3 mb-3"><strong>Analytics</strong> Dashboard</h1>
-        <div class="flex gap-2">
-          <button class="btn-sm" @click="atualizarDados" :disabled="isLoading">
-            🔄 Atualizar
-          </button>
-          <button class="btn-sm" @click="exportarRelatorio">📊 Exportar</button>
-        </div>
+        <div class="flex gap-2"></div>
       </div>
 
       <!-- Cards de Estatísticas -->
@@ -342,9 +337,9 @@ export default defineComponent({
     ]);
 
     const resumoFinanceiro = ref({
-      entradas: 1.850,
+      entradas: 1.85,
       saidas: 320,
-      saldo: 1.530,
+      saldo: 1.53,
     });
 
     function getAlertClass(tipo: string) {
@@ -555,6 +550,7 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   font-size: 0.875rem;
+  margin-right: 10px;
 }
 .btn-danger {
   background-color: #dc2626;
