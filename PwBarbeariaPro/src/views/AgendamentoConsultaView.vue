@@ -29,7 +29,7 @@
             <td class="border px-4 py-2">{{ a.cliente }}</td>
             <td class="border px-4 py-2">{{ a.servico }}</td>
             <td class="border px-4 py-2">{{ a.profissional }}</td>
-            <td class="border px-4 py-2">{{ a.data }}</td>
+            <td class="border px-4 py-2">{{ formatarData(a.data) }}</td>
             <td class="border px-4 py-2">{{ a.horario }}</td>
             <td class="border px-4 py-2">
               <router-link
@@ -56,30 +56,16 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from "vue";
+import { api } from "@/common/http";
+import { useSweetAlert } from "@/composables/useSweetAlert";
 import feather from "feather-icons";
 
 export default defineComponent({
   name: "AgendamentoConsultaView",
   setup() {
     const filtro = ref({ nome: "", data: "" });
-    const agendamentos = ref([
-      {
-        id: 1,
-        cliente: "João Silva",
-        servico: "Corte Masculino",
-        profissional: "Carlos",
-        data: "2024-05-15",
-        horario: "14:00",
-      },
-      {
-        id: 2,
-        cliente: "Maria Santos",
-        servico: "Limpeza de Pele",
-        profissional: "Ana",
-        data: "2024-05-16",
-        horario: "09:30",
-      },
-    ]);
+    const agendamentos = ref<any[]>([]);
+    const { showError, showSuccess } = useSweetAlert();
 
     const agendamentosFiltrados = computed(() => {
       return agendamentos.value.filter((a) => {
@@ -91,23 +77,43 @@ export default defineComponent({
       });
     });
 
-    function cancelarAgendamento(a: any) {
-      const confirmado = window.confirm(
-        `Cancelar agendamento de ${a.cliente}?`
-      );
-      if (confirmado) {
-        agendamentos.value = agendamentos.value.filter((x) => x.id !== a.id);
+    async function carregarAgendamentos() {
+      try {
+        const { data } = await api.get("/api/Agendamento");
+        agendamentos.value = data;
+      } catch {
+        showError("Erro", "Erro ao carregar agendamentos.");
       }
+    }
+
+    async function cancelarAgendamento(a: any) {
+      const confirmado = window.confirm(`Cancelar agendamento de ${a.cliente}?`);
+      if (!confirmado) return;
+
+      try {
+        await api.delete(`/api/Agendamento/${a.id}`);
+        agendamentos.value = agendamentos.value.filter((x) => x.id !== a.id);
+        showSuccess("Cancelado", "Agendamento cancelado com sucesso.");
+      } catch {
+        showError("Erro", "Erro ao cancelar o agendamento.");
+      }
+    }
+
+    function formatarData(dataISO: string): string {
+      const [ano, mes, dia] = dataISO.split("-");
+      return `${dia}/${mes}/${ano}`;
     }
 
     onMounted(() => {
       feather.replace();
+      carregarAgendamentos();
     });
 
     return {
       filtro,
       agendamentosFiltrados,
       cancelarAgendamento,
+      formatarData,
     };
   },
 });
@@ -137,3 +143,4 @@ export default defineComponent({
   cursor: pointer;
 }
 </style>
+

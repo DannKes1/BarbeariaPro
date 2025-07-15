@@ -1,150 +1,190 @@
 <template>
   <div class="p-6 max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">Editar Serviço</h1>
-    <form @submit.prevent="submitForm" class="space-y-4" v-if="servico">
+
+    <form @submit.prevent="submitForm" class="space-y-4">
       <div>
         <label>Nome do Serviço</label>
-        <input v-model="servico.nome" class="input" :readonly="bloquearNome" />
-        <p v-if="bloquearNome" class="text-sm text-gray-500">
-          O nome não pode ser alterado porque há agendamentos vinculados.
-        </p>
-        <p v-if="erros.nome" class="text-red-500 text-sm">{{ erros.nome }}</p>
+        <input
+          v-model="servico.nome"
+          class="input"
+          required
+          :disabled="isLoading"
+        />
       </div>
 
       <div>
         <label>Descrição</label>
-        <textarea v-model="servico.descricao" class="input" required></textarea>
-        <p v-if="erros.descricao" class="text-red-500 text-sm">
-          {{ erros.descricao }}
-        </p>
+        <textarea
+          v-model="servico.descricao"
+          class="input"
+          rows="3"
+          :disabled="isLoading"
+        ></textarea>
       </div>
 
       <div>
-        <label>Preço</label>
-        <input
-          v-model="servico.preco"
+        <label>Categoria</label>
+        <select
+          v-model="servico.categoria"
           class="input"
           required
-          placeholder="R$ 00,00"
-          @input="formatarPreco"
-        />
-        <p v-if="erros.preco" class="text-red-500 text-sm">{{ erros.preco }}</p>
+          :disabled="isLoading"
+        >
+          <option value="">Selecione uma categoria</option>
+          <option value="Cabelo">Cabelo</option>
+          <option value="Barba">Barba</option>
+          <option value="Estética">Estética</option>
+          <option value="Unhas">Unhas</option>
+          <option value="Massagem">Massagem</option>
+          <option value="Combo">Combo</option>
+        </select>
       </div>
 
-      <div>
-        <label>Duração Estimada (minutos)</label>
-        <input
-          v-model="servico.duracao"
-          class="input"
-          required
-          type="number"
-          min="1"
-        />
-        <p v-if="erros.duracao" class="text-red-500 text-sm">
-          {{ erros.duracao }}
-        </p>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label>Preço (R$)</label>
+          <input
+            v-model.number="servico.valor"
+            class="input"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            :disabled="isLoading"
+          />
+        </div>
+
+        <div>
+          <label>Duração (minutos)</label>
+          <input
+            v-model.number="servico.duracaoMinutos"
+            class="input"
+            type="number"
+            min="15"
+            step="15"
+            required
+            :disabled="isLoading"
+          />
+        </div>
       </div>
 
-      <button class="btn" type="submit">Salvar Alterações</button>
+      <div class="flex gap-2">
+        <button class="btn" type="submit" :disabled="isLoading">
+          <span
+            v-if="isLoading"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          {{ isLoading ? "Salvando..." : "Salvar Alterações" }}
+        </button>
+      </div>
     </form>
-
-    <p v-if="sucesso" class="text-green-600 mt-4">
-      Serviço atualizado com sucesso!
-    </p>
-    <p v-else-if="!servico" class="text-red-600 text-center">
-      Serviço não encontrado.
-    </p>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import feather from "feather-icons";
+import { useRoute, useRouter } from "vue-router";
+import { useSweetAlert } from "@/composables/useSweetAlert";
+import { api } from "@/common/http";
 
 export default defineComponent({
-  name: "ServicoEditarView",
+  name: "ServicoEdicaoView",
   setup() {
     const route = useRoute();
-    const sucesso = ref(false);
-    const bloquearNome = ref(false);
-    const erros = ref({ nome: "", descricao: "", preco: "", duracao: "" });
+    const router = useRouter();
+    const id = Number(route.params.id);
 
-    const servicosMock = [
-      {
-        nome: "Corte Masculino",
-        descricao: "Corte tradicional com tesoura e máquina.",
-        preco: "R$ 35,00",
-        duracao: 30,
-        possuiAgendamento: true,
-      },
-      {
-        nome: "Limpeza de Pele",
-        descricao: "Procedimento estético para remover impurezas.",
-        preco: "R$ 75,00",
-        duracao: 45,
-        possuiAgendamento: false,
-      },
-    ];
+    const { showError, showSuccess, showLoading, hideLoading, confirmAction } =
+      useSweetAlert();
 
-    const servico = ref<any>(null);
+    const isLoading = ref(false);
 
-    onMounted(() => {
-      const nomeParam = route.params.nome;
-      const encontrado = servicosMock.find((s) => s.nome === nomeParam);
-      if (encontrado) {
-        servico.value = { ...encontrado };
-        bloquearNome.value = encontrado.possuiAgendamento;
-      }
-      feather.replace();
+    const servico = ref({
+      id: id,
+      nome: "",
+      descricao: "",
+      categoria: "",
+      valor: 0,
+      duracaoMinutos: 0,
     });
 
-    function formatarPreco() {
-      let valor = servico.value.preco.replace(/[^\d]/g, "");
-      if (valor.length < 3) valor = valor.padStart(3, "0");
-      const reais = valor.slice(0, valor.length - 2);
-      const centavos = valor.slice(-2);
-      servico.value.preco = `R$ ${reais},${centavos}`;
-    }
-
-    function validar() {
-      let valido = true;
-      erros.value = { nome: "", descricao: "", preco: "", duracao: "" };
-
-      if (!servico.value.descricao || servico.value.descricao.length < 20) {
-        erros.value.descricao = "Descrição deve ter pelo menos 20 caracteres.";
-        valido = false;
-      }
-
-      if (!/^R\$ \d+,\d{2}$/.test(servico.value.preco)) {
-        erros.value.preco = "Preço no formato R$ 00,00.";
-        valido = false;
-      }
-
-      const duracao = parseInt(servico.value.duracao);
-      if (!Number.isInteger(duracao) || duracao <= 0) {
-        erros.value.duracao = "Duração deve ser um número positivo.";
-        valido = false;
-      }
-
-      return valido;
-    }
-
-    function submitForm() {
-      if (validar()) {
-        console.log("Serviço atualizado:", servico.value);
-        sucesso.value = true;
-        setTimeout(() => (sucesso.value = false), 3000);
+    async function carregarServico() {
+      try {
+        const { data } = await api.get(`/api/Servico/${id}`);
+        servico.value = {
+          id: data.id,
+          nome: data.nome,
+          descricao: data.descricao,
+          categoria: data.categoria,
+          valor: data.valor,
+          duracaoMinutos: data.duracaoMinutos,
+        };
+      } catch {
+        showError("Erro", "Erro ao carregar o serviço.");
+        router.push("/servico");
       }
     }
+
+    async function submitForm() {
+      if (!servico.value.nome.trim()) {
+        showError("Campo obrigatório", "Informe o nome do serviço.");
+        return;
+      }
+
+      if (!servico.value.categoria) {
+        showError("Campo obrigatório", "Selecione uma categoria.");
+        return;
+      }
+
+      if (!servico.value.valor || servico.value.valor <= 0) {
+        showError("Preço inválido", "Informe um preço válido.");
+        return;
+      }
+
+      if (!servico.value.duracaoMinutos || servico.value.duracaoMinutos < 15) {
+        showError("Duração inválida", "A duração mínima é de 15 minutos.");
+        return;
+      }
+
+      const confirmado = await confirmAction(
+        "Confirmar alterações",
+        `Deseja salvar as alterações no serviço "${servico.value.nome}"?`,
+        "Salvar"
+      );
+
+      if (!confirmado) return;
+
+      isLoading.value = true;
+      showLoading("Salvando alterações...");
+
+      try {
+        const payload = {
+          ...servico.value,
+          duracaoEstimada: new Date().toISOString(),
+        };
+
+        await api.put(`/api/Servico/${id}`, payload);
+
+        hideLoading();
+
+        showSuccess("Sucesso", "Serviço atualizado com sucesso.");
+        router.push("/servico/consulta");
+      } catch {
+        hideLoading();
+        showError("Erro", "Erro ao atualizar o serviço.");
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    onMounted(carregarServico);
 
     return {
       servico,
-      erros,
-      sucesso,
-      bloquearNome,
+      isLoading,
       submitForm,
-      formatarPreco,
     };
   },
 });
@@ -162,5 +202,19 @@ export default defineComponent({
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+textarea.input {
+  resize: vertical;
+  min-height: 80px;
 }
 </style>
