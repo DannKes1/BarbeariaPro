@@ -9,7 +9,7 @@
       </div>
       <router-link to="/caixa/consulta" class="btn btn-secondary">
         <i class="icon-list"></i>
-        Consultar Caixas
+        Consultar Caixa
       </router-link>
     </div>
 
@@ -222,7 +222,7 @@ interface CaixaApi {
   saldoFinal?: number;
   dataAbertura: string;
   dataFechamento?: string;
-  usuarioId: number;
+  usuarioFk: number;
 }
 
 interface CaixaAtual {
@@ -278,7 +278,7 @@ export default defineComponent({
       const id = parseInt(caixa.value.usuarioId);
       const usuario = usuarios.value.find((p) => getUsuarioId(p) === id);
       if (usuario) {
-        return `${usuario.perfil} ${usuario.sobrenome}`;
+        return `${usuario.perfil}`;
       }
       return "";
     };
@@ -333,16 +333,17 @@ export default defineComponent({
         if (ultimoCaixa.status === "Aberto") {
           try {
             const usuarioResponse = await api.get<Usuario>(
-              `/api/Usuario/${ultimoCaixa.usuarioId}`
+              `/api/Usuario/${ultimoCaixa.usuarioFk}`
             );
             const usuario = usuarioResponse.data;
 
             caixaAberto.value = true;
             caixaAtual.value = {
-              nomeResponsavel: `${usuario.perfil} ${usuario.sobrenome}`,
+              nomeResponsavel: usuario.perfil,
               saldoInicial: ultimoCaixa.saldoInicial.toFixed(2),
               dataAbertura: ultimoCaixa.dataAbertura,
             };
+            console.log(caixaAtual);
           } catch (error) {
             caixaAberto.value = true;
             caixaAtual.value = {
