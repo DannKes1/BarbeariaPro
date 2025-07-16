@@ -62,7 +62,7 @@
               </div>
             </div>
 
-            <!-- Valor -->
+            
             <div class="form-group">
               <label for="valor" class="form-label">Valor (R$) *</label>
               <div class="input-container">
@@ -100,7 +100,7 @@
               }}</span>
             </div>
 
-            <!-- Categoria -->
+           
             <div class="form-group">
               <label for="categoria" class="form-label">Categoria *</label>
               <div class="input-container">
@@ -135,7 +135,7 @@
               }}</span>
             </div>
 
-            <!-- Observações -->
+   
             <div class="form-group">
               <label for="observacoes" class="form-label">
                 Observações
@@ -157,7 +157,7 @@
               </div>
             </div>
 
-            <!-- Submit Button -->
+            
             <div class="submit-container">
               <button
                 type="submit"
@@ -601,7 +601,7 @@ export default defineComponent({
   color: #ef4444;
 }
 
-/* Select specific */
+
 .form-select {
   appearance: none;
   cursor: pointer;

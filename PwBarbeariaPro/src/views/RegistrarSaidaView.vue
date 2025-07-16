@@ -3,8 +3,18 @@
     <div>
       <div class="header">
         <div class="icon-container">
-          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12" />
+          <svg
+            class="icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 12h12"
+            />
           </svg>
         </div>
         <h1 class="title">Registrar Nova Saída</h1>
@@ -30,8 +40,12 @@
                 />
               </div>
               <div class="input-footer">
-                <span v-if="errors.descricao" class="error-message">{{ errors.descricao }}</span>
-                <span class="char-counter">{{ form.descricao.length }}/100</span>
+                <span v-if="errors.descricao" class="error-message">{{
+                  errors.descricao
+                }}</span>
+                <span class="char-counter"
+                  >{{ form.descricao.length }}/100</span
+                >
               </div>
             </div>
 
@@ -52,7 +66,9 @@
                   @input="clearFieldError('valor')"
                 />
               </div>
-              <span v-if="errors.valor" class="error-message">{{ errors.valor }}</span>
+              <span v-if="errors.valor" class="error-message">{{
+                errors.valor
+              }}</span>
             </div>
 
             <div class="form-group">
@@ -72,11 +88,16 @@
                   <option value="outros">📋 Outros</option>
                 </select>
               </div>
-              <span v-if="errors.categoria" class="error-message">{{ errors.categoria }}</span>
+              <span v-if="errors.categoria" class="error-message">{{
+                errors.categoria
+              }}</span>
             </div>
 
             <div class="form-group">
-              <label for="observacoes" class="form-label">Observações <span class="optional-label">(opcional)</span></label>
+              <label for="observacoes" class="form-label"
+                >Observações
+                <span class="optional-label">(opcional)</span></label
+              >
               <textarea
                 id="observacoes"
                 v-model="form.observacoes"
@@ -87,7 +108,9 @@
                 @input="clearFieldError('observacoes')"
               ></textarea>
               <div class="textarea-footer">
-                <span class="char-counter">{{ form.observacoes.length }}/500</span>
+                <span class="char-counter"
+                  >{{ form.observacoes.length }}/500</span
+                >
               </div>
             </div>
 
@@ -98,11 +121,10 @@
                 :disabled="isLoading || !isFormValid"
               >
                 <div v-if="isLoading" class="button-content">
+                  <div class="loading-spinner"></div>
                   Registrando...
                 </div>
-                <div v-else class="button-content">
-                  Registrar Saída
-                </div>
+                <div v-else class="button-content">Registrar Saída</div>
               </button>
             </div>
           </form>
@@ -121,7 +143,8 @@ import { useSweetAlert } from "@/composables/useSweetAlert";
 export default defineComponent({
   name: "RegistrarSaidaView",
   setup() {
-    const { showSuccess, showError, showLoading, hideLoading } = useSweetAlert();
+    const { showSuccess, showError, showLoading, hideLoading } =
+      useSweetAlert();
     const router = useRouter();
 
     const isLoading = ref(false);
@@ -131,7 +154,7 @@ export default defineComponent({
       descricao: "",
       valor: "",
       categoria: "",
-      observacoes: ""
+      observacoes: "",
     });
 
     const errors = reactive<Record<string, string>>({});
@@ -139,19 +162,37 @@ export default defineComponent({
     const validateField = (field: string): boolean => {
       switch (field) {
         case "descricao":
-          if (!form.descricao.trim()) return (errors.descricao = "Descrição obrigatória"), false;
-          if (form.descricao.length < 3) return (errors.descricao = "Mínimo 3 caracteres"), false;
+          if (!form.descricao.trim()) {
+            errors.descricao = "Descrição obrigatória";
+            return false;
+          }
+          if (form.descricao.length < 3) {
+            errors.descricao = "Mínimo 3 caracteres";
+            return false;
+          }
           delete errors.descricao;
           return true;
         case "valor":
           const valor = parseFloat(form.valor);
-          if (!form.valor) return (errors.valor = "Valor obrigatório"), false;
-          if (isNaN(valor) || valor <= 0) return (errors.valor = "Valor deve ser maior que zero"), false;
-          if (valor > 999999.99) return (errors.valor = "Valor máximo R$ 999.999,99"), false;
+          if (!form.valor) {
+            errors.valor = "Valor obrigatório";
+            return false;
+          }
+          if (isNaN(valor) || valor <= 0) {
+            errors.valor = "Valor deve ser maior que zero";
+            return false;
+          }
+          if (valor > 999999.99) {
+            errors.valor = "Valor máximo R$ 999.999,99";
+            return false;
+          }
           delete errors.valor;
           return true;
         case "categoria":
-          if (!form.categoria) return (errors.categoria = "Categoria obrigatória"), false;
+          if (!form.categoria) {
+            errors.categoria = "Categoria obrigatória";
+            return false;
+          }
           delete errors.categoria;
           return true;
         default:
@@ -160,12 +201,16 @@ export default defineComponent({
     };
 
     const clearFieldError = (field: string): void => {
-      delete errors[field];
+      if (errors[field]) {
+        delete errors[field];
+      }
     };
 
-    const isFormValid = computed(() =>
-      ["descricao", "valor", "categoria"].every(validateField)
-    );
+    const isFormValid = computed(() => {
+      return ["descricao", "valor", "categoria"].every((field) =>
+        validateField(field)
+      );
+    });
 
     onMounted(async () => {
       try {
@@ -173,54 +218,116 @@ export default defineComponent({
         if (res.data?.status === "Aberto") {
           caixaAberto.value = res.data;
         } else {
-          showError("Caixa Fechado", "Abra o caixa antes de registrar uma saída.");
+          await showError(
+            "Caixa Fechado",
+            "Abra o caixa antes de registrar uma saída."
+          );
           setTimeout(() => {
             router.push({ path: "/caixa/abrir" });
           }, 2000);
         }
-      } catch {
-        showError("Erro", "Não foi possível carregar o caixa.");
+      } catch (error) {
+        console.error("Erro ao carregar caixa:", error);
+        await showError("Erro", "Não foi possível carregar o caixa.");
       }
     });
 
+    const resetForm = () => {
+      Object.assign(form, {
+        descricao: "",
+        valor: "",
+        categoria: "",
+        observacoes: "",
+      });
+      Object.keys(errors).forEach((key) => delete errors[key]);
+    };
+
     const handleSubmit = async () => {
+      // Validação final do formulário
       if (!isFormValid.value) {
-        showError("Formulário inválido", "Preencha todos os campos corretamente.");
+        await showError(
+          "Formulário inválido",
+          "Preencha todos os campos corretamente."
+        );
+        return;
+      }
+
+      // Verificar se o caixa está disponível
+      if (!caixaAberto.value) {
+        await showError(
+          "Caixa não encontrado",
+          "Nenhum caixa aberto foi localizado."
+        );
         return;
       }
 
       const valorNum = parseFloat(form.valor);
 
-      showLoading("Registrando saída...");
+      // Verificar se o valor é válido
+      if (isNaN(valorNum) || valorNum <= 0) {
+        await showError("Valor inválido", "Por favor, insira um valor válido.");
+        return;
+      }
+
+      isLoading.value = true;
+
       try {
-        await api.post("/api/MovimentacaoCaixa", {
-          id: Math.floor(Math.random() * 1000000),
+        // Mostrar loading
+        showLoading("Registrando saída...");
+
+        // Criar movimentação
+        const movimentacaoPayload = {
+          id: 0, // O backend deve gerar o ID
           tipo: "Saída",
           valor: valorNum,
           categoria: form.categoria,
-          descricao: `${form.descricao}`,
+          descricao: form.descricao,
           comprovantePath: "",
-          caixaFk: caixaAberto.value.id
-        });
+          caixaFk: caixaAberto.value.id,
+        };
 
-        const novoSaldo = caixaAberto.value.saldoFinal - valorNum;
-        await api.put(`/api/Caixa/${caixaAberto.value.id}`, {
+        console.log("Enviando movimentação:", movimentacaoPayload);
+        await api.post("/api/MovimentacaoCaixa", movimentacaoPayload);
+
+        // Atualizar saldo do caixa
+        const novoSaldo = (caixaAberto.value.saldoFinal || 0) - valorNum;
+        const caixaAtualizado = {
           ...caixaAberto.value,
-          saldoFinal: novoSaldo
-        });
+          saldoFinal: novoSaldo,
+        };
 
-        showSuccess("Saída registrada", `Despesa de R$ ${valorNum.toFixed(2)} registrada com sucesso.`);
-        Object.assign(form, {
-          descricao: "",
-          valor: "",
-          categoria: "",
-          observacoes: ""
-        });
-      } catch (err) {
-        console.error(err);
-        showError("Erro", "Erro ao registrar saída.");
-      } finally {
+        console.log("Atualizando caixa:", caixaAtualizado);
+        await api.put(`/api/Caixa/${caixaAberto.value.id}`, caixaAtualizado);
+
+        // Atualizar referência local
+        caixaAberto.value.saldoFinal = novoSaldo;
+
+        // Esconder loading
         hideLoading();
+
+        // Mostrar sucesso
+        await showSuccess(
+          "Saída registrada com sucesso!",
+          `Despesa de R$ ${valorNum.toFixed(2)} foi registrada.`
+        );
+
+        // Resetar formulário
+        resetForm();
+      } catch (error) {
+        console.error("Erro ao registrar saída:", error);
+        hideLoading();
+
+        // Mostrar erro específico baseado na resposta
+        let errorMessage = "Erro ao registrar saída.";
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        await showError("Erro", errorMessage);
+      } finally {
+        isLoading.value = false;
       }
     };
 
@@ -231,9 +338,9 @@ export default defineComponent({
       isFormValid,
       validateField,
       clearFieldError,
-      handleSubmit
+      handleSubmit,
     };
-  }
+  },
 });
 </script>
 
@@ -242,99 +349,274 @@ export default defineComponent({
   padding: 2rem;
   max-width: 800px;
   margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
+
 .header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
 }
+
 .icon-container {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  background-color: #fee2e2;
+  border-radius: 50%;
+  margin-bottom: 1rem;
 }
+
 .icon {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   color: #dc2626;
 }
+
 .title {
-  font-size: 1.75rem;
-  font-weight: bold;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
 }
+
 .subtitle {
   font-size: 1rem;
-  color: #6b7280;
+  color: #64748b;
+  margin: 0;
 }
+
 .form-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.form-content {
   padding: 2rem;
 }
-.form-group {
-  margin-bottom: 1.25rem;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.optional-label {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
 .input-container {
   position: relative;
+  display: flex;
+  align-items: center;
 }
+
 .form-input,
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 0.625rem 0.75rem;
+  padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 0.5rem;
+  color: #111827;
+  background-color: #ffffff;
   font-size: 1rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
 }
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #9ca3af;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
 .input-with-prefix {
-  padding-left: 2.5rem;
+  padding-left: 3rem;
 }
+
 .currency-prefix {
   position: absolute;
-  top: 50%;
-  left: 0.75rem;
-  transform: translateY(-50%);
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 0.75rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.currency-prefix span {
   color: #6b7280;
-}
-.input-error {
-  border-color: #dc2626;
-}
-.error-message {
-  color: #dc2626;
   font-size: 0.875rem;
 }
+
+.input-error {
+  border-color: #fca5a5 !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1) !important;
+  background-color: #fef2f2 !important;
+}
+
+.form-select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.error-message {
+  font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.textarea-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
 .char-counter {
-  float: right;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #9ca3af;
 }
-.optional-label {
-  color: #9ca3af;
+
+.submit-container {
+  padding-top: 1rem;
 }
+
 .submit-button {
-  background-color: #dc2626;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: bold;
   width: 100%;
+  background: linear-gradient(to right, #dc2626, #b91c1c);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-size: 1rem;
 }
+
+.submit-button:hover:not(:disabled) {
+  background: linear-gradient(to right, #b91c1c, #991b1b);
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
 .submit-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
+
 .button-content {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
+
 .loading-spinner {
   width: 1rem;
   height: 1rem;
-  margin-right: 0.5rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .page-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .form-content {
+    padding: 1.5rem;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 1rem; /* Prevent zoom on iOS */
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .input-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .char-counter {
+    align-self: flex-end;
   }
 }
 </style>

@@ -16,7 +16,7 @@
               <div class="card-body">
                 <div class="m-sm-4">
                   <form @submit.prevent="handleSignUp">
-                    <!-- Name -->
+                 
                     <div class="mb-3">
                       <label class="form-label">Name</label>
                       <input
@@ -30,7 +30,7 @@
                       />
                     </div>
 
-                    <!-- Company -->
+          
                     <div class="mb-3">
                       <label class="form-label">Company</label>
                       <input
@@ -43,7 +43,6 @@
                       />
                     </div>
 
-                    <!-- Email -->
                     <div class="mb-3">
                       <label class="form-label">Email</label>
                       <input
@@ -57,7 +56,7 @@
                       />
                     </div>
 
-                    <!-- Password -->
+                 
                     <div class="mb-3">
                       <label class="form-label">Password</label>
                       <input
@@ -75,7 +74,7 @@
                       </small>
                     </div>
 
-                    <!-- Confirm password -->
+                  
                     <div class="mb-3">
                       <label class="form-label">Confirm Password</label>
                       <input
@@ -89,7 +88,7 @@
                       />
                     </div>
 
-                    <!-- Terms -->
+                   
                     <div class="mb-3">
                       <label class="form-check">
                         <input
@@ -107,7 +106,7 @@
                       </label>
                     </div>
 
-                    <!-- Submit -->
+               
                     <div class="text-center mt-3">
                       <button
                         type="submit"
@@ -231,12 +230,12 @@ export default defineComponent({
       showLoading("Criando sua conta...");
 
       try {
-        // Simula chamada de API
+    
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
         hideLoading();
 
-        // Diálogo de “conta criada” com redirecionamento opcional
+      
         const result = await Swal.fire({
           title: "Conta criada com sucesso!",
           text: `Bem-vindo, ${form.name}! Sua conta foi criada.`,

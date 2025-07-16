@@ -1,6 +1,6 @@
 <template>
   <div class="home-container">
-    <!-- Configurações de Visualização (usando cookies) -->
+    
     <div v-if="showConfigPanel" class="config-panel">
       <div class="config-content">
         <div class="config-header">
@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <!-- Botão de Configurações -->
+   
     <button
       class="config-toggle-btn"
       @click="showConfigPanel = !showConfigPanel"
@@ -76,7 +76,7 @@
       ⚙️
     </button>
 
-    <!-- Hero Section -->
+    
     <section class="hero-section" :class="getThemeClass()">
       <div class="hero-content">
         <div class="hero-text">
@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        <!-- Estatísticas (controladas por cookie) -->
+        
         <div v-if="viewPreferences.showStatistics" class="hero-image">
           <div class="floating-card">
             <div class="card-stats">
@@ -135,7 +135,7 @@
       </div>
     </section>
 
-    <!-- Features Section -->
+  
     <section class="features-section">
       <div class="container">
         <div class="section-header">
@@ -168,7 +168,7 @@
       </div>
     </section>
 
-    <!-- Quick Actions Section (controlada por cookie) -->
+    
     <section
       v-if="viewPreferences.showQuickActions"
       class="quick-actions-section"
@@ -201,7 +201,7 @@
       </div>
     </section>
 
-    <!-- Status Section -->
+    
     <section class="status-section">
       <div class="container">
         <div class="status-grid">
@@ -231,7 +231,7 @@
             </div>
           </div>
 
-          <!-- Próximos Agendamentos (controlado por cookie) -->
+        
           <div
             v-if="viewPreferences.showUpcomingAppointments"
             class="status-card"
@@ -268,7 +268,7 @@
       </div>
     </section>
 
-    <!-- Debug info (apenas para demonstração) -->
+    
     <div v-if="showDebugInfo" class="debug-panel">
       <h3 class="font-semibold mb-2">Informações dos Cookies (Debug)</h3>
       <div class="text-xs space-y-2">
@@ -342,7 +342,7 @@ export default defineComponent({
     const showConfigPanel = ref(false);
     const showDebugInfo = ref(false);
 
-    // Preferências de visualização (salvas em cookies)
+  
     const viewPreferences = ref({
       showStatistics: true,
       showQuickActions: true,
@@ -350,7 +350,7 @@ export default defineComponent({
       theme: "default",
     });
 
-    // Configurar cookies para preferências de visualização
+   
     const {
       canUseCookies,
       saveLastValues,
@@ -371,7 +371,7 @@ export default defineComponent({
       expirationDays: 90,
     });
 
-    // Computed para informações dos cookies
+    
     const cookieInfo = computed(() => getCookieInfo());
 
     const estatisticas = ref({
@@ -500,7 +500,7 @@ export default defineComponent({
       },
     ]);
 
-    // Funções para gerenciar preferências
+    
     function saveViewPreferences() {
       if (canUseCookies.value) {
         saveLastValues();
@@ -632,7 +632,7 @@ export default defineComponent({
     onMounted(() => {
       feather.replace();
 
-      // Carregar preferências salvas
+      
       if (canUseCookies.value) {
         loadLastValues();
       }

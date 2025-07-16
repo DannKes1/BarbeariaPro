@@ -2,8 +2,7 @@
   <div class="form-container">
     <div class="form-header">
       <h1 class="form-title">Consultar Agendamentos</h1>
-      <div class="header-actions">
-      </div>
+      <div class="header-actions"></div>
     </div>
 
     <div class="form-section">
@@ -33,28 +32,38 @@
           </thead>
           <tbody>
             <tr v-for="a in agendamentosFiltrados" :key="a.id">
-              <td class="border px-4 py-2">{{ a.cliente?.nome || "Não disponível" }}</td>
-              <td class="border px-4 py-2">{{ a.servico?.nome || "Não disponível" }}</td>
-              <td class="border px-4 py-2">{{ a.profissional?.nome || "Não disponível" }}</td>
-              <td class="border px-4 py-2">{{ formatarData(a.dataHorario) }}</td>
-              <td class="border px-4 py-2">{{ a.status || "Não disponível" }}</td>
+              <td class="border px-4 py-2">
+                {{ a.cliente?.nome || "Não disponível" }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ a.servico?.nome || "Não disponível" }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ a.profissional?.nome || "Não disponível" }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ formatarData(a.dataHorario) }}
+              </td>
+              <td class="border px-4 py-2">
+                {{ a.status || "Não disponível" }}
+              </td>
               <td class="border px-4 py-2">
                 <div class="card-actions">
-                   <router-link
-                  :to="`/agendamento/editar/${a.id}`"
-                  class="btn btn-secondary btn-sm"
-                >
-                <i class="icon-edit"></i>
-                  Editar
-                </router-link>
-                <button
-                 class="btn btn-danger btn-sm"
-                  @click="cancelarAgendamento(a)"
-                >
-                <i class="icon-trash"></i>
+                  <router-link
+                    :to="`/agendamento/editar/${a.id}`"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    <i class="icon-edit"></i>
+                    Editar
+                  </router-link>
+                  <button
+                    class="btn btn-danger btn-sm"
+                    @click="cancelarAgendamento(a)"
+                  >
+                    <i class="icon-trash"></i>
 
-                  Cancelar
-                </button>
+                    Cancelar
+                  </button>
                 </div>
               </td>
             </tr>
@@ -66,7 +75,6 @@
   </div>
 </template>
 
-
 <script lang="ts">
 import { defineComponent, ref, computed, onMounted } from "vue";
 import { api } from "@/common/http";
@@ -77,7 +85,7 @@ export default defineComponent({
   name: "AgendamentoConsultaView",
   setup() {
     const filtro = ref({ nome: "", data: "" });
-    const agendamentos = ref<any[]>([]); 
+    const agendamentos = ref<any[]>([]);
     const { showError, showSuccess } = useSweetAlert();
 
     const agendamentosFiltrados = computed(() => {
@@ -96,20 +104,26 @@ export default defineComponent({
 
         const agendamentosCompletos = await Promise.all(
           data.map(async (agendamento: any) => {
-            const clienteResponse = await api.get(`/api/Cliente/${agendamento.clienteFk}`);
-            const servicoResponse = await api.get(`/api/Servico/${agendamento.servicoFk}`);
-            const profissionalResponse = await api.get(`/api/Profissional/${agendamento.profissionalFk}`);
-            
+            const clienteResponse = await api.get(
+              `/api/Cliente/${agendamento.clienteFk}`
+            );
+            const servicoResponse = await api.get(
+              `/api/Servico/${agendamento.servicoFk}`
+            );
+            const profissionalResponse = await api.get(
+              `/api/Profissional/${agendamento.profissionalFk}`
+            );
+
             return {
               ...agendamento,
               cliente: clienteResponse.data,
               servico: servicoResponse.data,
-              profissional: profissionalResponse.data
+              profissional: profissionalResponse.data,
             };
           })
         );
 
-        agendamentos.value = agendamentosCompletos; 
+        agendamentos.value = agendamentosCompletos;
       } catch (error) {
         showError("Erro", "Erro ao carregar agendamentos.");
         console.error("Erro ao carregar agendamentos:", error);
@@ -117,7 +131,9 @@ export default defineComponent({
     }
 
     async function cancelarAgendamento(a: any) {
-      const confirmado = window.confirm(`Cancelar agendamento de ${a.cliente?.nome}?`);
+      const confirmado = window.confirm(
+        `Cancelar agendamento de ${a.cliente?.nome}?`
+      );
       if (!confirmado) return;
 
       try {
@@ -130,16 +146,16 @@ export default defineComponent({
       }
     }
 
-      function formatarData(dataISO: string): string {
+    function formatarData(dataISO: string): string {
       const data = new Date(dataISO);
-      const dia = String(data.getDate()).padStart(2, '0');
-      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const dia = String(data.getDate()).padStart(2, "0");
+      const mes = String(data.getMonth() + 1).padStart(2, "0");
       const ano = data.getFullYear();
       return `${dia}/${mes}/${ano}`;
     }
     onMounted(() => {
       feather.replace();
-      carregarAgendamentos();  
+      carregarAgendamentos();
     });
 
     return {
@@ -151,8 +167,6 @@ export default defineComponent({
   },
 });
 </script>
-
-
 
 <style scoped>
 .form-container {
@@ -179,7 +193,6 @@ export default defineComponent({
   margin-top: 0;
   justify-content: flex-end;
 }
-
 
 .form-title {
   font-size: 2rem;

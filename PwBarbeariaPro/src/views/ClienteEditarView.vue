@@ -17,7 +17,7 @@
       </button>
     </div>
 
-    <!-- Debug Info (remover em produção) -->
+
     <div v-if="debugMode" class="debug-info">
       <h3>🔍 Debug Info</h3>
       <p><strong>Props ID:</strong> {{ props.id }} ({{ typeof props.id }})</p>
@@ -30,13 +30,13 @@
       <p><strong>ID Válido:</strong> {{ isValidId ? "✅" : "❌" }}</p>
     </div>
 
-    <!-- Estado de Carregamento -->
+   
     <div v-if="!cliente && !erro && isValidId" class="loading-state">
       <div class="loading-spinner-large"></div>
       <p class="loading-text">Carregando dados do cliente...</p>
     </div>
 
-    <!-- Estado de Erro -->
+   
     <div v-if="erro || !isValidId" class="error-state">
       <div class="error-icon">⚠️</div>
       <h3 class="error-title">Erro ao Carregar Cliente</h3>
@@ -58,13 +58,13 @@
       </div>
     </div>
 
-    <!-- Formulário de Edição -->
+    
     <form
       v-if="cliente && isValidId"
       @submit.prevent="submitForm"
       class="client-form"
     >
-      <!-- Dados Pessoais -->
+     
       <div class="form-section">
         <h2 class="section-title">Dados Pessoais</h2>
 
@@ -165,7 +165,7 @@
         </div>
       </div>
 
-      <!-- Botões de Ação -->
+      
       <div class="form-actions">
         <div class="actions-group">
           <div class="secondary-actions">

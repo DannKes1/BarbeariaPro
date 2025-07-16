@@ -13,7 +13,7 @@
       </router-link>
     </div>
 
-    <!-- Caixa Já Aberto -->
+   
     <div v-if="caixaAberto" class="caixa-aberto-card">
       <div class="status-header">
         <div class="status-icon">🟢</div>

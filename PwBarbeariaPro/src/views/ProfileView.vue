@@ -6,7 +6,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <!-- Foto e Informações Básicas -->
+      
       <div class="col-span-1">
         <div class="card text-center">
           <div class="card-body">
@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <!-- Formulário de Edição -->
+      
       <div class="col-span-2">
         <div class="card">
           <div class="card-header">
@@ -118,7 +118,7 @@
           </div>
         </div>
 
-        <!-- Alterar Senha -->
+      
         <div class="card mt-4">
           <div class="card-header">
             <h5>Alterar Senha</h5>
@@ -212,9 +212,7 @@ export default defineComponent({
     const defaultAvatar =
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYpPhduYGQv9LSNTSUDUM5MA7PmvllhukP6Q&s";
 
-    /**
-     * Estado do usuário
-     */
+   
     const usuario = ref<Usuario>({
       nome: "João",
       sobrenome: "Silva",
@@ -225,12 +223,10 @@ export default defineComponent({
       avatar: null,
     });
 
-    // Mantém cópia para detectar alterações
+    
     const usuarioOriginal = ref<Usuario>({ ...usuario.value });
 
-    /**
-     * Formulário de senhas
-     */
+    
     const senhas = ref<Senhas>({
       atual: "",
       nova: "",
@@ -275,13 +271,11 @@ export default defineComponent({
     }
 
     function handleImageError(event: Event) {
-      // Fallback para imagem padrão em caso de erro
+     
       (event.target as HTMLImageElement).src = defaultAvatar;
     }
 
-    /**
-     * Persiste dados de perfil
-     */
+  
     async function salvarPerfil() {
       if (!temAlteracoes.value) return;
 
@@ -399,7 +393,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      // Simular carregamento de dados do usuário
+ 
     });
 
     return {
@@ -408,7 +402,7 @@ export default defineComponent({
       estatisticas,
       isLoading,
       temAlteracoes,
-      defaultAvatar, // Exportar a variável da imagem
+      defaultAvatar, 
       getStatusClass,
       getStatusText,
       handleImageError,

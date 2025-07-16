@@ -106,9 +106,9 @@ export default defineComponent({
         const { data: agendamentoData } = await api.get(`/api/Agendamento/${id}`);
         agendamento.value = agendamentoData;
 
-        // Converte a data para o formato correto
+        
         const data = new Date(agendamento.value.dataHorario);
-        agendamento.value.dataHorario = data.toISOString().split("T")[0]; // Para exibir no formato date
+        agendamento.value.dataHorario = data.toISOString().split("T")[0];  
         agendamento.value.horario = data.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         await carregarClientes();

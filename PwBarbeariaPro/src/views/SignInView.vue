@@ -3,7 +3,7 @@
     class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
   >
     <div class="max-w-md w-full space-y-8">
-      <!-- Header -->
+   
       <div>
         <div
           class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100"
@@ -89,7 +89,7 @@
           </div>
         </div>
 
-        <!-- Botão de login -->
+        
         <div>
           <button
             type="submit"
@@ -124,22 +124,17 @@
         </div>
       </form>
 
-      <div v-if="rememberedUser" class="mt-4 p-3 bg-blue-50 rounded-md">
+    
+      <div v-if="errorMessage" class="mt-4 p-3 bg-red-50 rounded-md">
         <div class="flex items-center">
-          <i class="feather-icon text-blue-400 mr-2" data-feather="user"></i>
+          <i
+            class="feather-icon text-red-400 mr-2"
+            data-feather="alert-circle"
+          ></i>
           <div class="text-sm">
-            <p class="text-blue-800">Bem-vindo de volta!</p>
-            <p class="text-blue-600">
-              {{ rememberedUser.name }} ({{ rememberedUser.email }})
-            </p>
+            <p class="text-red-800 font-medium">Erro no login</p>
+            <p class="text-red-600">{{ errorMessage }}</p>
           </div>
-          <button
-            @click="clearRememberedUser"
-            class="ml-auto text-blue-400 hover:text-blue-600"
-            title="Esquecer usuário"
-          >
-            <i class="feather-icon" data-feather="x"></i>
-          </button>
         </div>
       </div>
 
@@ -219,14 +214,6 @@
           </button>
         </div>
       </div>
-
-      <div v-if="isDevelopment" class="mt-4 p-3 bg-yellow-50 rounded text-xs">
-        <strong>Debug:</strong><br />
-        Cookies habilitados: {{ cookiesEnabled ? "Sim" : "Não" }}<br />
-        Usuário lembrado: {{ rememberedUser ? "Sim" : "Não" }}<br />
-        Última rota: {{ lastRoute || "Nenhuma" }}<br />
-        Configurações salvas: {{ Object.keys(privacySettings).length }}
-      </div>
     </div>
   </div>
 </template>
@@ -236,6 +223,8 @@ import { ref, reactive, computed, onMounted, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useCookies } from "@/composables/useCookies";
 import { useSweetAlert } from "@/composables/useSweetAlert";
+import { api } from "@/common/http";
+
 
 interface LoginForm {
   email: string;
@@ -246,18 +235,56 @@ interface LoginForm {
 interface PrivacySettings {
   rememberLogin: boolean;
   autoRedirect: boolean;
+  keepSession: boolean;
 }
+
+interface Usuario {
+  id: number;
+  email: string;
+  perfil: string;
+  senha: string;
+  isAdmin: boolean;
+  profissionalId?: number;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  perfil: string;
+  isAdmin: boolean;
+  profissionalId?: number;
+}
+
 
 const router = useRouter();
 const route = useRoute();
-const {
-  useCookieState,
-  COOKIE_CONFIGS,
-  hasConsentForCategory,
-} = useCookies();
+const { useCookieState, COOKIE_CONFIGS, hasConsentForCategory } = useCookies();
 const { showToast, showError, showSuccess } = useSweetAlert();
 
+
 const isLoading = ref(false);
+const showPassword = ref(false);
+const showPrivacySettings = ref(false);
+const errorMessage = ref("");
+const usuariosAPI = ref<Usuario[]>([]);
+
+
+const loginForm = reactive<LoginForm>({
+  email: "",
+  password: "",
+  rememberMe: false,
+});
+
+
+const privacySettings = reactive<PrivacySettings>({
+  rememberLogin: true,
+  autoRedirect: true,
+  keepSession: false,
+});
+
+
 const isFormValid = computed(() => {
   return (
     loginForm.email.trim() &&
@@ -266,25 +293,94 @@ const isFormValid = computed(() => {
   );
 });
 
-const loginForm = reactive<LoginForm>({
-  email: "",
-  password: "",
-  rememberMe: false,
+const cookiesEnabled = computed(() => {
+  return typeof document !== "undefined" && navigator.cookieEnabled;
 });
 
-const privacySettings = reactive<PrivacySettings>({
-  rememberLogin: true,
-  autoRedirect: true,
+const rememberedUser = computed(() => {
+  return useCookieState(COOKIE_CONFIGS.REMEMBER_USER).value;
 });
 
-const saveRememberedUser = (userData: any) => {
+const lastRoute = computed(() => {
+  return route.query.redirect as string;
+});
+
+const isDevelopment = computed(() => {
+  return process.env.NODE_ENV === "development";
+});
+
+
+async function buscarUsuarios(): Promise<Usuario[]> {
+  try {
+    console.log("🔍 Buscando usuários na API...");
+    const response = await api.get("/api/Usuario");
+    const usuarios: Usuario[] = response.data;
+
+    console.log("👥 Usuários encontrados:", usuarios.length);
+    console.log("📋 Lista de usuários:", usuarios);
+
+    usuariosAPI.value = usuarios;
+    return usuarios;
+  } catch (error) {
+    console.error("❌ Erro ao buscar usuários:", error);
+    throw new Error("Erro ao conectar com o servidor");
+  }
+}
+
+async function validarCredenciais(
+  email: string,
+  senha: string
+): Promise<Usuario | null> {
+  try {
+    const usuarios = await buscarUsuarios();
+
+    console.log("🔐 Validando credenciais para:", email);
+
+   
+    const usuario = usuarios.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase()
+    );
+
+    if (!usuario) {
+      console.log("❌ Usuário não encontrado");
+      return null;
+    }
+
+    console.log("👤 Usuário encontrado:", {
+      id: usuario.id,
+      email: usuario.email,
+      perfil: usuario.perfil,
+      isAdmin: usuario.isAdmin,
+    });
+
+   
+    if (usuario.senha === senha) {
+      console.log("✅ Senha válida");
+      return usuario;
+    } else {
+      console.log("❌ Senha inválida");
+      return null;
+    }
+  } catch (error) {
+    console.error("❌ Erro na validação:", error);
+    throw error;
+  }
+}
+
+
+const saveRememberedUser = (userData: UserData) => {
   if (loginForm.rememberMe && hasConsentForCategory("preferences")) {
     const rememberedData = {
       email: userData.email,
+      name: userData.name,
       lastLogin: new Date().toISOString(),
     };
     useCookieState(COOKIE_CONFIGS.REMEMBER_USER).setValue(rememberedData);
   }
+};
+
+const clearRememberedUser = () => {
+  useCookieState(COOKIE_CONFIGS.REMEMBER_USER).setValue(null);
 };
 
 const checkExistingLogin = async () => {
@@ -306,49 +402,140 @@ const checkExistingLogin = async () => {
 
 const handleLogin = async () => {
   if (!isFormValid.value) {
-    showError("Formulário inválido", "Por favor, preencha todos os campos corretamente.");
+    errorMessage.value = "Por favor, preencha todos os campos corretamente.";
     return;
   }
 
   try {
     isLoading.value = true;
-    await new Promise((resolve) => setTimeout(resolve, 1000)); 
+    errorMessage.value = "";
 
-    if (loginForm.email === "admin@barbearia.com" && loginForm.password === "123456") {
-      const userData = {
-        id: 1,
-        name: "João Silva",
-        email: loginForm.email,
-        role: "admin",
-      };
+    console.log("🚀 Iniciando processo de login...");
 
-      const token = "jwt_token_" + Date.now();
-      useCookieState(COOKIE_CONFIGS.AUTH_TOKEN).setValue(token);
-      useCookieState(COOKIE_CONFIGS.USER_DATA).setValue(userData);
+    const usuario = await validarCredenciais(
+      loginForm.email,
+      loginForm.password
+    );
 
-      saveRememberedUser(userData);
-
-      const redirectTo = route.query.redirect as string || "/dashboard";
-      showSuccess("Login realizado!", `Bem-vindo, ${userData.name}!`);
-
-      await nextTick(() => {
-        router.push(redirectTo);
-      });
-    } else {
-      throw new Error("Credenciais inválidas");
+    if (!usuario) {
+      throw new Error("E-mail ou senha incorretos");
     }
-  } catch (error) {
-    showError("Erro no login", "E-mail ou senha incorretos. Tente novamente.");
+
+   
+    const userData: UserData = {
+      id: usuario.id,
+      name: usuario.perfil || "Usuário",
+      email: usuario.email,
+      role: usuario.isAdmin ? "admin" : "user",
+      perfil: usuario.perfil,
+      isAdmin: usuario.isAdmin,
+      profissionalId: usuario.profissionalId,
+    };
+
+    console.log("✅ Login bem-sucedido:", userData);
+
+    
+    const token = "jwt_token_" + Date.now() + "_" + usuario.id;
+
+
+    useCookieState(COOKIE_CONFIGS.AUTH_TOKEN).setValue(token);
+    useCookieState(COOKIE_CONFIGS.USER_DATA).setValue(userData);
+
+ 
+    saveRememberedUser(userData);
+
+   
+    const redirectTo = (route.query.redirect as string) || "/dashboard";
+
+   
+    showSuccess("Login realizado!", `Bem-vindo, ${userData.name}!`);
+
+ 
+    await nextTick(() => {
+      setTimeout(() => {
+        router.push(redirectTo);
+      }, 1000);
+    });
+  } catch (error: any) {
+    console.error("❌ Erro no login:", error);
+
+    if (error.message === "Erro ao conectar com o servidor") {
+      errorMessage.value =
+        "Não foi possível conectar ao servidor. Tente novamente.";
+    } else {
+      errorMessage.value =
+        error.message || "E-mail ou senha incorretos. Tente novamente.";
+    }
+
+    showError("Erro no login", errorMessage.value);
   } finally {
     isLoading.value = false;
   }
 };
 
+const handleForgotPassword = async () => {
+  const { value: email } = await showToast.inputEmail(
+    "Recuperar senha",
+    "Digite seu e-mail para receber as instruções de recuperação:"
+  );
+
+  if (email) {
+    try {
+     
+      const usuarios = await buscarUsuarios();
+      const usuario = usuarios.find(
+        (u) => u.email.toLowerCase() === email.toLowerCase()
+      );
+
+      if (usuario) {
+        showSuccess(
+          "E-mail enviado!",
+          "Instruções de recuperação foram enviadas para seu e-mail."
+        );
+      } else {
+        showError(
+          "E-mail não encontrado",
+          "Este e-mail não está cadastrado no sistema."
+        );
+      }
+    } catch (error) {
+      showError(
+        "Erro",
+        "Não foi possível processar a solicitação. Tente novamente."
+      );
+    }
+  }
+};
+
+const savePrivacySettings = () => {
+  
+  localStorage.setItem("privacySettings", JSON.stringify(privacySettings));
+  showPrivacySettings.value = false;
+  showToast.success("Configurações salvas com sucesso!");
+};
+
 onMounted(async () => {
+ 
+  const savedSettings = localStorage.getItem("privacySettings");
+  if (savedSettings) {
+    Object.assign(privacySettings, JSON.parse(savedSettings));
+  }
+
+  
   await checkExistingLogin();
+
+  
+  try {
+    await buscarUsuarios();
+  } catch (error) {
+    console.warn("Não foi possível pré-carregar usuários:", error);
+  }
+
+  if (rememberedUser.value && privacySettings.rememberLogin) {
+    loginForm.email = rememberedUser.value.email;
+  }
 });
 </script>
-
 
 <style scoped>
 .feather-icon {
@@ -531,6 +718,10 @@ onMounted(async () => {
   background-color: #fefce8;
 }
 
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
 .text-gray-900 {
   color: #111827;
 }
@@ -561,6 +752,18 @@ onMounted(async () => {
 
 .text-blue-800 {
   color: #1e40af;
+}
+
+.text-red-400 {
+  color: #f87171;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-red-800 {
+  color: #991b1b;
 }
 
 .hover\:text-gray-600:hover {
